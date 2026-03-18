@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found - KAVOX SOLE LAB</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #333;
+        }
+
+        /* Header Styles */
+        .header {
+      background-color: #1a1a1a;
+      padding: 12px 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo-container {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .logo-img {
+      height: 30px;
+      filter: invert(0);
+    }
+
+    .logo-sub {
+      font-size: 12px;
+      color: #4ade80;
+      letter-spacing: 6.5px;
+    }
+    .logo-sub-footer {
+      font-size: 14px;
+      color: #4ade80;
+      letter-spacing: 10px;
+    }
+
+    .search-box {
+      flex: 1;
+      max-width: 400px;
+      display: flex;
+      align-items: center;
+      background-color: #333;
+      border-radius: 4px;
+      padding: 8px 12px;
+      gap: 10px;
+    }
+
+    .search-box input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      color: #fff;
+      font-size: 13px;
+    }
+
+    .search-box input::placeholder {
+      color: #888;
+    }
+
+    .search-box svg {
+      color: #888;
+      width: 18px;
+      height: 18px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 25px;
+    }
+
+    .nav-links a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-links a:hover {
+      color: #4ade80;
+    }
+
+    .header-icons {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .header-icons a {
+      color: #fff;
+      display: flex;
+      align-items: center;
+    }
+
+    .header-icons svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .sign-in-btn {
+      background-color: #e91e63;
+      color: #fff;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .sign-in-btn:hover {
+      background-color: #c2185b;
+    }
+
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+    }
+    
+    .profile-mini {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background-color: #333;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      border: 1px solid #4ade80;
+    }
+    
+    .profile-mini img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .error-code {
+            font-size: 150px;
+            font-weight: 700;
+            color: #1a1a1a;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .error-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .error-message {
+            font-size: 16px;
+            color: #666;
+            max-width: 450px;
+            line-height: 1.6;
+            margin-bottom: 35px;
+        }
+
+        .error-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background-color: #e91e63;
+            color: #fff;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: #c2185b;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: #333;
+            border: 1px solid #333;
+            padding: 12px 30px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background-color: #333;
+            color: #fff;
+        }
+
+        /* Mobile Navigation */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 200;
+            flex-direction: column;
+            padding: 60px 30px;
+        }
+
+        .mobile-nav.active {
+            display: flex;
+        }
+
+        .mobile-nav-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 30px;
+            cursor: pointer;
+        }
+
+        .mobile-nav a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 18px;
+            padding: 15px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        /* Footer */
+        .footer {
+      background-color: #1a1a1a;
+      padding: 50px 30px 20px;
+      color: #fff;
+    }
+
+    .footer-content {
+      display: grid;
+      grid-template-columns: 1fr 2fr 1fr;
+      gap: 40px;
+      max-width: 1200px;
+      margin: 0 auto 30px;
+    }
+
+    .footer-logo .logo-img {
+      height: 40px;
+      filter: invert(0);
+      margin-bottom: 5px;
+    }
+
+    .footer-logo .logo-sub {
+      font-size: 10px;
+      color: #4ade80;
+      letter-spacing: 3px;
+    }
+
+    .footer-links {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .footer-links-column h4 {
+      font-size: 12px;
+      font-weight: 400;
+      margin-bottom: 15px;
+      color: #888;
+    }
+
+    .footer-links-column a {
+      display: block;
+      color: #ccc;
+      text-decoration: none;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .footer-links-column a:hover {
+      color: #4ade80;
+    }
+
+    .footer-social h4 {
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
+
+    .footer-social a {
+      display: block;
+      color: #ccc;
+      text-decoration: none;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .footer-social a:hover {
+      color: #4ade80;
+    }
+
+    .footer-bottom {
+      text-align: center;
+      padding-top: 20px;
+      border-top: 1px solid #333;
+    }
+
+    .footer-bottom p {
+      font-size: 11px;
+      color: #666;
+    }
+        /* Responsive */
+        @media (max-width: 992px) {
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .footer-links {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 12px 15px;
+            }
+
+            .search-box {
+                display: none;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .error-code {
+                font-size: 100px;
+            }
+
+            .error-title {
+                font-size: 22px;
+            }
+
+            .error-message {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-icons {
+                gap: 12px;
+            }
+
+            .header-icons svg {
+                width: 18px;
+                height: 18px;
+            }
+
+            .sign-in-btn {
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+
+            .error-code {
+                font-size: 80px;
+            }
+
+            .error-title {
+                font-size: 18px;
+            }
+
+            .error-actions {
+                flex-direction: column;
+                width: 100%;
+                padding: 0 20px;
+            }
+
+            .btn-primary,
+            .btn-secondary {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+    <div class="logo-container">
+      <img src="/images/logo.png" alt="KAVOX" class="logo-img">
+      <span class="logo-sub">SOLE LAB</span>
+    </div>
+
+    <div class="search-box">
+      <input type="text" placeholder="Search for products, brands & more">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="M21 21l-4.35-4.35"></path>
+      </svg>
+    </div>
+
+    <nav class="nav-links">
+      <a href="/">HOME</a>
+      <a href="/shop">SHOP</a>
+      <a href="/orders">ORDERS</a>
+    </nav>
+
+    <div class="header-icons">
+      <a href="/cart" title="Cart">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+        </svg>
+      </a>
+      <a href="/wishlist" title="Wishlist">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+        </svg>
+      </a>
+      <% if (locals.user) { %>
+        <a href="/account" title="Account">
+          <% if (user.profileImage) { %>
+            <div class="profile-mini">
+              <img src="<%= user.profileImage %>" alt="Profile">
+            </div>
+          <% } else { %>
+            <div class="profile-mini">
+              <%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %>
+            </div>
+          <% } %>
+        </a>
+        <a href="/api/auth/logout" class="sign-in-btn" style="background-color: #333;">Logout</a>
+      <% } else { %>
+        <a href="/login" class="sign-in-btn">Sign In</a>
+      <% } %>
+    </div>
+
+    <button class="menu-toggle" onclick="toggleMobileNav()">
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+  </header>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav" id="mobileNav">
+        <button class="mobile-nav-close" onclick="toggleMobileNav()">&times;</button>
+        <a href="/">HOME</a>
+        <a href="/shop">SHOP</a>
+        <a href="/orders">ORDERS</a>
+        <a href="/cart">CART</a>
+        <a href="/wishlist">WISHLIST</a>
+        <a href="/account">MY ACCOUNT</a>
+        <a href="/login">SIGN IN</a>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="error-code">404</div>
+        <h1 class="error-title">Page Not Found</h1>
+        <p class="error-message">
+            Sorry, the page you are looking for doesn't exist or has been moved. 
+            Please check the URL or navigate back to our homepage.
+        </p>
+        <div class="error-actions">
+            <a href="/" class="btn-primary">Go to Homepage</a>
+            <a href="/shop" class="btn-secondary">Browse Shop</a>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-logo">
+        <img src="/images/logo.png" alt="KAVOX" class="logo-img">
+        <p class="logo-sub-footer">SOLE LAB</p>
+      </div>
+
+      <div class="footer-links">
+        <div class="footer-links-column">
+          <a href="/cancellation">Cancellation & Returns</a>
+          <a href="/orders">Orders</a>
+          <a href="/">Home</a>
+          <a href="/shop">Shop</a>
+          <a href="/account">My Account</a>
+        </div>
+        <div class="footer-links-column">
+          <h4>Payments</h4>
+          <a href="/shipping">Shipping</a>
+          <a href="/terms">Terms of Use</a>
+          <a href="/security">Security</a>
+          <a href="/privacy">Privacy</a>
+        </div>
+      </div>
+
+      <div class="footer-social">
+        <h4>Find us on social</h4>
+        <a href="mailto:kavox@gmail.com">Email: kavox@gmail.com</a>
+        <a href="#">Instagram</a>
+        <a href="#">Facebook</a>
+        <a href="#">Twitter</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2026 Nonstop Fashion & Lifestyle</p>
+      <p>All Rights Reserved</p>
+    </div>
+  </footer>
+
+    <script>
+        function toggleMobileNav() {
+            const mobileNav = document.getElementById('mobileNav');
+            mobileNav.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>

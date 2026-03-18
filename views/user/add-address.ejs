@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Address - KAVOX SOLE LAB</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #333;
+        }
+
+        /* Header Styles */
+        .header {
+            background-color: #1a1a1a;
+            padding: 12px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .logo-img {
+            height: 40px;
+            filter: invert(0);
+        }
+
+        .logo-sub {
+            font-size: 9px;
+            color: #fff;
+            letter-spacing: 8px;
+            margin-top: 2px;
+            text-transform: uppercase;
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 400px;
+            display: flex;
+            align-items: center;
+            background-color: #333;
+            border-radius: 4px;
+            padding: 8px 12px;
+            gap: 10px;
+        }
+
+        .search-box input {
+            flex: 1;
+            background: none;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-size: 13px;
+        }
+
+        .search-box input::placeholder {
+            color: #888;
+        }
+
+        .search-box svg {
+            color: #888;
+            width: 18px;
+            height: 18px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .nav-links a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-links a:hover {
+            color: #4ade80;
+        }
+
+        .header-icons {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .header-icons a {
+            color: #fff;
+            display: flex;
+            align-items: center;
+        }
+
+        .header-icons svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .sign-in-btn {
+            background-color: #e91e63;
+            color: #fff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .sign-in-btn:hover {
+            background-color: #c2185b;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .profile-mini {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background-color: #333;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            border: 1px solid #4ade80;
+        }
+
+        .profile-mini img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 40px 60px;
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Page Title */
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 30px;
+            text-decoration: underline;
+            text-underline-offset: 6px;
+        }
+
+        /* Form Card */
+        .form-card {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 40px 50px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 25px;
+        }
+
+        .form-row.full-width {
+            display: block;
+        }
+
+        .form-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .form-group label .required {
+            color: #e91e63;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+            background-color: #fff;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #333;
+        }
+
+        .form-group select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            padding-right: 40px;
+            cursor: pointer;
+        }
+
+        .submit-btn-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .submit-btn {
+            background-color: #e91e63;
+            color: #fff;
+            border: none;
+            padding: 14px 50px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: background-color 0.2s;
+        }
+
+        .submit-btn:hover {
+            background-color: #c2185b;
+        }
+
+        /* Mobile Navigation */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 200;
+            flex-direction: column;
+            padding: 60px 30px;
+        }
+
+        .mobile-nav.active {
+            display: flex;
+        }
+
+        .mobile-nav-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 30px;
+            cursor: pointer;
+        }
+
+        .mobile-nav a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 18px;
+            padding: 15px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: #1a1a1a;
+            padding: 50px 30px 20px;
+            color: #fff;
+            margin-top: auto;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto 30px;
+        }
+
+        .footer-logo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-left: 20px;
+        }
+
+        .footer-logo .logo-img {
+            height: 40px;
+            filter: invert(0);
+            margin-bottom: 5px;
+        }
+
+        .footer-logo .logo-sub {
+            font-size: 10px;
+            color: #fff;
+            letter-spacing: 8px;
+            text-align: center;
+        }
+
+        .footer-links {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .footer-links-column a {
+            display: block;
+            color: #ccc;
+            text-decoration: none;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        .footer-links-column a:hover {
+            color: #4ade80;
+        }
+
+        .footer-social h4 {
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .footer-social a,
+        .footer-social p {
+            display: block;
+            color: #ccc;
+            text-decoration: none;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        .footer-social a:hover {
+            color: #4ade80;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+        }
+
+        .footer-bottom p {
+            font-size: 11px;
+            color: #666;
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .footer-links {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 12px 15px;
+            }
+
+            .search-box {
+                display: none;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .main-content {
+                padding: 30px 20px;
+            }
+
+            .page-title {
+                font-size: 20px;
+            }
+
+            .form-card {
+                padding: 25px 20px;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-icons {
+                gap: 12px;
+            }
+
+            .header-icons svg {
+                width: 18px;
+                height: 18px;
+            }
+
+            .sign-in-btn {
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+
+            .main-content {
+                padding: 20px 15px;
+            }
+
+            .form-card {
+                padding: 20px 15px;
+            }
+
+            .submit-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo-container">
+            <img src="/images/logo.png" alt="KAVOX" class="logo-img">
+            <span class="logo-sub">S O L E &nbsp; L A B</span>
+        </div>
+
+        <div class="search-box">
+            <input type="text" placeholder="Search for products,brands & more">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="M21 21l-4.35-4.35"></path>
+            </svg>
+        </div>
+
+        <nav class="nav-links">
+            <a href="/">HOME</a>
+            <a href="/shop">SHOP</a>
+            <a href="/orders">ORDERS</a>
+        </nav>
+
+        <div class="header-icons">
+            <a href="/cart" title="Cart">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                </svg>
+            </a>
+            <a href="/wishlist" title="Wishlist">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+            </a>
+            <% if (locals.user) { %>
+                <a href="/account" title="Account">
+                    <% if (user.profileImage) { %>
+                        <div class="profile-mini">
+                            <img src="<%= user.profileImage %>" alt="Profile">
+                        </div>
+                    <% } else { %>
+                        <div class="profile-mini">
+                            <%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %>
+                        </div>
+                    <% } %>
+                </a>
+                <a href="/api/auth/logout" class="sign-in-btn" style="background-color: #333;">Logout</a>
+            <% } else { %>
+                <a href="/login" class="sign-in-btn">Sign In</a>
+            <% } %>
+        </div>
+
+        <button class="menu-toggle" onclick="toggleMobileNav()">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+    </header>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav" id="mobileNav">
+        <button class="mobile-nav-close" onclick="toggleMobileNav()">&times;</button>
+        <a href="/">HOME</a>
+        <a href="/shop">SHOP</a>
+        <a href="/orders">ORDERS</a>
+        <a href="/cart">CART</a>
+        <a href="/wishlist">WISHLIST</a>
+        <a href="/account">MY ACCOUNT</a>
+        <a href="/login">SIGN IN</a>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <h1 class="page-title">ADD ADDRESS</h1>
+
+        <div class="form-card">
+            <form action="/address/add" method="POST" id="addAddressForm" novalidate>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>First Name <span class="required">*</span></label>
+                        <input type="text" name="firstName" id="firstName">
+                        <div class="error-msg" id="firstNameError" style="color: #e91e63; font-size: 12px; margin-top: 5px; display: none;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name <span class="required">*</span></label>
+                        <input type="text" name="lastName" id="lastName">
+                        <div class="error-msg" id="lastNameError" style="color: #e91e63; font-size: 12px; margin-top: 5px; display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Mobile Number <span class="required">*</span></label>
+                        <input type="tel" name="mobile" id="mobile" maxlength="10">
+                        <div class="error-msg" id="mobileError" style="color: #e91e63; font-size: 12px; margin-top: 5px; display: none;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Pincode <span class="required">*</span></label>
+                        <input type="text" name="pincode" id="pincode" maxlength="6">
+                        <div class="error-msg" id="pincodeError" style="color: #e91e63; font-size: 12px; margin-top: 5px; display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="form-row full-width">
+                    <div class="form-group">
+                        <label>House No., Building Name <span class="required">*</span></label>
+                        <input type="text" name="street" id="street">
+                        <div class="error-msg" id="streetError" style="color: #e91e63; font-size: 12px; margin-top: 5px; display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>State <span class="required">*</span></label>
+                        <input type="text" name="state" id="state">
+                        <div class="error-msg" id="stateError" style="color: #e91e63; font-size: 12px; margin-top: 5px; display: none;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>City <span class="required">*</span></label>
+                        <input type="text" name="city" id="city">
+                        <div class="error-msg" id="cityError" style="color: #e91e63; font-size: 12px; margin-top: 5px; display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="form-row full-width">
+                    <div class="form-group">
+                        <label>Type <span class="required">*</span></label>
+                        <select name="type" id="type">
+                            <option value="" disabled selected>Select Type</option>
+                            <option value="HOME">Home</option>
+                            <option value="WORK">Work</option>
+                            <option value="OTHER">Other</option>
+                        </select>
+                        <div class="error-msg" id="typeError" style="color: #e91e63; font-size: 12px; margin-top: 5px; display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="submit-btn-container">
+                    <button type="submit" class="submit-btn">ADD ADDRESS</button>
+                </div>
+            </form>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const form = document.getElementById('addAddressForm');
+                    const pincodeInput = document.getElementById('pincode');
+                    const cityInput = document.getElementById('city');
+                    const stateInput = document.getElementById('state');
+                    const mobileInput = document.getElementById('mobile');
+
+                    const showError = (inputId, message) => {
+                        const errorDiv = document.getElementById(inputId + 'Error');
+                        errorDiv.textContent = message;
+                        errorDiv.style.display = 'block';
+                        document.getElementById(inputId).style.borderColor = '#e91e63';
+                    };
+
+                    const hideError = (inputId) => {
+                        const errorDiv = document.getElementById(inputId + 'Error');
+                        errorDiv.textContent = '';
+                        errorDiv.style.display = 'none';
+                        document.getElementById(inputId).style.borderColor = '#ccc';
+                    };
+
+                    // Pincode API validation
+                    pincodeInput.addEventListener('input', async (e) => {
+                        const pincode = e.target.value.trim();
+                        if (pincode.length === 6 && /^\d{6}$/.test(pincode)) {
+                            hideError('pincode');
+                            try {
+                                const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+                                const data = await response.json();
+                                if (data[0].Status === "Success") {
+                                    const details = data[0].PostOffice[0];
+                                    cityInput.value = details.District;
+                                    stateInput.value = details.State;
+                                    hideError('city');
+                                    hideError('state');
+                                } else {
+                                    showError('pincode', 'Invalid Indian pincode');
+                                }
+                            } catch (error) {
+                                console.error('Pincode API error:', error);
+                            }
+                        } else if (pincode.length > 0) {
+                            showError('pincode', 'Pincode must be 6 digits');
+                        }
+                    });
+
+                    form.addEventListener('submit', (e) => {
+                        let isValid = true;
+                        const fields = ['firstName', 'lastName', 'mobile', 'pincode', 'street', 'state', 'city', 'type'];
+                        
+                        fields.forEach(field => {
+                            const input = document.getElementById(field);
+                            if (!input.value.trim()) {
+                                showError(field, 'This field is required');
+                                isValid = false;
+                            } else {
+                                hideError(field);
+                                if (field === 'mobile') {
+                                    if (!/^\d{10}$/.test(input.value)) {
+                                        showError('mobile', 'Mobile number must be exactly 10 digits');
+                                        isValid = false;
+                                    } else if (/^(\d)\1{9}$/.test(input.value)) {
+                                        showError('mobile', 'Invalid mobile number');
+                                        isValid = false;
+                                    }
+                                }
+                                if (field === 'pincode' && !/^\d{6}$/.test(input.value)) {
+                                    showError('pincode', 'Pincode must be 6 digits');
+                                    isValid = false;
+                                }
+                            }
+                        });
+
+
+                        if (!isValid) e.preventDefault();
+                    });
+                });
+            </script>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <img src="/images/logo.png" alt="KAVOX" class="logo-img">
+                <span class="logo-sub">S O L E &nbsp; L A B</span>
+            </div>
+
+            <div class="footer-links">
+                <div class="footer-links-column">
+                    <a href="/cancellation">Cancellation & Returns</a>
+                    <a href="/orders">orders</a>
+                    <a href="/">Home</a>
+                    <a href="/shop">Shope</a>
+                    <a href="/account">My Account</a>
+                </div>
+                <div class="footer-links-column">
+                    <a href="/payments">Payments</a>
+                    <a href="/shipping">Shipping</a>
+                    <a href="/terms">Terms of Use</a>
+                    <a href="/security">Security</a>
+                    <a href="/privacy">Privacy</a>
+                </div>
+            </div>
+
+            <div class="footer-social">
+                <h4>Find us on social</h4>
+                <p>Email : kavox@gmail.com</p>
+                <a href="#">Instagram</a>
+                <a href="#">Facebook</a>
+                <a href="#">Twiter</a>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2026 Nonstop Fashion & Lifestyle</p>
+            <p>All Rights Reserved</p>
+        </div>
+    </footer>
+
+    <script>
+        function toggleMobileNav() {
+            const mobileNav = document.getElementById('mobileNav');
+            mobileNav.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>
