@@ -26,8 +26,10 @@ passport.use(new GoogleStrategy({
         email: email,
         googleId: profile.id
       });
-      // Tag user explicitly transiently to signal the callback route
-      user.isNewGoogleUser = true;
+    }
+
+    if (user && !user.isActive) {
+      return done(null, false, { message: "suspended" });
     }
 
     return done(null, user)

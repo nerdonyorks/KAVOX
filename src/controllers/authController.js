@@ -92,53 +92,27 @@ exports.signup = async (req, res) => {
   }
 };
 
-exports.createPasswordPost = async (req, res) => {
-  try {
-    const { newPassword, confirmPassword } = req.body;
-    
-    if (newPassword !== confirmPassword) {
-      return res.status(400).render("user/create-password", {
-        error: "Passwords do not match.",
-        user: req.user
-      });
-    }
-
-    const userId = req.user?.id;
-    if (!userId) return res.redirect("/login");
-
-    const user = await User.findById(userId);
-    user.password = newPassword; 
-    
-    try {
-        await user.save();
-    } catch (validationError) {
-        return res.status(400).render("user/create-password", {
-           error: "Password must contain uppercase, lowercase, number and symbol (min 8 chars).",
-           user: req.user
-        });
-    }
-
-    req.session.save(() => res.redirect("/login"));
-    
-  } catch (error) {
-    console.error("Create Password Post Error:", error);
-    res.status(500).render("user/create-password", { error: "Server error updating password.", user: req.user });
-  }
-};
 
 exports.verifyOtp = async (req, res) => {
   try {
     const { email, otp, type } = req.body;
+    const isAjax = req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'));
 
     // Verify OTP first via Service Layer
     const isValid = await otpService.verifyOTP(email, otp);
     if (!isValid) {
+      if (isAjax) {
+        return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
+      }
       return res.status(400).render("user/otp-verify", { error: "Invalid or expired OTP", email, ...req.body });
     }
 
     if (type === 'signup') {
         const signupData = req.session.signupData;
         if (!signupData || signupData.email !== email) {
+            if (isAjax) {
+                return res.status(400).json({ success: false, message: "Signup session expired or invalid" });
+            }
             return res.status(400).render("user/otp-verify", { error: "Signup session expired or invalid", email, ...req.body });
         }
 
@@ -154,10 +128,16 @@ exports.verifyOtp = async (req, res) => {
         await user.save();
         delete req.session.signupData;
 
+        if (isAjax) {
+            return res.json({ success: true, redirect: "/login?signup_success=1" });
+        }
         return res.redirect("/login?signup_success=1");
     } else if (type === 'email_change') {
         const pendingEmail = req.session.pendingEmail;
         if (!pendingEmail || pendingEmail.newEmail !== email) {
+            if (isAjax) {
+                return res.status(400).json({ success: false, message: "Email change session expired or invalid" });
+            }
             return res.status(400).render("user/otp-verify", { error: "Email change session expired or invalid", email, ...req.body });
         }
 
@@ -166,6 +146,9 @@ exports.verifyOtp = async (req, res) => {
         // Final check if email was taken while user was verifying
         const existingUser = await User.findOne({ email: pendingEmail.newEmail });
         if (existingUser && existingUser._id.toString() !== user._id.toString()) {
+            if (isAjax) {
+                return res.status(400).json({ success: false, message: "This email has been taken by another account. Please try a different email." });
+            }
             return res.status(400).render("user/otp-verify", { 
                 error: "This email has been taken by another account. Please try a different email.", 
                 email, ...req.body 
@@ -176,13 +159,22 @@ exports.verifyOtp = async (req, res) => {
         await user.save();
         delete req.session.pendingEmail;
 
+        if (isAjax) {
+            return res.json({ success: true, redirect: "/account?email_success=1" });
+        }
         return res.redirect("/account?email_success=1");
     } else {
+        if (isAjax) {
+            return res.status(400).json({ success: false, message: "Unknown OTP verification type" });
+        }
         res.status(400).render("user/otp-verify", { error: "Unknown OTP verification type", email, ...req.body });
     }
 
   } catch (error) {
     console.error("verifyOtp error", error);
+    if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+        return res.status(500).json({ success: false, message: "Verification failed due to server error." });
+    }
     res.status(500).render("user/otp-verify", { error: "Verification failed due to server error.", ...req.body });
   }
 };
@@ -213,7 +205,7 @@ exports.login = async (req, res, next) => {
     }
 
     if (!user.password) {
-        return res.status(400).render("user/login", { error: "Account registered with Google. Use Google login.", email });
+        return res.status(400).render("user/login", { error: "This account uses Google login. Please continue with Google or set a password.", email });
     }
 
     const isMatch = await user.comparePassword(password);
@@ -330,7 +322,7 @@ exports.logout = (req, res) => {
       if (err) {
          console.error("Session Destroy Error:", err);
       }
-      res.clearCookie('connect.sid'); // Clear session cookie manually
+      res.clearCookie('user_sid'); // Clear session cookie manually
       res.redirect("/login");
     });
   });

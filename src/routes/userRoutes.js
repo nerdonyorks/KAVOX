@@ -13,7 +13,6 @@ router.get("/verify-otp", userController.renderOtpVerify);
 router.get("/forgot-password", isLoggedOut, userController.renderForgotPassword);
 router.get("/reset-password", isLoggedOut, userController.renderResetPassword);
 router.get("/user/new-password", isLoggedOut, userController.renderNewPassword);
-router.get("/create-password", userController.renderCreatePassword);
 
 // Protected User Routes
 router.get("/account", isLoggedIn, userController.renderAccount);

@@ -10,33 +10,32 @@ router.post("/signup", authController.signup);
 // Google Auth Routes
 router.get("/api/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
-router.get("/api/auth/google/callback", 
-  passport.authenticate("google", { failureRedirect: "/login" }), 
-  (req, res) => {
-    // If it's a completely new account created via Google OAuth
-    if (req.user && req.user.isNewGoogleUser) {
-        req.user.isNewGoogleUser = undefined; // clean transient tag
-        req.session.save(() => {
-            return res.redirect("/create-password");
+router.get("/api/auth/google/callback", (req, res, next) => {
+    passport.authenticate("google", (err, user, info) => {
+        if (err) return next(err);
+        
+        if (!user) {
+            if (info && info.message === "suspended") {
+                return res.redirect("/login?error=suspended");
+            }
+            return res.redirect("/login");
+        }
+
+        req.logIn(user, (err) => {
+            if (err) return next(err);
+            req.session.save(() => {
+                return res.redirect("/home");
+            });
         });
-    } else {
-        // Successful authentication, existing user, redirect to account dash or home
-        req.session.save(() => {
-            return res.redirect("/home");
-        });
-    }
-  }
-);
+    })(req, res, next);
+});
 
 // Standard Login Route (Email + Password)
 router.post("/login", authController.login);
 
-// Create Password Route for Google Users
-router.post("/create-password", authController.createPasswordPost);
-
 // OTP Flow Routes
 router.post("/verify-otp", authController.verifyOtp);
-router.post("/resend-otp", authController.resendOtp);
+router.post("/api/auth/resend-otp", authController.resendOtp);
 
 // Forgot & Reset Password Routes
 router.post("/api/auth/forgot-password", authController.forgotPassword);

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -155,7 +156,7 @@
             text-decoration: none;
             border: 1px solid #4ade80;
         }
-        
+
         .profile-mini img {
             width: 100%;
             height: 100%;
@@ -279,7 +280,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.95);
+            background: rgba(0, 0, 0, 0.95);
             z-index: 200;
             flex-direction: column;
             padding: 60px 30px;
@@ -478,6 +479,7 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Header -->
     <header class="header">
@@ -509,7 +511,9 @@
             </a>
             <a href="/wishlist" title="Wishlist">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    <path
+                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                    </path>
                 </svg>
             </a>
             <% if (locals.user) { %>
@@ -518,16 +522,16 @@
                         <div class="profile-mini">
                             <img src="<%= user.profileImage %>" alt="Profile">
                         </div>
-                    <% } else { %>
-                        <div class="profile-mini">
-                            <%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %>
-                        </div>
-                    <% } %>
+                        <% } else { %>
+                            <div class="profile-mini">
+                                <%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %>
+                            </div>
+                            <% } %>
                 </a>
                 <a href="/api/auth/logout" class="sign-in-btn" style="background-color: #333;">Logout</a>
-            <% } else { %>
-                <a href="/login" class="sign-in-btn">Sign In</a>
-            <% } %>
+                <% } else { %>
+                    <a href="/login" class="sign-in-btn">Sign In</a>
+                    <% } %>
         </div>
 
         <button class="menu-toggle" onclick="toggleMobileNav()">
@@ -555,9 +559,10 @@
     <main class="main-content">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
             <h1 class="page-title">ADDRESS</h1>
-            <a href="/account" style="text-decoration: none; color: #e91e63; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 5px;">
+            <a href="/account"
+                style="text-decoration: none; color: #e91e63; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 5px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
                 </svg>
                 BACK TO PROFILE
             </a>
@@ -569,31 +574,40 @@
         </div>
 
         <!-- Address List -->
-        <% if (typeof addresses !== 'undefined' && addresses.length > 0) { %>
+        <% if (typeof addresses !=='undefined' && addresses.length> 0) { %>
             <% addresses.forEach(function(address, index) { %>
                 <div class="address-card">
                     <div class="address-content">
-                        <input type="checkbox" class="address-checkbox" <%= address.isDefault ? 'checked' : '' %> onchange="setDefaultAddress('<%= address._id %>')">
-                        <div class="address-details">
-                            <span class="address-type">(<%= address.type || 'HOME' %>)</span>
-                            <span class="address-line"><%= address.street %></span>
-                            <span class="address-line"><%= address.city %> - <%= address.pincode %></span>
-                            <span class="address-line"><%= address.state %></span>
-                            <span class="address-line">Mobile : <%= address.mobile %></span>
-                        </div>
+                        <input type="checkbox" class="address-checkbox" <%=address.isDefault ? 'checked' : '' %>
+                        onchange="setDefaultAddress('<%= address._id %>')">
+                            <div class="address-details">
+                                <span class="address-type">(<%= address.type || 'HOME' %>)</span>
+                                <span class="address-line">
+                                    <%= address.street %>
+                                </span>
+                                <span class="address-line">
+                                    <%= address.city %> - <%= address.pincode %>
+                                </span>
+                                <span class="address-line">
+                                    <%= address.state %>
+                                </span>
+                                <span class="address-line">Mobile : <%= address.mobile %></span>
+                            </div>
                     </div>
                     <div class="address-actions">
-                        <button class="delete-btn" style="margin-bottom: 8px; border-color: #333; color: #333;" onclick="window.location.href='/address/edit/<%= address._id %>'">Edit Address</button>
+                        <button class="delete-btn" style="margin-bottom: 8px; border-color: #333; color: #333;"
+                            onclick="window.location.href='/address/edit/<%= address._id %>'">Edit Address</button>
                         <button class="delete-btn" onclick="deleteAddress('<%= address._id %>')">Delete Address</button>
                     </div>
                 </div>
-            <% }); %>
-        <% } else { %>
-            <div style="text-align: center; padding: 40px; background: #fafafa; border-radius: 8px; border: 1px dashed #ccc;">
-                <p style="color: #888; margin-bottom: 20px;">No addresses saved yet.</p>
-                <a href="/address/add" class="add-address-btn" style="display: inline-block;">Add New Address</a>
-            </div>
-        <% } %>
+                <% }); %>
+                    <% } else { %>
+                        <div
+                            style="text-align: center; padding: 40px; background: #fafafa; border-radius: 8px; border: 1px dashed #ccc;">
+                            <p style="color: #888; margin-bottom: 20px;">No addresses saved yet.</p>
+
+                        </div>
+                        <% } %>
     </main>
 
     <!-- Footer -->
@@ -663,4 +677,5 @@
         }
     </script>
 </body>
+
 </html>

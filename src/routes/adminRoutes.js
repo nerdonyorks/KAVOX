@@ -6,6 +6,7 @@ const { isAdmin, setNoCache, isLoggedOut } = require("../middleware/authMiddlewa
 // Unprotected Login GET/POST
 router.get("/admin/login", isLoggedOut, adminController.renderLogin);
 router.post("/admin/login", adminController.loginAdmin);
+router.get("/admin/logout", adminController.logoutAdmin);
 
 // Protected Admin Dashboard & Management
 router.get("/admin/dashboard", isAdmin, setNoCache, adminController.renderDashboard);

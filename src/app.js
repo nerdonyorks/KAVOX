@@ -28,7 +28,22 @@ app.use(express.urlencoded({ extended: false }));
 
 
 // ---------- SESSION ----------
-app.use(session({
+const adminSession = session({
+  name: 'admin_sid',
+  secret: process.env.SESSION_SECRET || 'fallback_secret',
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.default.create({
+    mongoUrl: process.env.MONGO_URI,
+    collectionName: 'admin_sessions'
+  }),
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24 // 1 day
+  }
+});
+
+const userSession = session({
+  name: 'user_sid',
   secret: process.env.SESSION_SECRET || 'fallback_secret',
   resave: false,
   saveUninitialized: false,
@@ -39,7 +54,15 @@ app.use(session({
   cookie: {
     maxAge: 1000 * 60 * 60 * 24 // 1 day
   }
-}));
+});
+
+app.use((req, res, next) => {
+  if (req.path.startsWith('/admin')) {
+    adminSession(req, res, next);
+  } else {
+    userSession(req, res, next);
+  }
+});
 
 // ---------- PASSPORT ----------
 app.use(passport.initialize());

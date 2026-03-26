@@ -9,6 +9,9 @@ exports.isLoggedIn = (req, res, next) => {
 // Protect routes that should not be visible to logged in users (e.g., /login, /signup)
 exports.isLoggedOut = (req, res, next) => {
   if (req.isAuthenticated && req.isAuthenticated()) {
+    if (req.path.startsWith('/admin') || (req.user && req.user.role === 'admin')) {
+        return res.redirect("/admin/dashboard");
+    }
     return res.redirect("/");
   }
   next();

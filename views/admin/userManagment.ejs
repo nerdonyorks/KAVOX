@@ -672,90 +672,13 @@
                   </tr>
                 <% }); %>
               <% } else { %>
-                <!-- Demo Data -->
                 <tr>
-                  <td>101</td>
-                  <td>
-                    <div class="user-cell">
-                      <img src="https://i.pravatar.cc/32?img=1" alt="Hans Burger" class="user-avatar">
-                      <span class="user-name">Hans Burger</span>
+                  <td colspan="7" style="text-align: center; padding: 40px; color: #666;">
+                    <div style="font-size: 16px; margin-bottom: 10px;">
+                      No <%= typeof currentFilter !== 'undefined' && currentFilter !== 'all' ? currentFilter : '' %> users found
                     </div>
+                    <p style="font-size: 13px;">There are currently no users matching this criteria.</p>
                   </td>
-                  <td>sample@gmail.com</td>
-                  <td>6/10/2020</td>
-                  <td><button class="btn-block block">BLOCK</button></td>
-                </tr>
-                <tr>
-                  <td>102</td>
-                  <td>
-                    <div class="user-cell">
-                      <img src="https://i.pravatar.cc/32?img=5" alt="Jolina Angelo" class="user-avatar">
-                      <span class="user-name">Jolina Angelo</span>
-                    </div>
-                  </td>
-                  <td>sample@gmail.com</td>
-                  <td>6/10/2020</td>
-                  <td><button class="btn-block block">BLOCK</button></td>
-                </tr>
-                <tr>
-                  <td>103</td>
-                  <td>
-                    <div class="user-cell">
-                      <img src="https://i.pravatar.cc/32?img=3" alt="Sarah Curry" class="user-avatar">
-                      <span class="user-name">Sarah Curry</span>
-                    </div>
-                  </td>
-                  <td>sample@gmail.com</td>
-                  <td>6/10/2020</td>
-                  <td><button class="btn-block block">BLOCK</button></td>
-                </tr>
-                <tr>
-                  <td>104</td>
-                  <td>
-                    <div class="user-cell">
-                      <img src="https://i.pravatar.cc/32?img=8" alt="Rulia Joberts" class="user-avatar">
-                      <span class="user-name">Rulia Joberts</span>
-                    </div>
-                  </td>
-                  <td>sample@gmail.com</td>
-                  <td>6/10/2020</td>
-                  <td><button class="btn-block block">BLOCK</button></td>
-                </tr>
-                <tr>
-                  <td>105</td>
-                  <td>
-                    <div class="user-cell">
-                      <img src="https://i.pravatar.cc/32?img=9" alt="Jolina Angelo" class="user-avatar">
-                      <span class="user-name">Jolina Angelo</span>
-                    </div>
-                  </td>
-                  <td>sample@gmail.com</td>
-                  <td>6/10/2020</td>
-                  <td><button class="btn-block unblock">UNBLOCK</button></td>
-                </tr>
-                <tr>
-                  <td>106</td>
-                  <td>
-                    <div class="user-cell">
-                      <img src="https://i.pravatar.cc/32?img=11" alt="Sarah Curry" class="user-avatar">
-                      <span class="user-name">Sarah Curry</span>
-                    </div>
-                  </td>
-                  <td>sample@gmail.com</td>
-                  <td>6/10/2020</td>
-                  <td><button class="btn-block block">BLOCK</button></td>
-                </tr>
-                <tr>
-                  <td>107</td>
-                  <td>
-                    <div class="user-cell">
-                      <img src="https://i.pravatar.cc/32?img=12" alt="Rulia Joberts" class="user-avatar">
-                      <span class="user-name">Rulia Joberts</span>
-                    </div>
-                  </td>
-                  <td>sample@gmail.com</td>
-                  <td>6/10/2020</td>
-                  <td><button class="btn-block block">BLOCK</button></td>
                 </tr>
               <% } %>
             </tbody>

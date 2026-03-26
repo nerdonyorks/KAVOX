@@ -6,9 +6,32 @@ exports.renderHome = (req, res) => res.render("user/home");
 
 exports.renderSignup = (req, res) => res.render("user/signup");
 
-exports.renderLogin = (req, res) => res.render("user/login");
+exports.renderLogin = (req, res) => {
+    const { error } = req.query;
+    let errorMessage = null;
 
-exports.renderOtpVerify = (req, res) => res.render("user/otp-verify");
+    if (error === 'suspended') {
+        errorMessage = "Your account has been suspended. Please contact support.";
+    }
+
+    res.render("user/login", { error: errorMessage });
+};
+
+exports.renderOtpVerify = (req, res) => {
+    // Check for active OTP sessions
+    const hasSignupSession = !!req.session.signupData;
+    const hasEmailChangeSession = !!req.session.pendingEmail;
+
+    if (!hasSignupSession && !hasEmailChangeSession) {
+        // If logged in, go to account, otherwise to login
+        if (req.isAuthenticated && req.isAuthenticated()) {
+            return res.redirect("/account");
+        }
+        return res.redirect("/login");
+    }
+
+    res.render("user/otp-verify");
+};
 
 exports.renderForgotPassword = (req, res) => res.render("user/forgot-password");
 
@@ -21,8 +44,6 @@ exports.renderResetPassword = (req, res) => {
 };
 
 exports.renderNewPassword = (req, res) => res.render("user/new-password");
-
-exports.renderCreatePassword = (req, res) => res.render("user/create-password");
 
 exports.renderAccount = async (req, res, next) => {
   try {
@@ -287,10 +308,16 @@ exports.updateProfilePassword = async (req, res, next) => {
     const user = await User.findById(userId);
     if (!user) return res.redirect("/login");
 
-    // 1. Verify old password
-    const isMatch = await user.comparePassword(oldPassword);
-    if (!isMatch) {
-      errors.oldPassword = "Old password is incorrect";
+    // 1. Verify old password (only if user has a password)
+    if (user.password) {
+      if (!oldPassword) {
+        errors.oldPassword = "Old password is required";
+      } else {
+        const isMatch = await user.comparePassword(oldPassword);
+        if (!isMatch) {
+          errors.oldPassword = "Old password is incorrect";
+        }
+      }
     }
 
     // 2. Validate new password complexity

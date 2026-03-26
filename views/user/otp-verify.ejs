@@ -365,6 +365,9 @@
                     </div>
                     <% } %>
 
+                        <!-- AJAX error message div -->
+                        <div id="ajaxErrorDiv" class="error-message" style="display: none; margin-bottom: 20px;"></div>
+
                         <form action="/verify-otp" method="POST" id="otpForm">
                             <!-- Read email from query params or passed variable, fallback to empty -->
                             <input type="hidden" name="email" id="userEmail"
@@ -398,200 +401,162 @@
     </div>
 
     <script>
-        // Check for email and signup info in query params if not set
-        const urlParams = new URLSearchParams(window.location.search);
-
-        const emailFromUrl = urlParams.get('email');
-        const emailInput = document.getElementById('userEmail');
-        if (emailFromUrl && !emailInput.value) {
-            emailInput.value = emailFromUrl;
-        }
-
-        const type = urlParams.get('type');
-        const flowTypeInput = document.getElementById('flowType');
-        if (type) {
-            flowTypeInput.value = type;
-        }
-
-        const nameFromUrl = urlParams.get('name');
-        if (nameFromUrl) document.getElementById('userName').value = nameFromUrl;
-
-        const refFromUrl = urlParams.get('referralCode');
-        if (refFromUrl) document.getElementById('userReferral').value = refFromUrl;
-
-
-        // Timer Logic
-        const TIMER_DURATION = 60;
-        const timerKey = `otp_timer_end_${emailInput.value}`;
-        
-        let timerEnd = localStorage.getItem(timerKey);
-        let timeLeft;
-
-        if (timerEnd) {
-            timeLeft = Math.max(0, Math.floor((parseInt(timerEnd) - Date.now()) / 1000));
-        } else {
-            timeLeft = TIMER_DURATION;
-            timerEnd = Date.now() + (TIMER_DURATION * 1000);
-            localStorage.setItem(timerKey, timerEnd);
-        }
-
-        const timerElement = document.getElementById('timerText');
-        const resendBtn = document.getElementById('resendOtpBtn');
-        let timerId;
-
-        function updateTimerDisplay() {
-            if (timeLeft > 0) {
-                timerElement.textContent = `(${timeLeft}s)`;
-                timerElement.style.display = 'inline';
-                resendBtn.style.pointerEvents = 'none';
-                resendBtn.style.color = '#999';
-            } else {
-                timerElement.style.display = 'none';
-                resendBtn.style.pointerEvents = 'auto';
-                resendBtn.style.color = '#3366cc';
-                localStorage.removeItem(timerKey);
-                clearInterval(timerId);
-            }
-        }
-
-        function startTimer(duration = TIMER_DURATION) {
-            timeLeft = duration;
-            timerEnd = Date.now() + (duration * 1000);
-            localStorage.setItem(timerKey, timerEnd);
+        // Use a self-invoking function to avoid global namespace pollution and ensure clean initialization
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const emailInput = document.getElementById('userEmail');
+            const flowTypeInput = document.getElementById('flowType');
+            const timerElement = document.getElementById('timerText');
+            const resendBtn = document.getElementById('resendOtpBtn');
+            const otpInputs = document.querySelectorAll('.otp-input');
+            const inlineError = document.getElementById('ajaxErrorDiv');
+            const inputFieldErrors = document.getElementById('otpInputError');
             
-            updateTimerDisplay();
+            // 1. Populate initial data from URL
+            const emailFromUrl = urlParams.get('email');
+            if (emailFromUrl && !emailInput.value) {
+                emailInput.value = emailFromUrl;
+            }
 
-            clearInterval(timerId);
-            timerId = setInterval(() => {
-                timeLeft = Math.max(0, Math.floor((parseInt(localStorage.getItem(timerKey)) - Date.now()) / 1000));
-                updateTimerDisplay();
-                if (timeLeft <= 0) clearInterval(timerId);
-            }, 1000);
-        }
+            const typeFromUrl = urlParams.get('type');
+            if (typeFromUrl) {
+                flowTypeInput.value = typeFromUrl;
+            }
 
-        // Initialize display
-        updateTimerDisplay();
-        if (timeLeft > 0) {
-            timerId = setInterval(() => {
-                timeLeft = Math.max(0, Math.floor((parseInt(localStorage.getItem(timerKey)) - Date.now()) / 1000));
-                updateTimerDisplay();
-                if (timeLeft <= 0) clearInterval(timerId);
-            }, 1000);
-        }
+            const nameFromUrl = urlParams.get('name');
+            if (nameFromUrl) document.getElementById('userName').value = nameFromUrl;
 
-        // Resend logic
-        resendBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            if (timeLeft > 0) return; // double check
+            const refFromUrl = urlParams.get('referralCode');
+            if (refFromUrl) document.getElementById('userReferral').value = refFromUrl;
 
+            // 2. Timer Setup
             const email = emailInput.value;
-            if (!email) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Email Missing',
-                    text: 'Email not provided for resending OTP',
-                    confirmButtonColor: '#ff1e56'
-                });
-                return;
-            }
-            try {
-                // Unified endpoint
-                const res = await fetch('/api/auth/resend-otp', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email })
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'OTP Resent',
-                        text: 'OTP resent to your email.',
-                        confirmButtonColor: '#ff1e56'
-                    });
-                    startTimer(); // Restart the lock
+            const TIMER_DURATION = 60;
+            const timerKey = `otp_timer_end_${email}`;
+            
+            let timerId;
+
+            function updateTimerDisplay(time) {
+                if (time > 0) {
+                    timerElement.textContent = `(${time}s)`;
+                    timerElement.style.display = 'inline';
+                    resendBtn.style.pointerEvents = 'none';
+                    resendBtn.style.color = '#999';
                 } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Failed to Resend',
-                        text: data.message || 'Failed to resend OTP.',
-                        confirmButtonColor: '#ff1e56'
-                    });
+                    timerElement.style.display = 'none';
+                    resendBtn.style.pointerEvents = 'auto';
+                    resendBtn.style.color = '#3366cc';
+                    if (email) localStorage.removeItem(timerKey);
+                    clearInterval(timerId);
                 }
-            } catch (err) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Server Error',
-                    text: 'An error occurred while resending OTP.',
-                    confirmButtonColor: '#ff1e56'
-                });
             }
-        });
 
-        // Auto-focus next input on entry
-        const otpInputs = document.querySelectorAll('.otp-input');
-
-        otpInputs.forEach((input, index) => {
-            input.addEventListener('input', (e) => {
-                const value = e.target.value;
-
-                // Only allow numbers
-                if (!/^\d*$/.test(value)) {
-                    e.target.value = '';
-                    return;
+            function startTimer(duration) {
+                clearInterval(timerId);
+                let finishTime = localStorage.getItem(timerKey);
+                
+                // If no finishTime exists in localStorage, this is a "fresh" arrival or resend
+                if (!finishTime) {
+                    finishTime = Date.now() + (duration * 1000);
+                    if (email) localStorage.setItem(timerKey, finishTime);
                 }
 
-                // Move to next input
-                if (value.length === 1 && index < otpInputs.length - 1) {
-                    otpInputs[index + 1].focus();
-                }
-            });
-
-            input.addEventListener('keydown', (e) => {
-                // Move to previous input on backspace
-                if (e.key === 'Backspace' && !e.target.value && index > 0) {
-                    otpInputs[index - 1].focus();
-                }
-            });
-
-            // Handle paste
-            input.addEventListener('paste', (e) => {
-                e.preventDefault();
-                const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 4);
-
-                pastedData.split('').forEach((char, i) => {
-                    if (otpInputs[i]) {
-                        otpInputs[i].value = char;
+                const tick = () => {
+                    const now = Date.now();
+                    const remaining = Math.max(0, Math.floor((parseInt(finishTime) - now) / 1000));
+                    updateTimerDisplay(remaining);
+                    if (remaining <= 0) {
+                        clearInterval(timerId);
                     }
-                });
+                };
 
-                if (pastedData.length > 0) {
-                    const focusIndex = Math.min(pastedData.length, otpInputs.length - 1);
-                    otpInputs[focusIndex].focus();
-                }
-            });
-        });
-
-        // Combine OTP values before form submission
-        document.getElementById('otpForm').addEventListener('submit', (e) => {
-            const otp = Array.from(otpInputs).map(input => input.value).join('');
-            const errorDiv = document.getElementById('otpInputError');
-
-            if (otp.length < 4) {
-                e.preventDefault();
-                errorDiv.style.display = 'block';
-                return;
-            } else {
-                errorDiv.style.display = 'none';
+                tick(); // Run immediately to avoid 1s delay
+                timerId = setInterval(tick, 1000);
             }
 
-            // Create hidden input for combined OTP
-            const hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.name = 'otp';
-            hiddenInput.value = otp;
-            e.target.appendChild(hiddenInput);
-        });
+            // 3. Initialize Timer and UI
+            if (email) {
+                // If we have an email, start the 60s timer (it will resume if finishTime is in localStorage)
+                startTimer(TIMER_DURATION);
+            } else {
+                updateTimerDisplay(0);
+            }
+
+            // 4. Resend Logic
+            resendBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const currentEmail = emailInput.value;
+                if (!currentEmail) return;
+
+                try {
+                    const res = await fetch('/api/auth/resend-otp', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: currentEmail })
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        Swal.fire({ icon: 'success', title: 'OTP Resent', text: 'OTP resent to your email.', confirmButtonColor: '#ff1e56' });
+                        localStorage.removeItem(timerKey); // Clear old timer so startTimer creates a fresh one
+                        startTimer(TIMER_DURATION);
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Failed to Resend', text: data.message || 'Failed to resend OTP.', confirmButtonColor: '#ff1e56' });
+                    }
+                } catch (err) {
+                    Swal.fire({ icon: 'error', title: 'Server Error', text: 'An error occurred while resending OTP.', confirmButtonColor: '#ff1e56' });
+                }
+            });
+
+            // 5. Input Auto-focus & Paste Logic
+            otpInputs.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    if (!/^\d*$/.test(e.target.value)) { e.target.value = ''; return; }
+                    if (e.target.value.length === 1 && index < otpInputs.length - 1) otpInputs[index + 1].focus();
+                });
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) otpInputs[index - 1].focus();
+                });
+                input.addEventListener('paste', (e) => {
+                    e.preventDefault();
+                    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 4);
+                    pastedData.split('').forEach((char, i) => { if (otpInputs[i]) otpInputs[i].value = char; });
+                    if (pastedData.length > 0) otpInputs[Math.min(pastedData.length, otpInputs.length - 1)].focus();
+                });
+            });
+
+            // 6. AJAX Verification Logic
+            document.getElementById('otpForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const otp = Array.from(otpInputs).map(input => input.value).join('');
+                const currentEmail = emailInput.value;
+                const currentType = flowTypeInput.value;
+
+                inlineError.style.display = 'none';
+                inputFieldErrors.style.display = 'none';
+
+                if (otp.length < 4) { inputFieldErrors.style.display = 'block'; return; }
+
+                try {
+                    const response = await fetch('/verify-otp', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                        body: JSON.stringify({ email: currentEmail, otp, type: currentType })
+                    });
+                    const data = await response.json();
+                    if (response.ok && data.success) {
+                        window.location.href = data.redirect;
+                    } else {
+                        inlineError.textContent = data.message || 'Invalid or expired OTP. Please try again.';
+                        inlineError.style.display = 'block';
+                        otpInputs.forEach(input => input.value = '');
+                        otpInputs[0].focus();
+                    }
+                } catch (err) {
+                    inlineError.textContent = 'An error occurred during verification. Please try again.';
+                    inlineError.style.display = 'block';
+                }
+            });
+        })();
     </script>
 </body>
 

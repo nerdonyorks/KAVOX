@@ -156,3 +156,19 @@ exports.renderUserDetails = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.logoutAdmin = (req, res) => {
+    req.logout((err) => {
+        if (err) {
+            console.error("Admin Logout Error:", err);
+            return res.redirect("/admin/dashboard");
+        }
+        req.session.destroy((err) => {
+            if (err) {
+                console.error("Admin Session Destroy Error:", err);
+            }
+            res.clearCookie('admin_sid');
+            res.redirect("/admin/login");
+        });
+    });
+};
