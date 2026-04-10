@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="user-layout">
+  <%- include('../partials/user-header') %>
+
+  <main class="product-details-container">
+    <!-- Breadcrumbs -->
+    <nav class="breadcrumbs">
+      <a href="/">Home</a>
+      <span>&rsaquo;</span>
+      <a href="/shop">Shop</a>
+      <span>&rsaquo;</span>
+      <a href="/shop?category=<%= product.category._id %>"><%= product.category.name %></a>
+      <span>&rsaquo;</span>
+      <span><%= (product.name.length > 30) ? product.name.substring(0, 30) + '...' : product.name %></span>
+    </nav>
+
+    <div class="product-main">
+      <!-- Image Gallery -->
+      <div class="product-gallery">
+        <div class="thumbnail-list">
+          <% 
+            const allImages = product.variants.filter(v => v.isActive).flatMap(v => v.images);
+            const uniqueImages = [...new Map(allImages.map(img => [img.url, img])).values()];
+          %>
+          <% uniqueImages.forEach((img, index) => { %>
+            <div class="thumbnail-item <%= index === 0 ? 'active' : '' %>" onclick="changeMainImage('<%= img.url %>', this)">
+              <img src="<%= img.url %>" alt="Thumbnail <%= index + 1 %>">
+            </div>
+          <% }) %>
+        </div>
+        <div class="main-image-container" id="mainImageContainer" onmousemove="zoomImage(event)" onmouseleave="resetZoom()">
+          <img id="mainProductImage" src="<%= uniqueImages[0]?.url || '/images/placeholder.jpg' %>" alt="<%= product.name %>">
+          <div id="zoomLens" class="zoom-lens"></div>
+        </div>
+      </div>
+
+      <!-- Product Info Panel -->
+      <div class="product-info-panel">
+        <span class="product-brand-details"><%= product.brand || 'KAVOX Original' %></span>
+        <h1><%= product.name %></h1>
+        
+        <div class="rating-summary" style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+          <span style="background: #22c55e; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 14px; font-weight: 700;">4.5 ★</span>
+          <span style="color: #888; font-size: 13px;">(124 Reviews)</span>
+        </div>
+
+        <div class="pricing-panel">
+          <% 
+            const discount = product.productOffer || 0;
+            const finalPrice = Math.round(product.price * (1 - discount/100));
+          %>
+          <span class="final-price-lg">₹<%= finalPrice %></span>
+          <% if (discount > 0) { %>
+            <span class="base-price-lg">₹<%= product.price %></span>
+            <span class="discount-badge-lg"><%= discount %>% OFF</span>
+          <% } %>
+        </div>
+
+        <!-- Stock Status -->
+        <div class="stock-status">
+          <% 
+            const totalStock = product.variants.reduce((acc, v) => acc + (v.isActive ? v.quantity : 0), 0);
+            let stockClass = 'stock-in';
+            let stockText = 'In Stock';
+            if (totalStock <= 0) {
+              stockClass = 'stock-out';
+              stockText = 'Out of Stock';
+            } else if (totalStock < 10) {
+              stockClass = 'stock-low';
+              stockText = `Only ${totalStock} left!`;
+            }
+          %>
+          <span class="stock-badge <%= stockClass %>"><%= stockText %></span>
+        </div>
+
+        <!-- Variants Selection -->
+        <div class="variant-selection">
+          <span class="variant-title">Available Sizes</span>
+          <div class="size-list">
+            <% 
+              const sizes = [...new Set(product.variants.filter(v => v.isActive).map(v => v.size))];
+            %>
+            <% sizes.forEach(size => { %>
+              <div class="size-item" data-size="<%= size %>" onclick="selectSize('<%= size %>', this)"><%= size %></div>
+            <% }) %>
+          </div>
+        </div>
+
+        <div class="variant-selection">
+          <span class="variant-title">Select Color</span>
+          <div class="color-list">
+            <% 
+              const colors = [...new Set(product.variants.filter(v => v.isActive).map(v => v.color))];
+            %>
+            <% colors.forEach(color => { %>
+              <div class="color-item" style="background: <%= color.toLowerCase() === 'white' ? '#fff' : color.toLowerCase() %>" onclick="selectColor('<%= color %>', this)" title="<%= color %>"></div>
+            <% }) %>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="product-actions-panel">
+          <div class="quantity-control">
+            <button class="qty-btn" onclick="updateQty(-1)">-</button>
+            <input type="number" id="buyQty" class="qty-input" value="1" min="1" max="10" readonly>
+            <button class="qty-btn" onclick="updateQty(1)">+</button>
+          </div>
+          <button class="btn-add-cart" onclick="addToCart('<%= product._id %>')">Add to Cart</button>
+          <button class="btn-buy-now" onclick="buyNow('<%= product._id %>')">Buy Now</button>
+        </div>
+
+        <!-- Highlights -->
+        <div class="product-highlights">
+          <span class="variant-title">Product Highlights</span>
+          <ul style="padding-left: 20px; font-size: 14px; color: #666; display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+            <li>100% Genuine Product</li>
+            <li>Premium Quality Material</li>
+            <li>Easy 7 Days Return Policy</li>
+            <li>Secure Payment Options</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="product-tabs">
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('description', this)">Description</button>
+        <button class="tab-btn" onclick="switchTab('specifications', this)">Specifications</button>
+        <button class="tab-btn" onclick="switchTab('reviews', this)">Reviews (124)</button>
+      </div>
+      <div id="description" class="tab-content">
+        <p><%= product.description %></p>
+      </div>
+      <div id="specifications" class="tab-content" style="display: none;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+           <tr style="border-bottom: 1px solid #eee;"><td style="padding: 12px; font-weight: 600; width: 200px;">Brand</td><td style="padding: 12px;"><%= product.brand || 'KAVOX' %></td></tr>
+           <tr style="border-bottom: 1px solid #eee;"><td style="padding: 12px; font-weight: 600;">Category</td><td style="padding: 12px;"><%= product.category.name %></td></tr>
+           <tr style="border-bottom: 1px solid #eee;"><td style="padding: 12px; font-weight: 600;">Upper Material</td><td style="padding: 12px;">Breathable Fabric</td></tr>
+           <tr style="border-bottom: 1px solid #eee;"><td style="padding: 12px; font-weight: 600;">Sole Material</td><td style="padding: 12px;">Rubber</td></tr>
+        </table>
+      </div>
+      <div id="reviews" class="tab-content" style="display: none;">
+        <div style="display: flex; gap: 40px; margin-top: 20px;">
+          <div style="flex: 0 0 200px;">
+            <div style="font-size: 48px; font-weight: 800; color: #000; margin-bottom: 5px;">4.5<span style="font-size: 20px; color: #888;">/5.0</span></div>
+            <div style="color: #22c55e; margin-bottom: 15px;">★★★★★</div>
+            <div style="font-size: 13px; color: #888;">Based on 124 Reviews</div>
+          </div>
+          <div style="flex: 1;">
+            <p style="font-style: italic; color: #666; margin-bottom: 20px;">"Extremely comfortable and high quality stuff. Highly recommend for daily wear!" - <strong>Sameer A.</strong></p>
+            <p style="font-style: italic; color: #666;">"The fit is perfect and the color is exactly as shown in the pictures." - <strong>Neha G.</strong></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Related Products -->
+    <% if (relatedProducts && relatedProducts.length > 0) { %>
+    <section class="related-products-section">
+      <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 30px; text-transform: uppercase;">You May Also Like</h2>
+      <div class="product-grid">
+        <% relatedProducts.forEach(rp => { %>
+          <%- include('partials/product-card', { product: rp }) %>
+        <% }) %>
+      </div>
+    </section>
+    <% } %>
+  </main>
+
+  <%- include('../partials/user-footer') %>
+  <script>
+    // Inject product variants data for frontend filtering
+    window.productId = '<%= product._id %>';
+    window.productVariants = <%- JSON.stringify(product.variants.filter(v => v.isActive)) %>;
+
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/js/product.js"></script>
+</body>
+</html>
+

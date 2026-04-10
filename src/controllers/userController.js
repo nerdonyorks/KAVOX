@@ -1,8 +1,46 @@
 const User = require("../models/userModel");
+const Product = require("../models/productModel");
 const otpService = require("../services/otpService");
 const emailService = require("../services/emailService");
+const { HTTP_STATUS, MESSAGES } = require("../utils/constants");
+const sharp = require("sharp");
+const fs = require("fs").promises;
 
-exports.renderHome = (req, res) => res.render("user/home");
+exports.renderHome = async (req, res) => {
+    try {
+        const { search } = req.query;
+        let query = { isActive: true };
+
+        if (search) {
+            query.name = { $regex: search, $options: 'i' };
+        }
+
+        let products = await Product.find(query).sort({ createdAt: -1 }).lean();
+
+        // Seed data if empty (for demo)
+        if (products.length === 0 && !search) {
+            const demoProducts = [
+                { name: "Athleisure Shoes for Men", description: "Comfortable athletic shoes", price: 2799, originalPrice: 3499, discount: 20, image: "/images/products/shoe1.jpg", category: "Men", stock: 10 },
+                { name: "Men's Athleisure Shoes", description: "Versatile men's shoes", price: 1199, originalPrice: 1499, discount: 20, image: "/images/products/shoe2.jpg", category: "Men", stock: 15 },
+                { name: "Lifestyle Men's Casual Shoes", description: "Casual everyday shoes", price: 1499, originalPrice: 1799, discount: 15, image: "/images/products/shoe3.jpg", category: "Men", stock: 8 },
+                { name: "Lifestyle Casual Shoes for Men", description: "Stylish lifestyle shoes", price: 2899, originalPrice: 3499, discount: 20, image: "/images/products/shoe4.jpg", category: "Men", stock: 12 },
+                { name: "White Casual Shoes for Men", description: "Classic white casuals", price: 2499, originalPrice: 3399, discount: 25, image: "/images/products/shoe5.jpg", category: "Men", stock: 20 },
+                { name: "Men's Walking Slip-On Shoes", description: "Easy walking shoes", price: 1999, originalPrice: 2499, discount: 15, image: "/images/products/shoe6.jpg", category: "Men", stock: 18 }
+            ];
+            await Product.insertMany(demoProducts);
+            products = await Product.find(query).sort({ createdAt: -1 }).lean();
+        }
+
+        if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+            return res.json({ success: true, products });
+        }
+
+        res.render("user/home", { products });
+    } catch (err) {
+        console.error("Home render error:", err);
+        res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).render("user/error", { message: MESSAGES.HOME_PAGE_LOAD_FAILED });
+    }
+};
 
 exports.renderSignup = (req, res) => res.render("user/signup");
 
@@ -11,7 +49,7 @@ exports.renderLogin = (req, res) => {
     let errorMessage = null;
 
     if (error === 'suspended') {
-        errorMessage = "Your account has been suspended. Please contact support.";
+        errorMessage = MESSAGES.ACCOUNT_SUSPENDED;
     }
 
     res.render("user/login", { error: errorMessage });
@@ -86,13 +124,28 @@ exports.uploadProfileImage = async (req, res, next) => {
     }
 
     const userId = req.user.id;
-    const imagePath = `/uploads/users/${req.file.filename}`;
+    const inputPath = req.file.path;
+    
+    // Optimize with sharp
+    const buffer = await sharp(inputPath)
+      .resize(500, 500, { fit: "cover" })
+      .jpeg({ quality: 80 })
+      .toBuffer();
+    
+    await fs.writeFile(inputPath, buffer);
 
+    const imagePath = `/uploads/users/${req.file.filename}`;
     await User.findByIdAndUpdate(userId, { profileImage: imagePath });
 
+    if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+        return res.json({ success: true, message: "Profile image updated successfully", imagePath });
+    }
     res.redirect("/account");
   } catch (error) {
     console.error("Profile Image Upload Error:", error);
+    if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+        return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: error.message });
+    }
     next(error);
   }
 };
@@ -132,9 +185,9 @@ exports.updateProfile = async (req, res, next) => {
         // Check if new email is already taken
         const existingUser = await User.findOne({ email });
         if (existingUser && existingUser._id.toString() !== userId) {
-            return res.render("user/editProfile", { 
+            return res.status(HTTP_STATUS.BAD_REQUEST).render("user/editProfile", { 
                 user: user, 
-                error: "This email address is already in use by another account." 
+                error: MESSAGES.EMAIL_TAKEN 
             });
         }
 
@@ -171,6 +224,16 @@ exports.updateProfile = async (req, res, next) => {
         user.phone = mobile;
     }
     if (isImageChanged) {
+        const inputPath = req.file.path;
+        
+        // Optimize with sharp
+        const buffer = await sharp(inputPath)
+            .resize(500, 500, { fit: "cover" })
+            .jpeg({ quality: 80 })
+            .toBuffer();
+        
+        await fs.writeFile(inputPath, buffer);
+
         user.profileImage = `/uploads/users/${req.file.filename}`;
     }
 
@@ -184,24 +247,36 @@ exports.updateProfile = async (req, res, next) => {
     req.session.save((err) => {
         if (err) {
             console.error("Session Save Error:", err);
-            return res.status(500).render("user/editProfile", { user, error: "Failed to save session. Please try again." });
+            if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+                return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: MESSAGES.SESSION_SAVE_ERROR });
+            }
+            return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).render("user/editProfile", { user, error: MESSAGES.SESSION_SAVE_ERROR });
+        }
+        if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+            return res.json({ success: true, message: "Profile updated successfully" });
         }
         return res.redirect("/account");
     });
     
   } catch (error) {
     console.error("Profile Update Error Details:", error);
-    let errorMessage = "An error occurred while updating your profile.";
+    let errorMessage = MESSAGES.INTERNAL_SERVER_ERROR;
     
     if (error.name === 'ReferenceError' && error.message.includes('otpService')) {
-        errorMessage = "System error: OTP service is missing. Please contact support.";
+        errorMessage = MESSAGES.OTP_SERVICE_MISSING;
     } else if (error.name === 'ValidationError') {
         errorMessage = Object.values(error.errors).map(val => val.message).join(", ");
     } else if (error.code === 11000) {
-        errorMessage = "Email address is already in use.";
+        errorMessage = MESSAGES.EMAIL_TAKEN;
     }
     
     const user = await User.findById(req.user?.id);
+    if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ 
+            success: false, 
+            message: errorMessage 
+        });
+    }
     res.render("user/editProfile", { user, error: errorMessage });
   }
 };
@@ -231,10 +306,10 @@ exports.addAddress = async (req, res, next) => {
     const newAddress = {
       firstName: firstName,
       lastName: lastName,
-      addressLine: street,
+      street: street,
       city: city,
       state: state,
-      pin: pincode,
+      pincode: pincode,
       isDefault: false,
       type: type || 'HOME',
       mobile: mobile
@@ -250,9 +325,23 @@ exports.addAddress = async (req, res, next) => {
     user.addresses.push(newAddress);
     await user.save();
 
+    if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        return res.status(HTTP_STATUS.CREATED).json({ 
+            success: true, 
+            message: MESSAGES.ADDRESS_ADDED, 
+            address: newAddress 
+        });
+    }
+
     res.redirect("/user/address");
   } catch (error) {
     console.error("Add Address Error:", error);
+    if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ 
+            success: false, 
+            message: MESSAGES.INTERNAL_SERVER_ERROR 
+        });
+    }
     next(error);
   }
 };
@@ -267,9 +356,22 @@ exports.deleteAddress = async (req, res, next) => {
       $pull: { addresses: { _id: addressId } }
     });
 
+    if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        return res.status(HTTP_STATUS.OK).json({ 
+            success: true, 
+            message: MESSAGES.ADDRESS_DELETED 
+        });
+    }
+
     res.redirect("/user/address");
   } catch (error) {
     console.error("Delete Address Error:", error);
+    if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ 
+            success: false, 
+            message: MESSAGES.INTERNAL_SERVER_ERROR 
+        });
+    }
     next(error);
   }
 };
@@ -289,9 +391,22 @@ exports.setDefaultAddress = async (req, res, next) => {
       await user.save();
     }
 
+    if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        return res.status(HTTP_STATUS.OK).json({ 
+            success: true, 
+            message: MESSAGES.ADDRESS_UPDATED 
+        });
+    }
+
     res.redirect("/user/address");
   } catch (error) {
     console.error("Set Default Address Error:", error);
+    if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ 
+            success: false, 
+            message: MESSAGES.INTERNAL_SERVER_ERROR 
+        });
+    }
     next(error);
   }
 };
@@ -311,11 +426,11 @@ exports.updateProfilePassword = async (req, res, next) => {
     // 1. Verify old password (only if user has a password)
     if (user.password) {
       if (!oldPassword) {
-        errors.oldPassword = "Old password is required";
+        errors.oldPassword = MESSAGES.OLD_PASSWORD_REQUIRED;
       } else {
         const isMatch = await user.comparePassword(oldPassword);
         if (!isMatch) {
-          errors.oldPassword = "Old password is incorrect";
+          errors.oldPassword = MESSAGES.OLD_PASSWORD_INCORRECT;
         }
       }
     }
@@ -323,17 +438,17 @@ exports.updateProfilePassword = async (req, res, next) => {
     // 2. Validate new password complexity
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
     if (!passwordRegex.test(newPassword)) {
-      errors.newPassword = "New password must contain uppercase, lowercase, number and symbol";
+      errors.newPassword = MESSAGES.NEW_PASSWORD_COMPLEXITY;
     }
 
     // 3. Confirm password match
     if (newPassword !== confirmPassword) {
-      errors.confirmPassword = "Passwords do not match";
+      errors.confirmPassword = MESSAGES.PASSWORDS_NOT_MATCH;
     }
 
     if (Object.keys(errors).length > 0) {
       if (req.xhr || req.headers.accept.indexOf('json') > -1) {
-        return res.status(400).json({ success: false, errors });
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, errors });
       }
       return res.render("user/resetPassword", { 
         user: req.user, 
@@ -348,10 +463,19 @@ exports.updateProfilePassword = async (req, res, next) => {
     user.password = newPassword; 
     await user.save(); // pre-save hook handles hashing
 
-    res.json({ success: true, message: "Password updated successfully" });
+    res.status(HTTP_STATUS.OK).json({ 
+        success: true, 
+        message: MESSAGES.PASSWORD_UPDATED 
+    });
 
   } catch (error) {
     console.error("Update Password Error:", error);
+    if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ 
+            success: false, 
+            message: MESSAGES.INTERNAL_SERVER_ERROR 
+        });
+    }
     next(error);
   }
 };
@@ -388,23 +512,33 @@ exports.updateAddress = async (req, res, next) => {
     }
 
     // Update the address fields
-    address.firstName = firstName; // The schema doesn't have firstName/lastName, it was passed in addAddress but not saved?
-    address.lastName = lastName;   // Looking back at addAddress, it only saved street, city, etc.
-    
-    // Actually the userModel.js addressSchema showed:
-    // type, addressLine (street), city, state, pin, mobile, isDefault
-
-    address.addressLine = street;
+    address.firstName = firstName;
+    address.lastName = lastName;
+    address.street = street;
     address.city = city;
     address.state = state;
-    address.pin = pincode;
+    address.pincode = pincode;
+    address.type = type || 'HOME';
     address.mobile = mobile;
-    address.type = type;
 
     await user.save();
+
+    if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        return res.status(HTTP_STATUS.OK).json({ 
+            success: true, 
+            message: MESSAGES.ADDRESS_UPDATED 
+        });
+    }
+
     res.redirect("/user/address");
   } catch (error) {
     console.error("Update Address Error:", error);
+    if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ 
+            success: false, 
+            message: MESSAGES.INTERNAL_SERVER_ERROR 
+        });
+    }
     next(error);
   }
 };

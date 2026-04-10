@@ -5,10 +5,10 @@ const addressSchema = new mongoose.Schema({
   firstName: String,
   lastName: String,
   type: { type: String, default: "HOME" },
-  addressLine: String,
+  street: String,
   city: String,
   state: String,
-  pin: String,
+  pincode: String,
   mobile: String,
   isDefault: { type: Boolean, default: false }
 });

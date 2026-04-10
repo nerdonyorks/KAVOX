@@ -5,12 +5,15 @@ const createAdmin = async () => {
   try {
 
     const adminExists = await User.findOne({ email: "admin@gmail.com" });
-
-    const hashedPassword = await bcrypt.hash("Admin@123", 10);
-
     if (adminExists) {
-      // Update existing admin password to match the one in this script
-      await User.findOneAndUpdate({ email: "admin@gmail.com" }, { password: hashedPassword });
+      // Pass plain password, model will hash it on save()
+      adminExists.password = "Admin@123";
+      await adminExists.save();
+      
+      // Verification log
+      const isCorrect = await adminExists.comparePassword("Admin@123");
+      console.log(`[AUTH] Admin password verified on startup: ${isCorrect}`);
+      
       console.log("Admin already exist");
       return;
     }
@@ -18,7 +21,7 @@ const createAdmin = async () => {
     const admin = new User({
       name: "Admin",
       email: "admin@gmail.com",
-      password: hashedPassword,
+      password: "Admin@123",
       role: "admin",
       isActive: true
     });

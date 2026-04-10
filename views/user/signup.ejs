@@ -8,6 +8,8 @@
   <!-- SweetAlert2 -->
   <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.all.min.js"></script>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/shimmer.js"></script>
   <style>
     * {
       margin: 0;
@@ -589,7 +591,8 @@
       });
 
       // Form Submission Validation
-      form.addEventListener('submit', (e) => {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
         const isFirstNameValid = validateField('firstName');
         const isLastNameValid = validateField('lastName');
         const isEmailValid = validateField('email');
@@ -598,7 +601,45 @@
         const isConfPwdValid = validateField('confirmPassword');
 
         if (!isFirstNameValid || !isLastNameValid || !isEmailValid || !isRefValid || !isPwdValid || !isConfPwdValid) {
-          e.preventDefault();
+          return;
+        }
+
+        const signupBtn = document.getElementById('signupBtn');
+        signupBtn.classList.add('btn-loading');
+        signupBtn.disabled = true;
+
+        try {
+          const formData = new FormData(form);
+          const dataObj = Object.fromEntries(formData.entries());
+          
+          const response = await fetch('/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify(dataObj)
+          });
+          
+          const result = await response.json();
+          if (result.success) {
+            window.location.href = result.redirect;
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Signup Error',
+              text: result.message || 'Signup failed',
+              confirmButtonColor: '#e91e63'
+            });
+          }
+        } catch (error) {
+          console.error('Signup Error:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An internal error occurred',
+            confirmButtonColor: '#e91e63'
+          });
+        } finally {
+          signupBtn.classList.remove('btn-loading');
+          signupBtn.disabled = false;
         }
       });
     });

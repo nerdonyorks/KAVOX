@@ -7,6 +7,8 @@
   <!-- SweetAlert2 -->
   <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.all.min.js"></script>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/shimmer.js"></script>
   <style>
     * {
       margin: 0;
@@ -464,12 +466,12 @@
           const validateEmail = () => {
             const email = emailInput.value.trim();
             if (!email) {
-              showError('email', 'Email is required');
+              showError('email', '<%= MESSAGES.EMAIL_REQUIRED %>');
               return false;
             }
             const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailPattern.test(email)) {
-              showError('email', 'Please enter a valid email address');
+              showError('email', '<%= MESSAGES.INVALID_EMAIL_FORMAT %>');
               return false;
             }
             hideError('email');
@@ -479,7 +481,7 @@
           const validatePassword = () => {
             const password = passwordInput.value.trim();
             if (!password) {
-              showError('password', 'Password is required');
+              showError('password', '<%= MESSAGES.PASSWORD_REQUIRED %>');
               return false;
             }
             hideError('password');
@@ -489,11 +491,52 @@
           emailInput.addEventListener('input', validateEmail);
           passwordInput.addEventListener('input', validatePassword);
 
-          form.addEventListener('submit', (e) => {
+          form.addEventListener('submit', async (e) => {
+            e.preventDefault();
             const isEmailValid = validateEmail();
             const isPasswordValid = validatePassword();
-            if (!isEmailValid || !isPasswordValid) {
-              e.preventDefault();
+            if (!isEmailValid || !isPasswordValid) return;
+
+            const submitBtn = form.querySelector('.login-btn');
+            submitBtn.classList.add('btn-loading');
+            submitBtn.disabled = true;
+
+            try {
+              const email = emailInput.value.trim();
+              const password = passwordInput.value.trim();
+              
+              const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ email, password })
+              });
+              
+              const data = await response.json();
+              if (data.success) {
+                window.location.href = data.redirect || '/home';
+              } else {
+                submitBtn.classList.remove('btn-loading');
+                submitBtn.disabled = false;
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Login Error',
+                  text: data.message || data.error || 'Invalid email or password',
+                  confirmButtonColor: '#e91e63'
+                });
+              }
+            } catch (error) {
+              submitBtn.classList.remove('btn-loading');
+              submitBtn.disabled = false;
+              console.error('Login error:', error);
+              
+              // Only show "Connection Error" if it's a real network/parsing error
+              // But we try to be helpful if possible
+              Swal.fire({
+                icon: 'error',
+                title: 'Login Failed',
+                text: typeof error === 'string' ? error : 'An unexpected error occurred. Please try again.',
+                confirmButtonColor: '#e91e63'
+              });
             }
           });
         });

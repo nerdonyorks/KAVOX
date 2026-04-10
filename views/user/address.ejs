@@ -5,6 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Address - KAVOX SOLE LAB</title>
+    <!-- SweetAlert2 -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.all.min.js"></script>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/shimmer.js"></script>
     <style>
         * {
             margin: 0;
@@ -656,24 +661,69 @@
             mobileNav.classList.toggle('active');
         }
 
-        function deleteAddress(addressId) {
-            Swal.fire({
+        async function deleteAddress(addressId) {
+            const { isConfirmed } = await Swal.fire({
                 title: 'Are you sure?',
                 text: "You won't be able to revert this!",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#e91e63',
-                cancelButtonColor: '#d33',
+                cancelButtonButtonColor: '#d33',
                 confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = '/address/delete/' + addressId;
-                }
             });
+
+            if (isConfirmed) {
+                const mainContent = document.querySelector('.main-content');
+                mainContent.classList.add('is-loading-container');
+                try {
+                    const [response] = await Promise.all([
+                        fetch(`/api/users/addresses/${addressId}`, {
+                            method: 'DELETE',
+                            headers: { 'Accept': 'application/json' }
+                        }),
+                        new Promise(resolve => setTimeout(resolve, 600))
+                    ]);
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        Swal.fire('Deleted!', data.message, 'success').then(() => window.location.reload());
+                    } else {
+                        mainContent.classList.remove('is-loading-container');
+                        Swal.fire('Error', data.message || 'Failed to delete address', 'error');
+                    }
+                } catch (error) {
+                    mainContent.classList.remove('is-loading-container');
+                    console.error('Delete Address Error:', error);
+                    Swal.fire('Error', 'An internal error occurred', 'error');
+                }
+            }
         }
 
-        function setDefaultAddress(addressId) {
-            window.location.href = '/address/set-default/' + addressId;
+        async function setDefaultAddress(addressId) {
+            const mainContent = document.querySelector('.main-content');
+            mainContent.classList.add('is-loading-container');
+            try {
+                const [response] = await Promise.all([
+                    fetch(`/api/users/addresses/${addressId}/default`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        body: JSON.stringify({ isDefault: true })
+                    }),
+                    new Promise(resolve => setTimeout(resolve, 600))
+                ]);
+
+                const data = await response.json();
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    mainContent.classList.remove('is-loading-container');
+                    Swal.fire('Error', data.message || 'Failed to set default address', 'error');
+                }
+            } catch (error) {
+                mainContent.classList.remove('is-loading-container');
+                console.error('Set Default Address Error:', error);
+                Swal.fire('Error', 'An internal error occurred', 'error');
+            }
         }
     </script>
 </body>

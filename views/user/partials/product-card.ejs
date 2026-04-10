@@ -1,0 +1,48 @@
+<% const discount=product.productOffer || 0; const finalPrice=Math.round(product.price * (1 - discount/100)); %>
+  <div class="product-card">
+    <div class="product-image-wrapper">
+      <% if (discount> 0) { %>
+        <div class="badge-offer">-<%= discount %>% OFF</div>
+        <% } %>
+
+          <a href="/product/<%= product._id %>">
+            <% let imgSrc='/images/placeholder.jpg' ; if (product.images && product.images.length> 0) {
+              imgSrc = product.images.find(img => img.isPrimary)?.url || product.images[0].url;
+              } else if (product.image) {
+              imgSrc = product.image;
+              }
+              %>
+              <img src="<%= imgSrc %>" alt="<%= product.name %>" loading="lazy">
+          </a>
+
+          <button class="wishlist-btn" title="Add to Wishlist" onclick="toggleWishlist('<%= product._id %>')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path
+                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+              </path>
+            </svg>
+          </button>
+    </div>
+
+    <div class="product-card-info">
+      <span class="product-brand">
+        <%= product.brand || 'KAVOX' %>
+      </span>
+      <a href="/product/<%= product._id %>" class="product-name" title="<%= product.name %>">
+        <%= product.name %>
+      </a>
+
+      <div class="product-pricing">
+        <span class="final-price">₹<%= finalPrice %></span>
+        <% if (discount> 0) { %>
+          <span class="base-price">₹<%= product.price %></span>
+          <% } %>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="product-card-actions">
+        <button class="btn-action" onclick="addToCart('<%= product._id %>')">Add to Cart</button>
+        <button class="btn-action" onclick="buyNow('<%= product._id %>')">Buy Now</button>
+      </div>
+    </div>
+  </div>

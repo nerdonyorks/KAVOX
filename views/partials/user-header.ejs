@@ -1,0 +1,78 @@
+<header class="header">
+  <div class="logo-container">
+    <a href="/" style="text-decoration: none; display: flex; flex-direction: column;">
+      <img src="/images/logo.png" alt="KAVOX" class="logo-img">
+      <span class="logo-sub">SOLE LAB</span>
+    </a>
+  </div>
+
+  <div class="search-box">
+    <input type="text" id="globalSearchInput" placeholder="Search for products, brands & more" value="<%= locals.searchQuery || '' %>">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <circle cx="11" cy="11" r="8"></circle>
+      <path d="M21 21l-4.35-4.35"></path>
+    </svg>
+  </div>
+
+  <nav class="nav-links">
+    <a href="/">HOME</a>
+    <a href="/shop">SHOP</a>
+    <a href="/orders">ORDERS</a>
+  </nav>
+
+  <div class="header-icons">
+    <a href="/cart" title="Cart">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+      </svg>
+    </a>
+
+    <a href="/wishlist" title="Wishlist">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+      </svg>
+    </a>
+
+    <% if (locals.user) { %>
+      <a href="/account" title="Account">
+        <div class="profile-mini">
+          <% if (user.profileImage && user.profileImage !== "/images/default-user.png") { %>
+            <img src="<%= user.profileImage %>" alt="Profile">
+          <% } else { %>
+            <%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %>
+          <% } %>
+        </div>
+      </a>
+      <a href="/api/auth/logout" class="sign-in-btn" style="background-color:#333;">Logout</a>
+    <% } else { %>
+      <a href="/login" class="sign-in-btn">Sign In</a>
+    <% } %>
+  </div>
+
+  <button class="menu-toggle" onclick="toggleMobileNav()">
+    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </button>
+</header>
+
+<div class="mobile-nav" id="mobileNav">
+  <button class="mobile-nav-close" onclick="toggleMobileNav()">&times;</button>
+  <a href="/">HOME</a>
+  <a href="/shop">SHOP</a>
+  <a href="/orders">ORDERS</a>
+  <a href="/cart">CART</a>
+  <a href="/wishlist">WISHLIST</a>
+  <a href="/account">MY ACCOUNT</a>
+  <a href="/login">SIGN IN</a>
+</div>
+
+<script>
+  function toggleMobileNav() {
+    const nav = document.getElementById('mobileNav');
+    nav.classList.toggle('active');
+  }
+</script>

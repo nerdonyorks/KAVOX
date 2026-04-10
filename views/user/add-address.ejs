@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Address - KAVOX SOLE LAB</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/shimmer.js"></script>
     <style>
         * {
             margin: 0;
@@ -653,10 +655,13 @@
                         }
                     });
 
-                    form.addEventListener('submit', (e) => {
+                    form.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        
                         let isValid = true;
                         const fields = ['firstName', 'lastName', 'mobile', 'pincode', 'street', 'state', 'city', 'type'];
                         
+                        const formData = {};
                         fields.forEach(field => {
                             const input = document.getElementById(field);
                             if (!input.value.trim()) {
@@ -664,6 +669,7 @@
                                 isValid = false;
                             } else {
                                 hideError(field);
+                                formData[field] = input.value.trim();
                                 if (field === 'mobile') {
                                     if (!/^\d{10}$/.test(input.value)) {
                                         showError('mobile', 'Mobile number must be exactly 10 digits');
@@ -681,7 +687,33 @@
                         });
 
 
-                        if (!isValid) e.preventDefault();
+                        if (isValid) {
+                            const submitBtn = document.querySelector('.submit-btn');
+                            form.classList.add('is-loading', 'loading-overlay');
+                            submitBtn.classList.add('skeleton');
+                            submitBtn.disabled = true;
+                            
+                            try {
+                                const response = await fetch('/api/users/addresses', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                                    body: JSON.stringify(formData)
+                                });
+                                const data = await response.json();
+                                if (data.success) {
+                                    window.location.href = '/user/address';
+                                } else {
+                                    alert(data.message || 'Failed to add address');
+                                }
+                            } catch (error) {
+                                console.error('Add Address Error:', error);
+                                alert('An internal error occurred');
+                            } finally {
+                                form.classList.remove('is-loading', 'loading-overlay');
+                                submitBtn.classList.remove('skeleton');
+                                submitBtn.disabled = false;
+                            }
+                        }
                     });
                 });
             </script>

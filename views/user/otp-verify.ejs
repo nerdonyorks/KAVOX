@@ -8,6 +8,8 @@
     <!-- SweetAlert2 -->
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.all.min.js"></script>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/shimmer.js"></script>
     <style>
         * {
             margin: 0;
@@ -531,13 +533,19 @@
                 const currentEmail = emailInput.value;
                 const currentType = flowTypeInput.value;
 
-                inlineError.style.display = 'none';
-                inputFieldErrors.style.display = 'none';
+                const ajaxErrorDiv = document.getElementById('ajaxErrorDiv');
+                const otpInputError = document.getElementById('otpInputError');
+                const submitBtn = document.querySelector('button[type="submit"]');
 
-                if (otp.length < 4) { inputFieldErrors.style.display = 'block'; return; }
+                ajaxErrorDiv.style.display = 'none';
+                otpInputError.style.display = 'none';
+                submitBtn.classList.add('btn-loading');
+                submitBtn.disabled = true;
+
+                if (otp.length < 4) { otpInputError.style.display = 'block'; submitBtn.classList.remove('btn-loading'); submitBtn.disabled = false; return; }
 
                 try {
-                    const response = await fetch('/verify-otp', {
+                    const response = await fetch('/api/auth/verify-otp', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                         body: JSON.stringify({ email: currentEmail, otp, type: currentType })
@@ -546,14 +554,17 @@
                     if (response.ok && data.success) {
                         window.location.href = data.redirect;
                     } else {
-                        inlineError.textContent = data.message || 'Invalid or expired OTP. Please try again.';
-                        inlineError.style.display = 'block';
+                        ajaxErrorDiv.textContent = data.message || 'Invalid or expired OTP. Please try again.';
+                        ajaxErrorDiv.style.display = 'block';
                         otpInputs.forEach(input => input.value = '');
                         otpInputs[0].focus();
                     }
                 } catch (err) {
-                    inlineError.textContent = 'An error occurred during verification. Please try again.';
-                    inlineError.style.display = 'block';
+                    ajaxErrorDiv.textContent = 'An error occurred during verification. Please try again.';
+                    ajaxErrorDiv.style.display = 'block';
+                } finally {
+                    submitBtn.classList.remove('btn-loading');
+                    submitBtn.disabled = false;
                 }
             });
         })();

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+    <%= title %>
+  </title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="user-layout">
+  <%- include('../partials/user-header') %>
+
+    <main class="shop-container">
+      <!-- Sidebar Filters -->
+      <aside class="filters-sidebar">
+        <h2 class="shop-title-main">Shop</h2>
+
+        <form id="filterForm" action="/shop" method="GET">
+          <input type="hidden" name="search" value="<%= searchQuery %>">
+          <input type="hidden" name="sort" id="filterSort" value="<%= sort %>">
+
+          <!-- Price Accordion -->
+          <div class="filter-section">
+            <div class="filter-header"
+              onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+              <h3>Price Range</h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+            <div class="filter-content">
+              <div class="price-slider-container">
+                <div class="price-slider-track"></div>
+                <div class="price-slider-range" id="priceRangeLine"></div>
+                <input type="range" class="price-input-range" id="minPriceRange" min="100" max="5000" step="100"
+                  value="<%= minPrice || 100 %>">
+                <input type="range" class="price-input-range" id="maxPriceRange" min="100" max="5000" step="100"
+                  value="<%= maxPrice || 5000 %>">
+              </div>
+              <div class="price-display">
+                <span class="price-value" id="minPriceDisplay">₹<%= minPrice || 100 %></span>
+                <span class="price-value" id="maxPriceDisplay">₹<%= maxPrice || 5000 %></span>
+              </div>
+              <!-- Hidden inputs for actual form submission -->
+              <input type="hidden" name="minPrice" id="minPrice" value="<%= minPrice || 100 %>">
+              <input type="hidden" name="maxPrice" id="maxPrice" value="<%= maxPrice || 5000 %>">
+            </div>
+          </div>
+
+          <!-- Size Accordion -->
+          <div class="filter-section">
+            <div class="filter-header"
+              onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+              <h3>Size</h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+            <div class="filter-content">
+              <div class="size-grid">
+                <% [6, 7, 8, 9, 10, 11, 12].forEach(s=> { %>
+                  <label class="size-box">
+                    UK <%= s %>
+                      <input type="radio" name="size" value="<%= s %>" <%=locals.currentSize==s ? 'checked' : '' %>>
+                  </label>
+                  <% }) %>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category Accordion -->
+          <div class="filter-section">
+            <div class="filter-header"
+              onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+              <h3>Category</h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+            <div class="filter-content category-pills">
+              <label class="category-pill">
+                All
+                <input type="radio" name="category" value="all" <%=currentCategory==='all' ? 'checked' : '' %>>
+              </label>
+              <% categories.forEach(cat=> { %>
+                <label class="category-pill">
+                  <%= cat.name %>
+                    <input type="radio" name="category" value="<%= cat._id %>" <%=currentCategory==cat._id.toString()
+                      ? 'checked' : '' %>>
+                </label>
+                <% }) %>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="filter-actions">
+            <div class="filter-actions-row">
+              <button type="button" class="btn-filter-clear" onclick="clearFilters()">Clear</button>
+              <button type="submit" class="btn-filter-apply">Apply Filters</button>
+            </div>
+          </div>
+        </form>
+      </aside>
+
+      <!-- Main Content -->
+      <section class="shop-main">
+        <div class="shop-top-bar">
+          <div class="results-count">
+            Showing <%= products.length %> of <%= totalProducts %> products
+          </div>
+          <div class="custom-sort-wrapper" id="customSort">
+            <span class="sort-label">SORT BY:</span>
+            <div class="sort-trigger" onclick="toggleSortMenu()">
+              <span id="currentSortText">
+                <%= sort === 'newest' ? 'Newest First' : 
+                    sort === 'priceLowHigh' ? 'Price: Low to High' : 
+                    sort === 'priceHighLow' ? 'Price: High to Low' : 
+                    sort === 'nameAZ' ? 'Name: A to Z' : 'Newest First' %>
+              </span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+            <ul class="sort-options">
+              <li class="sort-item <%= sort === 'newest' ? 'active' : '' %>" onclick="updateSort('newest')">Newest First</li>
+              <li class="sort-item <%= sort === 'priceLowHigh' ? 'active' : '' %>" onclick="updateSort('priceLowHigh')">Price: Low to High</li>
+              <li class="sort-item <%= sort === 'priceHighLow' ? 'active' : '' %>" onclick="updateSort('priceHighLow')">Price: High to Low</li>
+              <li class="sort-item <%= sort === 'nameAZ' ? 'active' : '' %>" onclick="updateSort('nameAZ')">Name: A to Z</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <% if (products.length===0) { %>
+          <div class="empty-state" style="text-align: center; padding: 100px 0;">
+            <h3 style="font-size: 24px; color: #888;">No products found.</h3>
+            <a href="/shop" style="color: #e91e63; text-decoration: underline;">Clear filters</a>
+          </div>
+          <% } else { %>
+            <div class="product-grid">
+              <% products.forEach(product=> { %>
+                <%- include('partials/product-card', { product: product }) %>
+                  <% }) %>
+            </div>
+
+            <!-- Pagination -->
+            <% if (totalPages> 1) { %>
+              <div class="pagination-container">
+                <% const prevParams=new URLSearchParams(window.location.search); prevParams.set('page', Math.max(1,
+                  currentPage - 1)); const nextParams=new URLSearchParams(window.location.search);
+                  nextParams.set('page', Math.min(totalPages, currentPage + 1)); %>
+                  <a href="/shop?<%= prevParams.toString() %>"
+                    class="page-link <%= currentPage === 1 ? 'disabled' : '' %>">PREV</a>
+
+                  <% for(let i=1; i <=totalPages; i++) { const pParams=new URLSearchParams(window.location.search);
+                    pParams.set('page', i); %>
+                    <a href="/shop?<%= pParams.toString() %>"
+                      class="page-link <%= currentPage === i ? 'active' : '' %>">
+                      <%= i %>
+                    </a>
+                    <% } %>
+
+                      <a href="/shop?<%= nextParams.toString() %>"
+                        class="page-link <%= currentPage === totalPages ? 'disabled' : '' %>">NEXT</a>
+              </div>
+              <% } %>
+                <% } %>
+      </section>
+    </main>
+
+    <script>
+      const minInput = document.getElementById('minPriceRange');
+      const maxInput = document.getElementById('maxPriceRange');
+      const minDisplay = document.getElementById('minPriceDisplay');
+      const maxDisplay = document.getElementById('maxPriceDisplay');
+      const minHidden = document.getElementById('minPrice');
+      const maxHidden = document.getElementById('maxPrice');
+      const rangeLine = document.getElementById('priceRangeLine');
+
+      function updateSlider(e) {
+        let minVal = parseInt(minInput.value);
+        let maxVal = parseInt(maxInput.value);
+
+        if (maxVal - minVal < 500) {
+          if (e && e.target === minInput) {
+            minInput.value = maxVal - 500;
+          } else if (e && e.target === maxInput) {
+            maxInput.value = minVal + 500;
+          }
+        }
+
+        const minPercent = ((minInput.value - 100) / (5000 - 100)) * 100;
+        const maxPercent = ((maxInput.value - 100) / (5000 - 100)) * 100;
+
+        rangeLine.style.left = minPercent + '%';
+        rangeLine.style.width = (maxPercent - minPercent) + '%';
+
+        minDisplay.textContent = '₹' + minInput.value;
+        maxDisplay.textContent = '₹' + maxInput.value;
+
+        minHidden.value = minInput.value;
+        maxHidden.value = maxInput.value;
+      }
+
+      minInput.addEventListener('input', updateSlider);
+      maxInput.addEventListener('input', updateSlider);
+
+      // Initialize
+      updateSlider();
+
+      function toggleSortMenu() {
+        document.getElementById('customSort').classList.toggle('active');
+      }
+
+      window.addEventListener('click', function(e) {
+        if (!document.getElementById('customSort').contains(e.target)) {
+          document.getElementById('customSort').classList.remove('active');
+        }
+      });
+
+      function updateSort(val) {
+        document.getElementById('filterSort').value = val;
+        document.getElementById('filterForm').submit();
+      }
+
+      function clearFilters() {
+        window.location.href = '/shop';
+      }
+
+
+      function applySize(size) {
+        // Redundant with new form but kept for legacy if needed
+        const url = new URL(window.location.href);
+        url.searchParams.set('size', size);
+        window.location.href = url.toString();
+      }
+    </script>
+    <%- include('../partials/user-footer') %>
+      <script src="/js/shop.js"></script>
+</body>
+
+</html>

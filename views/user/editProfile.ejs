@@ -7,6 +7,12 @@
   <!-- SweetAlert2 -->
   <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.all.min.js"></script>
+  <!-- Cropper.js -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/shimmer.js"></script>
+  <script src="/js/cropperManager.js"></script>
   <style>
     * {
       margin: 0;
@@ -544,6 +550,7 @@
         font-size: 11px;
       }
     }
+
   </style>
 </head>
 <body>
@@ -636,7 +643,7 @@
           </script>
       <% } %>
 
-      <form action="/profile/update" method="POST" enctype="multipart/form-data">
+      <form id="editProfileForm" action="/profile/update" method="POST" enctype="multipart/form-data">
         <div class="profile-avatar-container">
           <label for="profileImage" class="profile-avatar" style="display: flex; align-items: center; justify-content: center; background: #f0f0f0;">
             <% if (user.profileImage && user.profileImage !== "/images/default-user.png") { %>
@@ -735,6 +742,8 @@
     </div>
   </main>
 
+  <%- include('../partials/cropperModal') %>
+
   <!-- Footer -->
   <footer class="footer">
     <div class="footer-content">
@@ -780,29 +789,34 @@
       document.getElementById('mobileNav').classList.toggle('active');
     }
 
-    // Profile picture preview
+    // Profile picture preview & Cropping
+    let croppedFile = null;
+
     document.getElementById('profileImage').addEventListener('change', function(e) {
       const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const preview = document.getElementById('profilePreview');
-          const placeholder = document.getElementById('avatarPlaceholder');
-          
-          preview.src = e.target.result;
-          preview.style.display = 'block';
-          
-          if (placeholder) {
-            placeholder.style.display = 'none';
-          }
-        };
-        reader.readAsDataURL(file);
-      }
+      if (!file) return;
+
+      CropperManager.init(file, {
+        aspectRatio: 1,
+        width: 400,
+        height: 400,
+        callback: (file, previewUrl) => {
+            if (file) {
+                croppedFile = file;
+                const preview = document.getElementById('profilePreview');
+                const placeholder = document.getElementById('avatarPlaceholder');
+                
+                preview.src = previewUrl;
+                preview.style.display = 'block';
+                if (placeholder) placeholder.style.display = 'none';
+            }
+        }
+      });
     });
 
     // Form Validation
     document.addEventListener('DOMContentLoaded', () => {
-      const form = document.querySelector('form[action="/profile/update"]');
+      const form = document.getElementById('editProfileForm');
       const firstNameInput = document.getElementById('firstName');
       const lastNameInput = document.getElementById('lastName');
       const mobileInput = document.getElementById('mobile');
@@ -889,50 +903,85 @@
       mobileInput.addEventListener('input', validateMobile);
       emailInput.addEventListener('input', validateEmail);
 
-      form.addEventListener('submit', (e) => {
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
         const isFirstNameValid = validateFirstName();
         const isLastNameValid = validateLastName();
         const isMobileValid = validateMobile();
         const isEmailValid = validateEmail();
 
         if (!isFirstNameValid || !isLastNameValid || !isMobileValid || !isEmailValid) {
-          e.preventDefault();
+          return;
+        }
+
+        // Start Premium Loading Experience
+        const profileCard = document.querySelector('.profile-card');
+        const submitBtn = document.querySelector('.update-btn');
+        
+        profileCard.classList.add('is-loading-container');
+        submitBtn.classList.add('btn-loading');
+        submitBtn.disabled = true;
+
+        try {
+          const formData = new FormData(this);
+          
+          // Replace profileImage with the cropped version if available
+          if (croppedFile) {
+            formData.set('profileImage', croppedFile);
+          }
+          
+          // Use minDelay (600ms) to ensure shimmer is visible
+          const [response] = await Promise.all([
+            fetch('/profile/update', {
+              method: 'POST',
+              body: formData,
+              headers: { 'Accept': 'application/json' }
+            }),
+            new Promise(resolve => setTimeout(resolve, 600))
+          ]);
+
+          const data = await response.json();
+
+          if (response.ok || data.success) {
+            if (data.redirect && data.redirect.includes('verify-otp')) {
+                window.location.href = data.redirect;
+            } else {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Profile Updated',
+                  text: 'Your profile has been saved successfully.',
+                  confirmButtonColor: '#e91e63'
+                }).then(() => {
+                  window.location.href = '/account';
+                });
+            }
+          } else {
+            profileCard.classList.remove('is-loading-container');
+            submitBtn.classList.remove('btn-loading');
+            submitBtn.disabled = false;
+            
+            Swal.fire({
+              icon: 'error',
+              title: 'Update Failed',
+              text: data.message || 'Could not update profile',
+              confirmButtonColor: '#e91e63'
+            });
+          }
+        } catch (error) {
+          profileCard.classList.remove('is-loading-container');
+          submitBtn.classList.remove('btn-loading');
+          submitBtn.disabled = false;
+          
+          console.error('Update Profile Error:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An internal error occurred. Please try again.',
+            confirmButtonColor: '#e91e63'
+          });
         }
       });
-    });
-
-    document.querySelector('form').addEventListener('submit', function(e) {
-      const fName = document.getElementById('firstName').value.trim();
-      const mobile = document.getElementById('mobile').value.trim();
-      const email = emailInput.value.trim();
-
-      // Clear errors
-      document.querySelectorAll('.error-msg').forEach(el => {
-        el.textContent = '';
-        el.style.display = 'none';
-      });
-      document.querySelectorAll('input').forEach(el => el.style.borderColor = '#ddd');
-
-      let isValid = true;
-
-      if (!fName) {
-        showError('firstName', 'First name is required');
-        isValid = false;
-      }
-
-      if (mobile && !/^\d{10}$/.test(mobile)) {
-        showError('mobile', 'Mobile number must be 10 digits');
-        isValid = false;
-      }
-
-      if (!email) {
-        showError('email', 'Email is required');
-        isValid = false;
-      }
-
-      if (!isValid) {
-        e.preventDefault();
-      }
     });
 
     function showError(id, msg) {
