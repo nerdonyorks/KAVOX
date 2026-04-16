@@ -5,10 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OTP Verification - KAVOX SOLE LAB</title>
-    <!-- SweetAlert2 -->
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.all.min.js"></script>
     <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/notifications.js"></script>
     <script src="/js/shimmer.js"></script>
     <style>
         * {
@@ -498,14 +496,14 @@
                     });
                     const data = await res.json();
                     if (res.ok) {
-                        Swal.fire({ icon: 'success', title: 'OTP Resent', text: 'OTP resent to your email.', confirmButtonColor: '#ff1e56' });
-                        localStorage.removeItem(timerKey); // Clear old timer so startTimer creates a fresh one
+                        KavoxNotify.toast('OTP resent to your email.', 'success');
+                        localStorage.removeItem(timerKey); 
                         startTimer(TIMER_DURATION);
                     } else {
-                        Swal.fire({ icon: 'error', title: 'Failed to Resend', text: data.message || 'Failed to resend OTP.', confirmButtonColor: '#ff1e56' });
+                        KavoxNotify.alert({ icon: 'error', title: 'Failed to Resend', text: data.message || 'Failed to resend OTP.' });
                     }
                 } catch (err) {
-                    Swal.fire({ icon: 'error', title: 'Server Error', text: 'An error occurred while resending OTP.', confirmButtonColor: '#ff1e56' });
+                    KavoxNotify.toast('An error occurred while resending OTP.', 'error');
                 }
             });
 

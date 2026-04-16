@@ -5,9 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>User Management - KAVOX Admin</title>
-  <!-- SweetAlert2 -->
-  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.all.min.js"></script>
+  <script src="/js/notifications.js"></script>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/shimmer.js"></script>
 </head>
@@ -129,7 +127,7 @@
           </div>
         </div>
     </main>
-
+    <script src="/js/notifications.js"></script>
     <script>
       function filterUsers(status) {
         const search = document.getElementById('searchInput').value;
@@ -138,21 +136,17 @@
 
       async function confirmToggleBlock(userId, isActivating) {
         const action = isActivating ? 'unblock' : 'block';
-        const color = isActivating ? '#4ade80' : '#ef4444';
         const checkbox = event.target;
         const switchLabel = checkbox.closest('.switch');
 
-        const { isConfirmed } = await Swal.fire({
+        const confirm = await KavoxNotify.confirm({
           title: `Are you sure?`,
           text: `You are about to ${action} this user.`,
           icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: color,
-          cancelButtonColor: '#6b7280',
-          confirmButtonText: `Yes, ${action}!`
+          confirmText: `Yes, ${action}!`
         });
 
-        if (isConfirmed) {
+        if (confirm.isConfirmed) {
           switchLabel.classList.add('switch-loading');
           checkbox.disabled = true;
           try {
@@ -162,14 +156,17 @@
             });
             const data = await response.json();
             if (data.success) {
-              Swal.fire('Success!', data.message, 'success').then(() => location.reload());
+              KavoxNotify.toast(data.message, 'success');
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
             } else {
-              Swal.fire('Error', data.message || 'Action failed', 'error');
+              KavoxNotify.alert({ title: 'Error', text: data.message || 'Action failed', icon: 'error' });
               checkbox.checked = !isActivating;
             }
           } catch (err) {
             console.error('Toggle Block Error:', err);
-            Swal.fire('Error', 'An internal error occurred', 'error');
+            KavoxNotify.toast('An internal error occurred', 'error');
             checkbox.checked = !isActivating;
           } finally {
             checkbox.disabled = false;

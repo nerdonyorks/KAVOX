@@ -4,15 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Profile - KAVOX SOLE LAB</title>
-  <!-- SweetAlert2 -->
-  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.all.min.js"></script>
-  <!-- Cropper.js -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
-  <link rel="stylesheet" href="/css/style.css">
-  <script src="/js/shimmer.js"></script>
-  <script src="/js/cropperManager.js"></script>
+    <!-- Cropper.js -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/shimmer.js"></script>
+    <script src="/js/cropperManager.js"></script>
   <style>
     * {
       margin: 0;
@@ -633,11 +630,10 @@
       <% if (typeof error !== 'undefined' && error) { %>
           <script>
             document.addEventListener('DOMContentLoaded', () => {
-              Swal.fire({
+              KavoxNotify.alert({
                 icon: 'error',
                 title: 'Update Failed',
-                text: '<%= error %>',
-                confirmButtonColor: '#e91e63'
+                text: '<%= error %>'
               });
             });
           </script>
@@ -783,7 +779,7 @@
       <p>All Rights Reserved</p>
     </div>
   </footer>
-
+  <script src="/js/notifications.js"></script>
   <script>
     function toggleMobileNav() {
       document.getElementById('mobileNav').classList.toggle('active');
@@ -947,11 +943,10 @@
             if (data.redirect && data.redirect.includes('verify-otp')) {
                 window.location.href = data.redirect;
             } else {
-                Swal.fire({
+                KavoxNotify.alert({
                   icon: 'success',
                   title: 'Profile Updated',
-                  text: 'Your profile has been saved successfully.',
-                  confirmButtonColor: '#e91e63'
+                  text: 'Your profile has been saved successfully.'
                 }).then(() => {
                   window.location.href = '/account';
                 });
@@ -961,11 +956,10 @@
             submitBtn.classList.remove('btn-loading');
             submitBtn.disabled = false;
             
-            Swal.fire({
+            KavoxNotify.alert({
               icon: 'error',
               title: 'Update Failed',
-              text: data.message || 'Could not update profile',
-              confirmButtonColor: '#e91e63'
+              text: data.message || 'Could not update profile'
             });
           }
         } catch (error) {
@@ -974,24 +968,14 @@
           submitBtn.disabled = false;
           
           console.error('Update Profile Error:', error);
-          Swal.fire({
+          KavoxNotify.alert({
             icon: 'error',
             title: 'Error',
-            text: 'An internal error occurred. Please try again.',
-            confirmButtonColor: '#e91e63'
+            text: 'An internal error occurred. Please try again.'
           });
         }
       });
     });
-
-    function showError(id, msg) {
-      const err = document.getElementById(id + 'Error');
-      if (err) {
-        err.textContent = msg;
-        err.style.display = 'block';
-      }
-      document.getElementById(id).style.borderColor = '#e91e63';
-    }
   </script>
 </body>
 </html>

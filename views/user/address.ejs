@@ -5,10 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Address - KAVOX SOLE LAB</title>
-    <!-- SweetAlert2 -->
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.all.min.js"></script>
     <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/notifications.js"></script>
     <script src="/js/shimmer.js"></script>
     <style>
         * {
@@ -662,15 +660,14 @@
         }
 
         async function deleteAddress(addressId) {
-            const { isConfirmed } = await Swal.fire({
+            const confirmed = await KavoxNotify.confirm({
                 title: 'Are you sure?',
                 text: "You won't be able to revert this!",
                 icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#e91e63',
-                cancelButtonButtonColor: '#d33',
-                confirmButtonText: 'Yes, delete it!'
+                confirmText: 'Yes, delete it!'
             });
+            
+            const isConfirmed = confirmed.isConfirmed;
 
             if (isConfirmed) {
                 const mainContent = document.querySelector('.main-content');
@@ -686,15 +683,16 @@
                     
                     const data = await response.json();
                     if (data.success) {
-                        Swal.fire('Deleted!', data.message, 'success').then(() => window.location.reload());
+                        await KavoxNotify.alert({ title: 'Deleted!', text: data.message, icon: 'success' });
+                        window.location.reload();
                     } else {
                         mainContent.classList.remove('is-loading-container');
-                        Swal.fire('Error', data.message || 'Failed to delete address', 'error');
+                        KavoxNotify.alert({ title: 'Error', text: data.message || 'Failed to delete address', icon: 'error' });
                     }
                 } catch (error) {
                     mainContent.classList.remove('is-loading-container');
                     console.error('Delete Address Error:', error);
-                    Swal.fire('Error', 'An internal error occurred', 'error');
+                    KavoxNotify.alert({ title: 'Error', text: 'An internal error occurred', icon: 'error' });
                 }
             }
         }
@@ -717,12 +715,12 @@
                     window.location.reload();
                 } else {
                     mainContent.classList.remove('is-loading-container');
-                    Swal.fire('Error', data.message || 'Failed to set default address', 'error');
+                    KavoxNotify.alert({ title: 'Error', text: data.message || 'Failed to set default address', icon: 'error' });
                 }
             } catch (error) {
                 mainContent.classList.remove('is-loading-container');
                 console.error('Set Default Address Error:', error);
-                Swal.fire('Error', 'An internal error occurred', 'error');
+                KavoxNotify.alert({ title: 'Error', text: 'An internal error occurred', icon: 'error' });
             }
         }
     </script>

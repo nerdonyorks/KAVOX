@@ -1,12 +1,13 @@
 const Product = require("../models/productModel");
 const Category = require("../models/categoryModel");
+const Wishlist = require("../models/wishlist");
 const { HTTP_STATUS, MESSAGES } = require("../utils/constants");
 const sharp = require("sharp");
 const path = require("path");
 const fs = require("fs").promises;
 
-// @desc    Get single product by ID
-// @route   GET /api/admin/product/:id
+//Get single product by ID
+
 exports.getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id).populate("category", "name");
@@ -30,8 +31,8 @@ exports.getProductById = async (req, res) => {
   }
 };
 
-// @desc    Get all products with pagination and search
-// @route   GET /api/admin/product
+//Get all products with pagination and search
+
 exports.listProducts = async (req, res) => {
   try {
     const { search, page = 1, limit = 10, category } = req.query;
@@ -130,7 +131,7 @@ exports.createProduct = async (req, res) => {
           existingProduct.price = price;
           existingProduct.category = category;
           existingProduct.images = processedVariants[0].images;
-          existingProduct.productOffer = parseInt(productOffer) || 0;
+          existingProduct.productOffer = Math.min(100, Math.max(0, parseFloat(productOffer) || 0));
           existingProduct.showOnHome = showOnHome === "true" || showOnHome === true;
           existingProduct.isActive = isActive === "true" || isActive === true || isActive === undefined;
           existingProduct.variants = processedVariants;
@@ -233,7 +234,7 @@ exports.createProduct = async (req, res) => {
       price,
       category,
       images: productImages,
-      productOffer: parseInt(productOffer) || 0,
+      productOffer: Math.min(100, Math.max(0, parseFloat(productOffer) || 0)),
       showOnHome: showOnHome === 'true' || showOnHome === true,
       isActive: isActive === 'true' || isActive === true || isActive === undefined,
       variants: processedVariants,
@@ -256,7 +257,6 @@ exports.createProduct = async (req, res) => {
 };
 
 // Update product
-// PUT /api/admin/product/:id
 exports.updateProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -294,7 +294,7 @@ exports.updateProduct = async (req, res) => {
     if (description) product.description = description;
     if (price) product.price = price;
     if (category) product.category = category;
-    if (typeof productOffer !== "undefined") product.productOffer = parseInt(productOffer) || 0;
+    if (typeof productOffer !== "undefined") product.productOffer = Math.min(100, Math.max(0, parseFloat(productOffer) || 0));
     if (typeof showOnHome !== "undefined") product.showOnHome = showOnHome === "true" || showOnHome === true;
     if (typeof isActive !== "undefined") product.isActive = isActive === "true" || isActive === true;
     const files = req.files || [];
@@ -373,8 +373,8 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
-// @desc    Soft delete product
-// @route   DELETE /api/admin/product/:id
+// Soft delete product
+
 exports.deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -403,13 +403,21 @@ exports.deleteProduct = async (req, res) => {
 
 // --- USER SIDE METHODS ---
 
-// @desc    List products for shop with filters, search, sort
-// @route   GET /shop
+//List products for shop with filters, search, sort
+
 exports.userListProducts = async (req, res) => {
   try {
     const { search, category, brand, minPrice, maxPrice, sort, size, page = 1, limit = 12 } = req.query;
 
-    const query = { isDeleted: false, isActive: true };
+    // Get all active, non-deleted categories to filter products
+    const activeCategories = await Category.find({ isActive: true, isDeleted: false }, "_id").lean();
+    const activeCategoryIds = activeCategories.map(cat => cat._id);
+
+    const query = { 
+      isDeleted: false, 
+      isActive: true,
+      category: { $in: activeCategoryIds }
+    };
 
     // Search by name
     if (search) {
@@ -418,7 +426,8 @@ exports.userListProducts = async (req, res) => {
 
     // Filter by Category
     if (category && category !== "all") {
-      query.category = category;
+      const categoryArray = Array.isArray(category) ? category : [category];
+      query.category = { $in: categoryArray };
     }
 
     // Filter by Brand
@@ -439,8 +448,9 @@ exports.userListProducts = async (req, res) => {
       quantity: { $gt: 0 }
     };
     if (size) {
-      // Handle both raw size and "UK " prefixed size
-      variantQuery.size = { $regex: new RegExp(`^${size}$|^UK ${size}$`, "i") };
+      const sizeArray = Array.isArray(size) ? size : [size];
+      const sizeRegexes = sizeArray.map(s => new RegExp(`^${s}$|^UK ${s}$`, "i"));
+      variantQuery.size = { $in: sizeRegexes };
     }
 
     query.variants = { $elemMatch: variantQuery };
@@ -461,6 +471,16 @@ exports.userListProducts = async (req, res) => {
       .limit(parseInt(limit))
       .lean();
 
+    // Get user's wishlist product IDs if logged in
+    let wishlistProductIds = [];
+    const currentUser = req.user || req.session.user;
+    if (currentUser) {
+      const wishlist = await Wishlist.findOne({ userId: currentUser._id });
+      if (wishlist) {
+        wishlistProductIds = wishlist.products.map(p => p.toString());
+      }
+    }
+
     const categories = await Category.find({ isActive: true, isDeleted: false }).lean();
     const brands = await Product.distinct("brand", { isDeleted: false, isActive: true });
 
@@ -473,13 +493,31 @@ exports.userListProducts = async (req, res) => {
       totalPages: Math.ceil(totalProducts / parseInt(limit)),
       currentPage: parseInt(page),
       sort: sort || 'newest',
-      currentCategory: category || 'all',
+      currentCategory: Array.isArray(category) ? category : (category && category !== 'all' ? [category] : []),
       currentBrand: brand || 'all',
-      currentSize: size || '',
+      currentSize: Array.isArray(size) ? size : (size ? [size] : []),
       minPrice: minPrice || '',
       maxPrice: maxPrice || '',
-      searchQuery: search || ''
+      searchQuery: search || '',
+      wishlistProductIds // Pass to view
     };
+
+    if (req.query.ajax === 'true') {
+      return res.render("user/partials/shop-grid", data, (err, html) => {
+        if (err) {
+          console.error("AJAX Render Error:", err);
+          return res.status(500).json({ success: false, message: "Render error" });
+        }
+        res.json({ 
+          success: true, 
+          html, 
+          totalProducts: data.totalProducts,
+          currentPage: data.currentPage,
+          totalPages: data.totalPages,
+          wishlistProductIds: data.wishlistProductIds // Also pass to AJAX if needed
+        });
+      });
+    }
 
     if (req.xhr || req.headers.accept.includes("application/json")) {
       return res.json({ success: true, ...data });
@@ -494,15 +532,15 @@ exports.userListProducts = async (req, res) => {
   }
 };
 
-// @desc    Get detailed product view
-// @route   GET /product/:id
+//Get detailed product view
+
 exports.userGetProductDetails = async (req, res) => {
   try {
     const product = await Product.findOne({ _id: req.params.id, isDeleted: false, isActive: true })
       .populate("category")
       .lean();
 
-    if (!product) {
+    if (!product || !product.category || !product.category.isActive || product.category.isDeleted) {
       return res.redirect("/shop");
     }
 
@@ -514,10 +552,21 @@ exports.userGetProductDetails = async (req, res) => {
       isActive: true
     }).limit(4).lean();
 
+    // Check if product is in wishlist if user is logged in
+    let isInWishlist = false;
+    const currentUser = req.user || req.session.user;
+    if (currentUser) {
+      const wishlist = await Wishlist.findOne({ userId: currentUser._id });
+      if (wishlist) {
+        isInWishlist = wishlist.products.some(pId => pId.toString() === product._id.toString());
+      }
+    }
+
     res.render("user/product-details", {
       title: `${product.name} - KAVOX`,
       product,
-      relatedProducts
+      relatedProducts,
+      isInWishlist
     });
   } catch (error) {
     console.error("User Get Product Details Error:", error);
@@ -527,8 +576,8 @@ exports.userGetProductDetails = async (req, res) => {
   }
 };
 
-// @desc    Check if product is still active/available (for real-time user-side checks)
-// @route   GET /api/products/:id/status
+//Check if product is still active/available (for real-time user-side checks)
+
 exports.checkProductStatus = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -549,6 +598,51 @@ exports.checkProductStatus = async (req, res) => {
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Error checking product status."
+    });
+  }
+};
+
+/**
+ * GET: Product Variants for Add-to-Cart Modal
+ */
+exports.userGetProductVariants = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const product = await Product.findOne({ _id: id, isDeleted: false, isActive: true })
+      .populate("category")
+      .lean();
+
+    if (!product || !product.category || !product.category.isActive) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
+        success: false,
+        message: "Product not found or unavailable."
+      });
+    }
+
+    // Filter active variants
+    const activeVariants = product.variants.filter(v => v.isActive);
+
+    // Calculate final price (respecting offers)
+    const pOffer = product.productOffer || 0;
+    const cOffer = product.category.offer || 0;
+    const discount = Math.max(pOffer, cOffer);
+    const finalPrice = Math.round(product.price * (1 - discount / 100));
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      data: {
+        id: product._id,
+        name: product.name,
+        basePrice: product.price,
+        finalPrice,
+        variants: activeVariants
+      }
+    });
+  } catch (error) {
+    console.error("Get Variants Error:", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Failed to load variant data."
     });
   }
 };

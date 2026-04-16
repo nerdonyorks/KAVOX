@@ -4,9 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Category Management - KAVOX Admin</title>
-  <!-- SweetAlert2 -->
-  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.all.min.js"></script>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/notifications.js"></script>
   <!-- Cropper.js -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
@@ -184,6 +183,12 @@
 
     function hideErrors() {
       document.querySelectorAll('.error-msg').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+    }
+
+    function hideFieldError(inputId, errorId) {
+      if (inputId) document.getElementById(inputId).classList.remove('is-invalid');
+      if (errorId) document.getElementById(errorId).style.display = 'none';
     }
 
     function closeModal() {
@@ -203,13 +208,18 @@
       
       let isValid = true;
       if (!name) {
+        document.getElementById('nameError').textContent = "Category name is required.";
         document.getElementById('nameError').style.display = 'block';
+        document.getElementById('categoryName').classList.add('is-invalid');
         isValid = false;
       }
       if (offer === "" || offer < 0 || offer > 100) {
         document.getElementById('offerError').style.display = 'block';
+        document.getElementById('categoryOffer').classList.add('is-invalid');
         isValid = false;
       }
+
+      if (!isValid) return;
       
       const payload = {
         name,
@@ -228,25 +238,30 @@
         });
         const result = await response.json();
         if (result.success) {
-          Swal.fire({ icon: 'success', title: 'Success', text: result.message, toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+          KavoxNotify.toast(result.message, 'success');
           closeModal();
           loadCategories(currentPage);
         } else {
-          Swal.fire('Error', result.message, 'error');
+          // Check if error is name related
+          if (result.message && (result.message.toLowerCase().includes('name') || result.message.toLowerCase().includes('duplicate'))) {
+            document.getElementById('nameError').textContent = result.message;
+            document.getElementById('nameError').style.display = 'block';
+            document.getElementById('categoryName').classList.add('is-invalid');
+          } else {
+            KavoxNotify.alert({ title: 'Error', text: result.message, icon: 'error' });
+          }
         }
       } catch (err) {
-        Swal.fire('Error', 'Something went wrong', 'error');
+        KavoxNotify.toast('Something went wrong', 'error');
       }
     });
 
     async function deleteCategory(id) {
-      const confirm = await Swal.fire({
+      const confirm = await KavoxNotify.confirm({
         title: 'Are you sure?',
-        text: "This will soft-delete the category and remove its image!",
+        text: "This will soft-delete the category!",
         icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        confirmButtonText: 'Yes, delete it!'
+        confirmText: 'Yes, delete it!'
       });
       
       if (confirm.isConfirmed) {
@@ -254,11 +269,11 @@
           const response = await fetch(`/api/admin/category/${id}`, { method: 'DELETE' });
           const result = await response.json();
           if (result.success) {
-            Swal.fire('Deleted!', result.message, 'success');
+            KavoxNotify.toast(result.message, 'success');
             loadCategories(currentPage);
           }
         } catch (err) {
-          Swal.fire('Error', 'Failed to delete', 'error');
+          KavoxNotify.toast('Failed to delete', 'error');
         }
       }
     }
@@ -271,6 +286,10 @@
         loadCategories(1, e.target.value);
       }, 300);
     });
+
+    // Real-time validation clearing
+    document.getElementById('categoryName').addEventListener('input', () => hideFieldError('categoryName', 'nameError'));
+    document.getElementById('categoryOffer').addEventListener('input', () => hideFieldError('categoryOffer', 'offerError'));
 
     window.onload = () => loadCategories();
   </script>

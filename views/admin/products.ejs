@@ -5,18 +5,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Product Management - KAVOX Admin</title>
-  <!-- SweetAlert2 -->
-  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.all.min.js"></script>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/notifications.js"></script>
   <!-- Cropper.js -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
-  <link rel="stylesheet" href="/css/skeleton.css">
-  <link rel="stylesheet" href="/css/admin.css">
   <script src="/js/shimmer.js"></script>
   <script src="/js/cropperManager.js"></script>
-  <link rel="stylesheet" href="/css/admin.css">
-  <script src="/js/shimmer.js"></script>
   <style>
     /* Admin Table Specifics */
     .admin-layout .product-img {
@@ -52,37 +47,16 @@
     }
 
     /* Column Widths */
-    .col-product {
-      width: 22%;
-    }
-
-    .col-category {
-      width: 12%;
-    }
-
-    .col-price {
-      width: 10%;
-    }
-
-    .col-offer {
-      width: 8%;
-    }
-
-    .col-variants {
-      width: 10%;
-    }
-
-    .col-stock {
-      width: 10%;
-    }
-
-    .col-status {
-      width: 12%;
-    }
-
-    .col-action {
-      width: 16%;
-    }
+    .col-product { width: 18%; }
+    .col-category { width: 10%; }
+    .col-price { width: 8%; }
+    .col-p-offer { width: 8%; }
+    .col-c-offer { width: 8%; }
+    .col-final { width: 10%; }
+    .col-variants { width: 9%; }
+    .col-stock { width: 9%; }
+    .col-status { width: 10%; }
+    .col-action { width: 10%; }
 
     .action-btns {
       display: flex;
@@ -170,7 +144,9 @@
                   <th class="col-product">PRODUCT</th>
                   <th class="col-category">CATEGORY</th>
                   <th class="col-price">PRICE</th>
-                  <th class="col-offer">OFFER</th>
+                  <th class="col-p-offer">P.OFFER</th>
+                  <th class="col-c-offer">C.OFFER</th>
+                  <th class="col-final">FINAL</th>
                   <th class="col-variants">VARIANTS</th>
                   <th class="col-stock">STOCK</th>
                   <th class="col-status">STATUS</th>
@@ -247,7 +223,7 @@
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
                 <div class="form-group">
                   <label class="form-label">Offer (%)</label>
-                  <input type="number" id="prodOffer" class="form-control no-spinner" placeholder="Enter discount %">
+                  <input type="number" id="prodOffer" class="form-control no-spinner" placeholder="Enter discount %" step="0.01" min="0" max="100">
                 </div>
                 <div class="form-group">
                   <label class="form-label">Status</label>
@@ -303,7 +279,7 @@
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px;">
                     <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label">Size</label>
-                        <select class="form-control v-size">
+                        <select class="form-control v-size" onchange="hideFieldError('', 'error_${vId}')">
                             <option value="">Select Size</option>
                             ${[6, 7, 8, 9, 10, 11, 12].map(s => `
                                 <option value="UK ${s}" ${data.size === 'UK ' + s ? 'selected' : ''}>UK ${s}</option>
@@ -312,7 +288,7 @@
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label">Color</label>
-                        <select class="form-control v-color">
+                        <select class="form-control v-color" onchange="hideFieldError('', 'error_${vId}')">
                             <option value="">Select Color</option>
                             ${['Red', 'Black', 'White', 'Blue'].map(c => `
                                 <option value="${c}" ${data.color === c ? 'selected' : ''}>${c}</option>
@@ -408,7 +384,12 @@
 
       function hideErrors() {
         document.querySelectorAll('.error-msg').forEach(el => el.style.display = 'none');
-        document.querySelectorAll('.form-control').forEach(el => el.classList.remove('is-invalid'));
+        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+      }
+
+      function hideFieldError(inputId, errorId) {
+        if (inputId) document.getElementById(inputId).classList.remove('is-invalid');
+        if (errorId) document.getElementById(errorId).style.display = 'none';
       }
 
       function showError(inputId, errorId) {
@@ -498,7 +479,10 @@
         tbody.innerHTML = result.data.map(p => {
           const primaryImg = p.variants?.[0]?.images?.[0]?.url || '/images/placeholder.png';
           const price = p.price || 0;
-          const offer = p.productOffer || 0;
+          const pOffer = p.productOffer || 0;
+          const cOffer = p.category?.offer || 0;
+          const effectiveOffer = Math.max(pOffer, cOffer);
+          const finalPrice = Math.round(price * (1 - effectiveOffer / 100));
           const stock = p.variants?.reduce((acc, v) => acc + (v.quantity || 0), 0) || 0;
 
           return `
@@ -511,7 +495,9 @@
                     </td>
                     <td class="col-category">${p.category?.name || 'N/A'}</td>
                     <td class="col-price">₹${price.toLocaleString()}</td>
-                    <td class="col-offer">${offer}%</td>
+                    <td class="col-p-offer">${pOffer}%</td>
+                    <td class="col-c-offer" style="color: ${cOffer > 0 ? 'var(--primary)' : 'inherit'}">${cOffer}%</td>
+                    <td class="col-final" style="font-weight: 700; color: ${effectiveOffer > 0 ? '#166534' : 'inherit'}">₹${finalPrice.toLocaleString()}</td>
                     <td class="col-variants">
                         <span class="badge ${p.variants?.every(v => v.isActive) ? 'badge-success' : (p.variants?.some(v => v.isActive) ? 'badge-warning' : 'badge-error')}" 
                               style="min-width: 44px; text-transform: uppercase; font-weight: 700; font-size: 11px; padding: 4px 8px;">
@@ -699,22 +685,25 @@
         formData.append('variants', JSON.stringify(variants));
 
         try {
-          Swal.fire({ title: 'Uploading...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+          KavoxNotify.loading('Saving Product...');
           const id = document.getElementById('productId').value;
           const url = id ? `/api/admin/product/${id}` : '/api/admin/product';
           const method = id ? 'PUT' : 'POST';
 
           const res = await fetch(url, { method, body: formData });
           const result = await res.json();
-
+          KavoxNotify.closeLoading();
           if (result.success) {
-            Swal.fire('Success', result.message, 'success');
+            KavoxNotify.toast(result.message, 'success');
             closeModal();
             loadProducts();
           } else {
-            Swal.fire('Error', result.message, 'error');
+            KavoxNotify.alert({ title: 'Error', text: result.message, icon: 'error' });
           }
-        } catch (err) { Swal.fire('Error', 'Submission failed', 'error'); }
+        } catch (err) { 
+          KavoxNotify.closeLoading();
+          KavoxNotify.toast('Submission failed', 'error'); 
+        }
       });
 
       document.getElementById('searchInput').oninput = function () {
@@ -733,20 +722,18 @@
           });
           const result = await res.json();
           if (result.success) {
-            Swal.fire({ icon: 'success', title: 'Updated', text: `Product ${!currentStatus ? 'Listed' : 'Unlisted'}`, toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+            KavoxNotify.toast(`Product ${!currentStatus ? 'Listed' : 'Unlisted'}`, 'success');
             loadProducts(1);
           }
-        } catch (err) { Swal.fire('Error', 'Failed to update status', 'error'); }
+        } catch (err) { KavoxNotify.toast('Failed to update status', 'error'); }
       }
 
       async function deleteProduct(id) {
-        const confirm = await Swal.fire({
+        const confirm = await KavoxNotify.confirm({
           title: 'Are you sure?',
           text: "This will soft-delete the product!",
           icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#ef4444',
-          confirmButtonText: 'Yes, delete it!'
+          confirmText: 'Yes, delete it!'
         });
 
         if (confirm.isConfirmed) {
@@ -754,12 +741,17 @@
             const res = await fetch(`/api/admin/product/${id}`, { method: 'DELETE' });
             const result = await res.json();
             if (result.success) {
-              Swal.fire('Deleted!', 'Product has been deleted.', 'success');
+              KavoxNotify.toast('Product has been deleted.', 'success');
               loadProducts(1);
             }
-          } catch (err) { Swal.fire('Error', 'Failed to delete product', 'error'); }
+          } catch (err) { KavoxNotify.toast('Failed to delete product', 'error'); }
         }
       }
+
+      document.getElementById('prodName').addEventListener('input', () => hideFieldError('prodName', 'nameError'));
+      document.getElementById('prodCategory').addEventListener('change', () => hideFieldError('prodCategory', 'categoryError'));
+      document.getElementById('prodPrice').addEventListener('input', () => hideFieldError('prodPrice', 'priceError'));
+      document.getElementById('prodDescription').addEventListener('input', () => hideFieldError('prodDescription', 'descriptionError'));
 
       window.onload = loadData;
     </script>

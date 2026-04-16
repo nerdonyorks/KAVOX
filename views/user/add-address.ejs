@@ -616,6 +616,15 @@
                     const stateInput = document.getElementById('state');
                     const mobileInput = document.getElementById('mobile');
 
+                    // Attach real-time error clearing
+                    ['firstName', 'lastName', 'mobile', 'pincode', 'street', 'state', 'city', 'type'].forEach(id => {
+                        const input = document.getElementById(id);
+                        if (input) {
+                            const eventType = input.tagName === 'SELECT' ? 'change' : 'input';
+                            input.addEventListener(eventType, () => hideError(id));
+                        }
+                    });
+
                     const showError = (inputId, message) => {
                         const errorDiv = document.getElementById(inputId + 'Error');
                         errorDiv.textContent = message;

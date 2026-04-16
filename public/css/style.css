@@ -94,15 +94,15 @@
   overflow: hidden;
 }
 
-/* Semi-transparent blur overlay */
+/* Semi-transparent blur overlay - More subtle for premium feel */
 .is-loading-container::after {
   content: "";
   position: absolute;
   inset: 0;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   pointer-events: auto;
   /* Block all clicks under the overlay */
 }
@@ -1054,7 +1054,7 @@ select.form-control {
   gap: 30px;
   position: sticky;
   top: 0;
-  z-index: 1000;
+  z-index: 10000;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
@@ -1491,31 +1491,33 @@ select.form-control {
   background: none;
   border: 1.5px solid #eee;
   color: #999;
-  padding: 12px;
-  border-radius: 4px;
-  font-size: 10px;
+  padding: 14px;
+  border-radius: 6px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
+  letter-spacing: 2px;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .user-layout .btn-filter-clear:hover {
-  border-color: #333;
-  color: #333;
-  background-color: #fcfcfc;
+  border-color: #000;
+  color: #000;
+  background-color: #f9f9f9;
 }
 
 .user-layout .filter-actions-row {
   display: grid;
-  grid-template-columns: 1.5fr 1fr;
+  grid-template-columns: 1fr;
   gap: 10px;
 }
 
 /* Updated Category/Size States */
 .user-layout .category-pills input[type="radio"],
-.user-layout .size-grid input[type="radio"] {
+.user-layout .category-pills input[type="checkbox"],
+.user-layout .size-grid input[type="radio"],
+.user-layout .size-grid input[type="checkbox"] {
   display: none;
 }
 
@@ -1612,22 +1614,66 @@ select.form-control {
 }
 
 .user-layout .wishlist-btn {
-  position: absolute;
-  bottom: 15px;
-  right: 15px;
   background: #fff;
   border: none;
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
   cursor: pointer;
   z-index: 5;
   color: #ccc;
-  transition: var(--transition);
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.user-layout .product-quick-actions {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 15px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+  z-index: 10;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.05), transparent);
+}
+
+.user-layout .product-card:hover .product-quick-actions {
+  transform: translateY(0);
+}
+
+.user-layout .atc-btn {
+  background: var(--accent-color);
+  border: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(233, 30, 99, 0.2);
+  cursor: pointer;
+  z-index: 5;
+  color: #fff;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.user-layout .atc-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.user-layout .atc-btn:hover {
+  transform: scale(1.1);
+  background: #d81b60;
 }
 
 .user-layout .wishlist-btn:hover,
@@ -1638,6 +1684,13 @@ select.form-control {
 .user-layout .wishlist-btn svg {
   width: 18px;
   height: 18px;
+  fill: transparent;
+  stroke: currentColor;
+  transition: fill 0.3s ease;
+}
+
+.user-layout .wishlist-btn.active svg {
+  fill: currentColor;
 }
 
 .user-layout .product-card-info {
@@ -1817,7 +1870,7 @@ select.form-control {
   min-width: 220px;
   background: white;
   border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   border: 1px solid #f0f0f0;
   padding: 8px;
   display: none;
@@ -1851,8 +1904,15 @@ select.form-control {
 }
 
 @keyframes slideDropdown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Footer (Common) */
@@ -2228,6 +2288,7 @@ select.form-control {
     grid-template-columns: 1fr;
   }
 }
+
 /* ==========================================================================
    PRODUCT DETAILS PAGE STYLES
    ========================================================================== */
@@ -2343,7 +2404,7 @@ select.form-control {
   display: none;
   pointer-events: none;
   z-index: 10;
-  box-shadow: 0 0 15px rgba(0,0,0,0.1);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
 }
 
 /* Product Info Panel */
@@ -2412,9 +2473,20 @@ select.form-control {
   letter-spacing: 1px;
 }
 
-.user-layout .stock-in { background: #dcfce7; color: #166534; }
-.user-layout .stock-out { background: #fee2e2; color: #991b1b; }
-.user-layout .stock-low { background: #fef9c3; color: #854d0e; }
+.user-layout .stock-in {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.user-layout .stock-out {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.user-layout .stock-low {
+  background: #fef9c3;
+  color: #854d0e;
+}
 
 /* Variant Selection */
 .user-layout .variant-selection {
@@ -2682,4 +2754,520 @@ select.form-control {
   border-color: #ddd;
   color: #999;
   pointer-events: none;
+}
+
+/* ==========================================================================
+   KAVOX CUSTOM NOTIFICATION SYSTEM (Replacement for SweetAlert)
+   ========================================================================== */
+
+#kavox-toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10300;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.kavox-toast {
+  pointer-events: auto;
+  min-width: 320px;
+  max-width: 400px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  padding: 18px 22px;
+  margin-bottom: 8px;
+  border-left: 5px solid #000;
+  position: relative;
+  overflow: hidden;
+  animation: kavoxSlideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  transition: all 0.3s ease;
+}
+
+.kavox-toast.removing {
+  animation: kavoxSlideOut 0.4s ease forwards;
+}
+
+.kavox-toast:hover .kavox-toast-progress-inner {
+  animation-play-state: paused;
+}
+
+@keyframes kavoxSlideIn {
+  from {
+    transform: translateX(110%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes kavoxSlideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateX(50px);
+    opacity: 0;
+    filter: blur(5px);
+  }
+}
+
+.kavox-toast-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.kavox-toast-success {
+  border-color: #4ade80;
+}
+
+.kavox-toast-success .kavox-toast-icon {
+  background: #4ade80;
+  color: #fff;
+}
+
+.kavox-toast-error {
+  border-color: #ef4444;
+}
+
+.kavox-toast-error .kavox-toast-icon {
+  background: #ef4444;
+  color: #fff;
+}
+
+.kavox-toast-content {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.4;
+}
+
+.kavox-toast-close {
+  margin-left: 15px;
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+  line-height: 1;
+}
+
+.kavox-toast-close:hover {
+  color: #333;
+}
+
+.kavox-toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.kavox-toast-progress-inner {
+  height: 100%;
+  width: 100%;
+  background: currentColor;
+  opacity: 0.3;
+  transform-origin: left;
+  animation: kavoxProgress linear forwards;
+}
+
+@keyframes kavoxProgress {
+  from {
+    transform: scaleX(1);
+  }
+
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* Confirmation Modal & Overlay */
+#kavox-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 10100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+#kavox-modal-overlay.active {
+  display: flex;
+  opacity: 1;
+}
+
+.kavox-confirm-modal {
+  background: #fff;
+  width: 90%;
+  max-width: 400px;
+  padding: 40px;
+  border-radius: 12px;
+  text-align: center;
+  transform: scale(0.9);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#kavox-modal-overlay.active .kavox-confirm-modal {
+  transform: scale(1);
+}
+
+.kavox-confirm-icon {
+  width: 60px;
+  height: 60px;
+  border: 3px solid #f59e0b;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 30px;
+  font-weight: 800;
+  color: #f59e0b;
+}
+
+.kavox-confirm-title {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 10px;
+  color: #111;
+}
+
+.kavox-confirm-text {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 30px;
+  line-height: 1.5;
+}
+
+.kavox-confirm-btns {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.kavox-confirm-btns button {
+  padding: 12px 24px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.kavox-btn-cancel {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.kavox-btn-cancel:hover {
+  background: #e5e7eb;
+}
+
+.kavox-btn-confirm {
+  background: #000;
+  color: #fff;
+}
+
+.kavox-btn-confirm:hover {
+  background: #333;
+}
+
+/* ==========================================================================
+   ADD TO CART VARIANT MODAL
+   ========================================================================== */
+
+.atc-modal {
+  background: #fff;
+  width: 95%;
+  max-width: 900px;
+  display: flex;
+  flex-direction: row;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  max-height: 90vh;
+}
+
+.atc-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: white;
+  border: 1px solid #eee;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.atc-left {
+  flex: 1.2;
+  background: #f8f8f8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.atc-main-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: opacity 0.3s ease;
+}
+
+.atc-right {
+  flex: 1;
+  padding: 50px 40px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.atc-product-name {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.atc-price {
+  font-size: 20px;
+  font-weight: 800;
+  color: #e91e63;
+  margin-bottom: 30px;
+}
+
+.variant-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 15px;
+  display: block;
+}
+
+.color-options,
+.size-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.color-swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #eee;
+  cursor: pointer;
+  padding: 2px;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.color-swatch:hover {
+  border-color: #ccc;
+}
+
+.color-swatch.active {
+  border-color: #000;
+  scale: 1.1;
+}
+
+.color-swatch span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+.size-btn {
+  padding: 10px 20px;
+  border: 1.5px solid #eee;
+  background: white;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.size-btn:hover:not(:disabled) {
+  border-color: #888;
+}
+
+.size-btn.active {
+  background: #000;
+  color: #fff;
+  border-color: #000;
+}
+
+.size-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  background: #fafafa;
+}
+
+.atc-qty-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: auto;
+  padding-top: 30px;
+}
+
+.qty-control {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid #eee;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.qty-control button {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: white;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.qty-control span {
+  padding: 0 15px;
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.btn-add-final {
+  flex: 1;
+  background: #000;
+  color: #fff;
+  border: none;
+  height: 50px;
+  border-radius: 4px;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-add-final:hover {
+  background: #333;
+}
+
+.btn-add-final:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.atc-error {
+  color: #ef4444;
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 10px;
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .atc-modal {
+    flex-direction: column;
+  }
+
+  .atc-left {
+    height: 300px;
+    padding: 20px;
+  }
+
+  .atc-right {
+    padding: 30px 20px;
+  }
+}
+
+/* Loading Overlay */
+#kavox-loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(3px);
+  z-index: 10200;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+#kavox-loading-overlay.active {
+  display: flex;
+  opacity: 1;
+}
+
+.kavox-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #000;
+  border-radius: 50%;
+  animation: kavox-spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+.kavox-loading-text {
+  font-size: 14px;
+  font-weight: 700;
+  color: #000;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+@keyframes kavox-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }

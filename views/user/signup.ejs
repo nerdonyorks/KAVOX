@@ -5,9 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KAVOX - Sign Up</title>
-  <!-- SweetAlert2 -->
-  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.all.min.js"></script>
+  <script src="/js/notifications.js"></script>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/shimmer.js"></script>
   <style>
@@ -622,20 +620,18 @@
           if (result.success) {
             window.location.href = result.redirect;
           } else {
-            Swal.fire({
+            KavoxNotify.alert({
               icon: 'error',
               title: 'Signup Error',
-              text: result.message || 'Signup failed',
-              confirmButtonColor: '#e91e63'
+              text: result.message || 'Signup failed'
             });
           }
         } catch (error) {
           console.error('Signup Error:', error);
-          Swal.fire({
+          KavoxNotify.alert({
             icon: 'error',
             title: 'Error',
-            text: 'An internal error occurred',
-            confirmButtonColor: '#e91e63'
+            text: 'An internal error occurred'
           });
         } finally {
           signupBtn.classList.remove('btn-loading');

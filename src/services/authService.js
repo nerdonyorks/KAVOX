@@ -7,7 +7,6 @@ const { MESSAGES } = require("../utils/constants");
 /**
  * Handles the initial phase of Email/Password signup.
  * Validates uniqueness, then triggers OTP generation and delivery.
- * @returns {Object} Indicates success or specific validation errors
  */
 exports.startSignup = async (userData) => {
     const { firstName, lastName, email, phone, referralCode, password, confirmPassword } = userData;
@@ -53,14 +52,11 @@ exports.startSignup = async (userData) => {
         return { success: false, error: MESSAGES.EMAIL_ALREADY_EXISTS };
     }
 
-    // Temporarily validate password strength via model constraints manually before 2FA to prevent bad inputs looping
-    // Mongoose handles validation inside `.save()`, but doing a pre-flight lets us exit early beautifully 
+    // Temporarily validate password strength via model constraints manually before 2FA to prevent bad inputs looping 
     const tempUser = new User({ name: 'temp', email, password });
     const validationError = tempUser.validateSync(['password']);
     if (validationError && password.length < 8) { // Our regex already catches < 6, model allows 8. Keeping fail safe open.
-        // We override this if the model requires more than 6, but our regex demands 6. Given instructions demand 6 chars.
-        // If the model enforces 8, the save at the end might still fail. 
-        // We should just ignore model validation here as we enforced strict regex constraints above.
+
     }
 
     // All clear! Save user directly to DB.

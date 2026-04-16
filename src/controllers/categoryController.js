@@ -1,8 +1,8 @@
 const Category = require("../models/categoryModel");
 const { HTTP_STATUS, MESSAGES } = require("../utils/constants");
 
-// @desc    Get all categories with pagination and search
-// @route   GET /api/admin/category
+// Get all categories with pagination and search
+
 exports.listCategories = async (req, res) => {
   try {
     const { search, page = 1, limit = 10 } = req.query;
@@ -35,8 +35,8 @@ exports.listCategories = async (req, res) => {
   }
 };
 
-// @desc    Create new category
-// @route   POST /api/admin/category
+//Create new category
+
 exports.createCategory = async (req, res) => {
   try {
     const { name, offer } = req.body;
@@ -58,7 +58,7 @@ exports.createCategory = async (req, res) => {
         // Restore instead of duplicate
         existing.isDeleted = false;
         existing.deletedAt = null;
-        existing.offer = offer || 0;
+        existing.offer = Math.min(100, Math.max(0, parseFloat(offer) || 0));
         existing.isActive = true; 
         await existing.save();
 
@@ -77,7 +77,7 @@ exports.createCategory = async (req, res) => {
 
     const category = new Category({ 
       name: normalizedName,
-      offer: offer || 0
+      offer: Math.min(100, Math.max(0, parseFloat(offer) || 0))
     });
     await category.save();
 
@@ -95,8 +95,8 @@ exports.createCategory = async (req, res) => {
   }
 };
 
-// @desc    Update category
-// @route   PUT /api/admin/category/:id
+//Update category
+
 exports.updateCategory = async (req, res) => {
   try {
     const { name, isActive, offer } = req.body;
@@ -130,7 +130,7 @@ exports.updateCategory = async (req, res) => {
     }
 
     if (typeof offer !== "undefined") {
-      category.offer = parseInt(offer);
+      category.offer = Math.min(100, Math.max(0, parseFloat(offer) || 0));
     }
 
     if (req.file) {
@@ -158,8 +158,8 @@ exports.updateCategory = async (req, res) => {
   }
 };
 
-// @desc    Soft delete category
-// @route   DELETE /api/admin/category/:id
+//Soft delete category
+
 exports.deleteCategory = async (req, res) => {
   try {
     const category = await Category.findById(req.params.id);

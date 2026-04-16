@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .wishlist-container {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 20px;
+      min-height: 60vh;
+    }
+    .wishlist-header {
+      margin-bottom: 40px;
+      text-align: center;
+    }
+    .wishlist-header h1 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .wishlist-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 30px;
+    }
+    .wishlist-item {
+      background: #fff;
+      border: 1px solid #eee;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    .wishlist-item:hover {
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      transform: translateY(-5px);
+    }
+    .wishlist-img {
+      height: 300px;
+      overflow: hidden;
+      position: relative;
+    }
+    .wishlist-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+    .wishlist-item:hover .wishlist-img img {
+      transform: scale(1.05);
+    }
+    .remove-wishlist-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: rgba(255,255,255,0.9);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ff4444;
+      cursor: pointer;
+      z-index: 10;
+      border: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: all 0.2s;
+    }
+    .remove-wishlist-btn:hover {
+      background: #ff4444;
+      color: #fff;
+    }
+    .wishlist-info {
+      padding: 20px;
+    }
+    .wishlist-brand {
+      font-size: 11px;
+      font-weight: 800;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .wishlist-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #000;
+      text-decoration: none;
+      display: block;
+      margin-bottom: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-family: 'Inter', sans-serif;
+    }
+    .wishlist-price {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 20px;
+      color: #000;
+    }
+    .btn-view-product {
+      width: 100%;
+      background: #000;
+      color: #fff;
+      text-decoration: none;
+      display: block;
+      text-align: center;
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 800;
+      transition: all 0.25s;
+      letter-spacing: 1px;
+    }
+    .btn-view-product:hover {
+      background: #333;
+      transform: translateY(-2px);
+    }
+    .empty-wishlist {
+      text-align: center;
+      padding: 100px 20px;
+      background: #f9f9f9;
+      border-radius: 30px;
+    }
+    .empty-wishlist i {
+      font-size: 80px;
+      color: #ddd;
+      margin-bottom: 20px;
+    }
+    .empty-wishlist h2 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .empty-wishlist p {
+      color: #888;
+      margin-bottom: 30px;
+    }
+  </style>
+</head>
+<body class="user-layout">
+  <%- include('../partials/user-header') %>
+
+  <main class="wishlist-container">
+    <div class="wishlist-header">
+      <h1>YOUR WISHLIST</h1>
+    </div>
+
+    <% if (!locals.wishlist || wishlist.products.length === 0) { %>
+      <div class="empty-wishlist">
+        <div style="font-size: 80px; color: #ddd; margin-bottom: 20px;">&hearts;</div>
+        <h2>Your wishlist is empty</h2>
+        <p>Save items you like to keep track of them!</p>
+        <a href="/shop" class="sign-in-btn" style="padding: 12px 40px; font-weight: 800;">BROWSE SHOP</a>
+      </div>
+    <% } else { %>
+      <div class="wishlist-grid">
+        <% wishlist.products.forEach(product => { %>
+          <div class="wishlist-item" id="wishlist-item-<%= product._id %>">
+            <button class="remove-wishlist-btn wishlist-btn active" onclick="toggleWishlist('<%= product._id %>', this)" title="Remove from wishlist">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+            </button>
+            <div class="wishlist-img">
+              <img src="<%= product.images[0]?.url %>" alt="<%= product.name %>">
+            </div>
+            <div class="wishlist-info">
+              <span class="wishlist-brand"><%= product.brand || 'KAVOX' %></span>
+              <a href="/product/<%= product._id %>" class="wishlist-name"><%= product.name %></a>
+              <div class="wishlist-price">₹<%= product.price %></div>
+              <a href="/product/<%= product._id %>" class="btn-view-product">VIEW DETAILS</a>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </main>
+
+  <%- include('../partials/user-footer') %>
+  
+  </script>
+  <script src="/js/cart.js"></script>
+  <script>
+    // Handle DOM removal on wishlist page
+    const originalToggleWishlist = toggleWishlist;
+    window.toggleWishlist = async function(productId, btn) {
+        // If we are on the wishlist page and the action is removal
+        // the global function will handle the API call and toast
+        // but we need to handle the specific DOM removal for this page
+        await originalToggleWishlist(productId, btn);
+        
+        // After toggle, check if it's still active. If not, remove from list
+        if (!btn.classList.contains('active')) {
+            const item = btn.closest('.wishlist-item');
+            if (item) {
+                item.style.opacity = '0';
+                item.style.transform = 'scale(0.9)';
+                setTimeout(() => {
+                    item.remove();
+                    if (document.querySelectorAll('.wishlist-item').length === 0) {
+                        location.reload();
+                    }
+                }, 300);
+            }
+        }
+    };
+  </script>
+</body>
+</html>

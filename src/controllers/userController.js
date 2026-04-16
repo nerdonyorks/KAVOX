@@ -1,5 +1,7 @@
 const User = require("../models/userModel");
 const Product = require("../models/productModel");
+const Category = require("../models/categoryModel");
+const Wishlist = require("../models/wishlist");
 const otpService = require("../services/otpService");
 const emailService = require("../services/emailService");
 const { HTTP_STATUS, MESSAGES } = require("../utils/constants");
@@ -9,33 +11,52 @@ const fs = require("fs").promises;
 exports.renderHome = async (req, res) => {
     try {
         const { search } = req.query;
-        let query = { isActive: true };
+
+        // Get all active, non-deleted categories
+        const activeCategories = await Category.find({ isActive: true, isDeleted: false }, "_id").lean();
+        const activeCategoryIds = activeCategories.map(cat => cat._id);
+
+        let query = { 
+            isActive: true, 
+            isDeleted: false,
+            category: { $in: activeCategoryIds }
+        };
 
         if (search) {
             query.name = { $regex: search, $options: 'i' };
+        } else {
+            // Primarily show products marked for home, but fallback to latest if needed
+            const homeFeaturedCount = await Product.countDocuments({ ...query, showOnHome: true });
+            if (homeFeaturedCount > 0) {
+                query.showOnHome = true;
+            }
         }
 
-        let products = await Product.find(query).sort({ createdAt: -1 }).lean();
+        let products = await Product.find(query)
+            .populate("category")
+            .sort({ createdAt: -1 })
+            .limit(12)
+            .lean();
 
-        // Seed data if empty (for demo)
-        if (products.length === 0 && !search) {
-            const demoProducts = [
-                { name: "Athleisure Shoes for Men", description: "Comfortable athletic shoes", price: 2799, originalPrice: 3499, discount: 20, image: "/images/products/shoe1.jpg", category: "Men", stock: 10 },
-                { name: "Men's Athleisure Shoes", description: "Versatile men's shoes", price: 1199, originalPrice: 1499, discount: 20, image: "/images/products/shoe2.jpg", category: "Men", stock: 15 },
-                { name: "Lifestyle Men's Casual Shoes", description: "Casual everyday shoes", price: 1499, originalPrice: 1799, discount: 15, image: "/images/products/shoe3.jpg", category: "Men", stock: 8 },
-                { name: "Lifestyle Casual Shoes for Men", description: "Stylish lifestyle shoes", price: 2899, originalPrice: 3499, discount: 20, image: "/images/products/shoe4.jpg", category: "Men", stock: 12 },
-                { name: "White Casual Shoes for Men", description: "Classic white casuals", price: 2499, originalPrice: 3399, discount: 25, image: "/images/products/shoe5.jpg", category: "Men", stock: 20 },
-                { name: "Men's Walking Slip-On Shoes", description: "Easy walking shoes", price: 1999, originalPrice: 2499, discount: 15, image: "/images/products/shoe6.jpg", category: "Men", stock: 18 }
-            ];
-            await Product.insertMany(demoProducts);
-            products = await Product.find(query).sort({ createdAt: -1 }).lean();
+        // Get user's wishlist product IDs if logged in
+        let wishlistProductIds = [];
+        if (req.user) {
+            const wishlist = await Wishlist.findOne({ userId: req.user._id });
+            if (wishlist) {
+                wishlistProductIds = wishlist.products.map(p => p.toString());
+            }
         }
 
         if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
-            return res.json({ success: true, products });
+            // For search results, include isInWishlist in the JSON
+            const mappedProducts = products.map(p => ({
+                ...p,
+                isInWishlist: wishlistProductIds.includes(p._id.toString())
+            }));
+            return res.json({ success: true, products: mappedProducts });
         }
 
-        res.render("user/home", { products });
+        res.render("user/home", { products, wishlistProductIds });
     } catch (err) {
         console.error("Home render error:", err);
         res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).render("user/error", { message: MESSAGES.HOME_PAGE_LOAD_FAILED });
@@ -120,6 +141,9 @@ exports.renderEditProfile = async (req, res, next) => {
 exports.uploadProfileImage = async (req, res, next) => {
   try {
     if (!req.file) {
+      if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "No image provided" });
+      }
       return res.redirect("/account");
     }
 
@@ -177,14 +201,31 @@ exports.updateProfile = async (req, res, next) => {
     let isImageChanged = !!req.file;
 
     if (!isNameChanged && !isMobileChanged && !isEmailChanged && !isImageChanged) {
+        if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+            return res.json({ success: true, message: "No changes detected" });
+        }
         return res.redirect("/account");
     }
+
+    // Helper for sharp processing
+    const processUserImage = async (file) => {
+        const inputPath = file.path;
+        const buffer = await sharp(inputPath)
+            .resize(500, 500, { fit: "cover" })
+            .jpeg({ quality: 80 })
+            .toBuffer();
+        await fs.writeFile(inputPath, buffer);
+        return `/uploads/users/${file.filename}`;
+    };
 
     // If only email is changed (or email is part of changes)
     if (isEmailChanged) {
         // Check if new email is already taken
         const existingUser = await User.findOne({ email });
         if (existingUser && existingUser._id.toString() !== userId) {
+            if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.EMAIL_TAKEN });
+            }
             return res.status(HTTP_STATUS.BAD_REQUEST).render("user/editProfile", { 
                 user: user, 
                 error: MESSAGES.EMAIL_TAKEN 
@@ -198,10 +239,7 @@ exports.updateProfile = async (req, res, next) => {
         // Store pending changes in session
         req.session.pendingEmail = { newEmail: email };
         
-        // Save other non-email changes first? 
-        // Actually, better to wait for OTP success to save anything IF email is being changed,
-        // OR save non-email changes and then wait for OTP for email.
-        // Let's save non-email changes now.
+        // Save other non-email changes
         if (isNameChanged) {
             user.name = `${firstName} ${lastName || ''}`.trim();
         }
@@ -209,10 +247,17 @@ exports.updateProfile = async (req, res, next) => {
             user.phone = mobile;
         }
         if (isImageChanged) {
-            user.profileImage = `/uploads/users/${req.file.filename}`;
+            user.profileImage = await processUserImage(req.file);
         }
         await user.save();
         console.log(`OTP sent to ${email} for email change verification.`);
+        
+        if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+            return res.json({ 
+                success: true, 
+                redirect: `/verify-otp?email=${encodeURIComponent(email)}&type=email_change` 
+            });
+        }
         return res.redirect(`/verify-otp?email=${encodeURIComponent(email)}&type=email_change`);
     }
 
@@ -224,17 +269,7 @@ exports.updateProfile = async (req, res, next) => {
         user.phone = mobile;
     }
     if (isImageChanged) {
-        const inputPath = req.file.path;
-        
-        // Optimize with sharp
-        const buffer = await sharp(inputPath)
-            .resize(500, 500, { fit: "cover" })
-            .jpeg({ quality: 80 })
-            .toBuffer();
-        
-        await fs.writeFile(inputPath, buffer);
-
-        user.profileImage = `/uploads/users/${req.file.filename}`;
+        user.profileImage = await processUserImage(req.file);
     }
 
     await user.save();

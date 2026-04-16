@@ -5,14 +5,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>User Profile - KAVOX SOLE LAB</title>
-  <!-- SweetAlert2 -->
-  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.all.min.js"></script>
+  <script src="/js/notifications.js"></script>
+  <script src="/js/shimmer.js"></script>
   <!-- Cropper.js -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
-  <link rel="stylesheet" href="/css/style.css">
-  <script src="/js/shimmer.js"></script>
   <script src="/js/cropperManager.js"></script>
   <style>
     .profile-avatar:hover .hover-overlay {
@@ -531,8 +528,10 @@
                 <%= user.email || 'N/A' %>
               </span>
             </div>
-            <div style="display: grid; grid-template-columns: 140px 1fr; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
-              <span style="font-size: 13px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Address</span>
+            <div
+              style="display: grid; grid-template-columns: 140px 1fr; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+              <span
+                style="font-size: 13px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Address</span>
               <span style="font-size: 15px; font-weight: 500; color: #475569;">
                 <% let defaultAddr=user.addresses ? user.addresses.find(a=> a.isDefault) : null;
                   if (!defaultAddr && user.addresses && user.addresses.length > 0) defaultAddr = user.addresses[0];
@@ -553,26 +552,43 @@
       </div>
 
       <!-- Action Buttons -->
-      <div class="action-buttons" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 32px;">
-        <a href="/orders" class="action-btn" style="border: 2px solid #000; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px; border-radius: 12px; transition: transform 0.2s;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e91e63" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line></svg>
+      <div class="action-buttons"
+        style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 32px;">
+        <a href="/orders" class="action-btn"
+          style="border: 2px solid #000; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px; border-radius: 12px; transition: transform 0.2s;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e91e63" stroke-width="2">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+          </svg>
           <span style="font-weight: 700; font-size: 11px; letter-spacing: 1px;">MY ORDERS</span>
         </a>
-        <a href="/wishlist" class="action-btn" style="border: 2px solid #000; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px; border-radius: 12px; transition: transform 0.2s;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e91e63" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+        <a href="/wishlist" class="action-btn"
+          style="border: 2px solid #000; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px; border-radius: 12px; transition: transform 0.2s;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e91e63" stroke-width="2">
+            <path
+              d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+            </path>
+          </svg>
           <span style="font-weight: 700; font-size: 11px; letter-spacing: 1px;">MY WISHLIST</span>
         </a>
-        <a href="/user/address" class="action-btn" style="border: 2px solid #000; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px; border-radius: 12px; transition: transform 0.2s;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e91e63" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        <a href="/user/address" class="action-btn"
+          style="border: 2px solid #000; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px; border-radius: 12px; transition: transform 0.2s;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e91e63" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
           <span style="font-weight: 700; font-size: 11px; letter-spacing: 1px;">ADDRESSES</span>
         </a>
-        <a href="/wallet" class="action-btn" style="border: 2px solid #000; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px; border-radius: 12px; transition: transform 0.2s;">
+        <a href="/wallet" class="action-btn"
+          style="border: 2px solid #000; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px; border-radius: 12px; transition: transform 0.2s;">
           <span style="font-weight: 700; font-size: 11px; letter-spacing: 1px;">WALLET</span>
         </a>
-        <a href="/coupons" class="action-btn" style="border: 2px solid #000; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px; border-radius: 12px; transition: transform 0.2s;">
+        <a href="/coupons" class="action-btn"
+          style="border: 2px solid #000; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px; border-radius: 12px; transition: transform 0.2s;">
           <span style="font-weight: 700; font-size: 11px; letter-spacing: 1px;">COUPONS</span>
         </a>
-        <a href="/referral" class="action-btn" style="border: 2px solid #000; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px; border-radius: 12px; transition: transform 0.2s;">
+        <a href="/referral" class="action-btn"
+          style="border: 2px solid #000; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px; border-radius: 12px; transition: transform 0.2s;">
           <span style="font-weight: 700; font-size: 11px; letter-spacing: 1px;">REFERRAL</span>
         </a>
       </div>
@@ -643,11 +659,7 @@
         formData.append('profileImage', file);
 
         try {
-          Swal.fire({
-            title: 'Uploading...',
-            allowOutsideClick: false,
-            didOpen: () => Swal.showLoading()
-          });
+          KavoxNotify.loading('Uploading Profile Image...');
 
           const response = await fetch('/api/users/profile/upload', {
             method: 'POST',
@@ -656,25 +668,28 @@
           });
 
           const result = await response.json();
-          Swal.close();
+          KavoxNotify.closeLoading();
 
           if (result.success) {
-            Swal.fire({
-              icon: 'success',
-              title: 'Updated',
-              text: 'Profile image updated successfully',
-              timer: 2000,
-              showConfirmButton: false
-            }).then(() => {
+            KavoxNotify.toast('Profile picture updated successfully', 'success');
+            setTimeout(() => {
               location.reload();
-            });
+            }, 1500);
           } else {
-            Swal.fire('Error', result.message || 'Upload failed', 'error');
+            KavoxNotify.alert({
+              title: 'Upload Failed',
+              text: result.message || 'The image could not be updated.',
+              icon: 'error'
+            });
           }
         } catch (error) {
-          Swal.close();
+          KavoxNotify.closeLoading();
           console.error('Upload Error:', error);
-          Swal.fire('Error', 'An internal error occurred', 'error');
+          KavoxNotify.alert({
+            title: 'Connection Error',
+            text: 'Could not connect to the server. Please check your connection.',
+            icon: 'error'
+          });
         }
       }
     </script>

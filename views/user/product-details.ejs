@@ -53,7 +53,9 @@
 
         <div class="pricing-panel">
           <% 
-            const discount = product.productOffer || 0;
+            const pOffer = product.productOffer || 0;
+            const cOffer = product.category?.offer || 0;
+            const discount = Math.max(pOffer, cOffer);
             const finalPrice = Math.round(product.price * (1 - discount/100));
           %>
           <span class="final-price-lg">₹<%= finalPrice %></span>
@@ -99,8 +101,10 @@
             <% 
               const colors = [...new Set(product.variants.filter(v => v.isActive).map(v => v.color))];
             %>
-            <% colors.forEach(color => { %>
-              <div class="color-item" style="background: <%= color.toLowerCase() === 'white' ? '#fff' : color.toLowerCase() %>" onclick="selectColor('<%= color %>', this)" title="<%= color %>"></div>
+            <% colors.forEach(color => { 
+                const hexColor = color.toLowerCase() === 'white' ? '#ffffff' : color.toLowerCase();
+            %>
+              <div class="color-item" style="background-color: <%= hexColor %>;" onclick="selectColor('<%= color %>', this)" title="<%= color %>"></div>
             <% }) %>
           </div>
         </div>
@@ -114,6 +118,11 @@
           </div>
           <button class="btn-add-cart" onclick="addToCart('<%= product._id %>')">Add to Cart</button>
           <button class="btn-buy-now" onclick="buyNow('<%= product._id %>')">Buy Now</button>
+          <button class="wishlist-btn <%= locals.isInWishlist ? 'active' : '' %>" title="Add to Wishlist" onclick="toggleWishlist('<%= product._id %>', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+          </button>
         </div>
 
         <!-- Highlights -->
@@ -182,7 +191,6 @@
     window.productVariants = <%- JSON.stringify(product.variants.filter(v => v.isActive)) %>;
 
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="/js/product.js"></script>
 </body>
 </html>

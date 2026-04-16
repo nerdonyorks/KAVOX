@@ -41,11 +41,10 @@ async function verifyProductAvailability() {
         const data = await response.json();
         
         if (data.success && data.isActive === false) {
-            Swal.fire({
+            KavoxNotify.alert({
                 icon: 'error',
                 title: 'Product Unavailable',
-                text: 'This product has been unlisted or removed.',
-                confirmButtonColor: '#e91e63'
+                text: 'This product has been unlisted or removed.'
             }).then(() => {
                 window.location.href = '/shop';
             });
@@ -222,24 +221,43 @@ async function addToCart(productId) {
     if (!isAvailable) return;
 
     if (!selectedSize || !selectedColor) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Selection Required',
-            text: 'Please select both size and color.',
-            confirmButtonColor: '#e91e63'
-        });
+        KavoxNotify.toast('Please select both size and color.', 'error');
         return;
     }
-    const quantity = document.getElementById('buyQty').value;
-    console.log(`Adding to cart: Product ${productId}, Size ${selectedSize}, Color ${selectedColor}, Qty ${quantity}`);
+    const quantity = parseInt(document.getElementById('buyQty').value);
     
-    // Future: AJAX call to backend
-    Swal.fire({
-        icon: 'success',
-        title: 'Added to Cart',
-        text: `Successfully added ${quantity} item(s) to cart!`,
-        confirmButtonColor: '#e91e63'
-    });
+    // Find the actual variantId
+    const variant = window.productVariants.find(v => 
+        v.color.toLowerCase() === selectedColor.toLowerCase() && 
+        v.size === selectedSize.toString()
+    );
+
+    if (!variant) {
+        return KavoxNotify.toast('Selected variant not found', 'error');
+    }
+
+    try {
+        const response = await fetch('/api/cart/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                productId: productId,
+                variantId: variant._id,
+                quantity: quantity
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            window.location.href = '/cart';
+        } else {
+            KavoxNotify.alert({ title: 'Oops', text: result.message, icon: 'error' });
+        }
+    } catch (error) {
+        console.error("Submission error:", error);
+        KavoxNotify.toast("Failed to add to cart", 'error');
+    }
 }
 
 async function buyNow(productId) {
@@ -248,12 +266,7 @@ async function buyNow(productId) {
     if (!isAvailable) return;
 
     if (!selectedSize || !selectedColor) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Selection Required',
-            text: 'Please select both size and color.',
-            confirmButtonColor: '#e91e63'
-        });
+        KavoxNotify.toast('Please select both size and color.', 'error');
         return;
     }
     const quantity = document.getElementById('buyQty').value;

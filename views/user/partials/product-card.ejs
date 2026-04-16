@@ -1,4 +1,6 @@
-<% const discount=product.productOffer || 0; const finalPrice=Math.round(product.price * (1 - discount/100)); %>
+<% const pOffer=product.productOffer || 0; const cOffer=(product.category && product.category.offer) ?
+  product.category.offer : 0; const discount=Math.max(pOffer, cOffer); const finalPrice=Math.round(product.price * (1 -
+  discount/100)); %>
   <div class="product-card">
     <div class="product-image-wrapper">
       <% if (discount> 0) { %>
@@ -15,13 +17,22 @@
               <img src="<%= imgSrc %>" alt="<%= product.name %>" loading="lazy">
           </a>
 
-          <button class="wishlist-btn" title="Add to Wishlist" onclick="toggleWishlist('<%= product._id %>')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path
-                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
-              </path>
-            </svg>
-          </button>
+          <!-- Quick Actions on Image -->
+          <div class="product-quick-actions">
+            <% 
+              const isWishlisted = (typeof wishlistProductIds !== 'undefined' && wishlistProductIds.includes(product._id.toString()));
+            %>
+            <button class="wishlist-btn <%= isWishlisted ? 'active' : '' %>" 
+                    title="Add to Wishlist" 
+                    onclick="toggleWishlist('<%= product._id %>', this)">
+              <svg viewBox="0 0 24 24" <%= isWishlisted ? 'fill="#e91e63"' : 'fill="none"' %> stroke="currentColor" stroke-width="2">
+                <path
+                  d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                </path>
+              </svg>
+            </button>
+
+          </div>
     </div>
 
     <div class="product-card-info">
@@ -39,10 +50,10 @@
           <% } %>
       </div>
 
-      <!-- Action Buttons -->
+      <!-- Desktop Action Buttons -->
       <div class="product-card-actions">
-        <button class="btn-action" onclick="addToCart('<%= product._id %>')">Add to Cart</button>
-        <button class="btn-action" onclick="buyNow('<%= product._id %>')">Buy Now</button>
+        <button class="btn-action" onclick="openAddToCartModal('<%= product._id %>')">Add to Cart</button>
+        <button class="btn-action" onclick="window.location.href='/product/<%= product._id %>'">View Details</button>
       </div>
     </div>
   </div>

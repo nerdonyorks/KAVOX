@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/userController");
 const productController = require("../controllers/productController");
+const cartController = require("../controllers/cartController");
+const wishlistController = require("../controllers/wishlistController");
 const { isLoggedIn, isLoggedOut } = require("../middleware/authMiddleware");
 const upload = require("../middleware/upload");
 
@@ -19,6 +21,16 @@ router.get("/user/new-password", isLoggedOut, userController.renderNewPassword);
 router.get("/shop", productController.userListProducts);
 router.get("/product/:id", productController.userGetProductDetails);
 router.get("/api/products/:id/status", productController.checkProductStatus);
+
+// Cart Routes
+router.get("/cart", isLoggedIn, cartController.getCart);
+router.post("/api/cart/add", isLoggedIn, cartController.addToCart);
+router.patch("/api/cart/quantity", isLoggedIn, cartController.updateQuantity);
+router.delete("/api/cart/remove/:itemId", isLoggedIn, cartController.removeFromCart);
+
+// Wishlist Routes
+router.get("/wishlist", isLoggedIn, wishlistController.getWishlist);
+router.post("/api/wishlist/toggle", isLoggedIn, wishlistController.toggleWishlist);
 
 // Protected User View Routes (Render)
 router.get("/account", isLoggedIn, userController.renderAccount);
@@ -38,5 +50,7 @@ router.post("/api/users/addresses", isLoggedIn, userController.addAddress);
 router.put("/api/users/addresses/:id", isLoggedIn, userController.updateAddress);
 router.delete("/api/users/addresses/:id", isLoggedIn, userController.deleteAddress);
 router.patch("/api/users/addresses/:id/default", isLoggedIn, userController.setDefaultAddress);
+
+router.get("/api/products/:id/variants", productController.userGetProductVariants);
 
 module.exports = router;
