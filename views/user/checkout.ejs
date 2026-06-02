@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="user-layout">
+  <%- include('../partials/user-header') %>
+
+  <main class="checkout-container">
+    <h1 class="checkout-page-title">CHECKOUT</h1>
+
+    <div class="checkout-grid">
+      <!-- LEFT COLUMN: Address & Payment -->
+      <div class="checkout-left">
+        
+        <!-- Address Section -->
+        <div class="checkout-section-header">
+          <h2>SELECT SAVED ADDRESS</h2>
+        </div>
+        
+        <div class="address-selection-box">
+          <% 
+            let defaultAddress = addresses.find(a => a.isDefault);
+            if (!defaultAddress && addresses.length > 0) defaultAddress = addresses[0];
+          %>
+          
+          <% if (defaultAddress) { %>
+            <div class="selected-address-card" id="selectedAddressCard" data-id="<%= defaultAddress._id %>">
+              <div class="address-card-top">
+                <div class="address-name-type">
+                  <span class="addr-name"><%= defaultAddress.firstName %> <%= defaultAddress.lastName %></span>
+                  <span class="addr-badge"><%= defaultAddress.type || 'HOME' %></span>
+                </div>
+                <!-- Since we have an open question on "Change" modal vs redirect, we will link to /user/address for now -->
+                <a href="/user/address?returnTo=/checkout" class="btn-change-addr">Change</a>
+              </div>
+              <div class="address-details">
+                <p><%= defaultAddress.street %>,</p>
+                <p><%= defaultAddress.city %>, <%= defaultAddress.state %> - <%= defaultAddress.pincode %></p>
+                <p class="addr-mobile"><strong>Mobile:</strong> <%= defaultAddress.mobile %></p>
+              </div>
+              <a href="/address/add?returnTo=/checkout" class="add-new-addr-link">Add new address</a>
+            </div>
+          <% } else { %>
+            <div class="no-address-state">
+              <p>You don't have any saved addresses.</p>
+              <a href="/address/add?returnTo=/checkout" class="btn-primary" style="display:inline-block; margin-top:10px;">Add New Address</a>
+            </div>
+          <% } %>
+        </div>
+
+        <!-- Payment Methods -->
+        <div class="payment-methods-wrapper">
+          <div class="payment-badge">PAYMENT METHODS</div>
+          
+          <div class="payment-options">
+            <!-- Razorpay (Disabled for now as per requirements) -->
+            <label class="payment-option disabled" title="Currently unavailable">
+              <input type="radio" name="paymentMethod" value="RAZORPAY" disabled>
+              <div class="payment-option-content">
+                <span>Razorpay</span>
+                <span class="payment-icon"><i>💳</i></span>
+              </div>
+            </label>
+
+            <!-- Cash on Delivery -->
+            <label class="payment-option active">
+              <input type="radio" name="paymentMethod" value="COD" checked>
+              <div class="payment-option-content">
+                <span>Cash on Delivery</span>
+              </div>
+            </label>
+
+            <!-- Wallet Pay (Disabled for now) -->
+            <label class="payment-option disabled" title="Currently unavailable">
+              <input type="radio" name="paymentMethod" value="WALLET" disabled>
+              <div class="payment-option-content">
+                <span>Wallet Pay</span>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: Order Summary -->
+      <div class="checkout-right">
+        
+        <!-- Coupons Section -->
+        <div class="checkout-summary-box">
+          <h3 class="summary-box-title">COUPONS</h3>
+          <p class="coupon-subtext">Apply Coupons and save extra</p>
+          <div class="coupon-input-group">
+            <input type="text" id="couponCode" placeholder="WELCOME20">
+            <button type="button" class="btn-apply-coupon">APPLY</button>
+          </div>
+        </div>
+
+        <!-- Order Details Section -->
+        <div class="checkout-summary-box">
+          <h3 class="summary-box-title">ORDER DETAILS</h3>
+          
+          <div class="checkout-items-list">
+            <% cart.items.forEach(item => { 
+                let imgSrc = '/images/placeholder.jpg';
+                if (item.productId && item.productId.images && item.productId.images.length > 0) {
+                    imgSrc = item.productId.images.find(img => img.isPrimary)?.url || item.productId.images[0].url;
+                }
+                const basePrice = item.productId.price;
+            %>
+              <div class="checkout-item">
+                <div class="checkout-item-img">
+                  <img src="<%= imgSrc %>" alt="<%= item.productId.name %>">
+                </div>
+                <div class="checkout-item-details">
+                  <div class="checkout-item-name"><%= item.productId.name %></div>
+                  <div class="checkout-item-meta">Size: <%= item.size %></div>
+                  <div class="checkout-item-meta">Quantity: <%= item.quantity %></div>
+                  <div class="checkout-item-price">
+                    <% if (item.price < basePrice) { %>
+                      <span class="strike-price">₹<%= basePrice %></span>
+                    <% } %>
+                    <span class="final-price">₹<%= item.price %></span>
+                  </div>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+
+          <hr class="summary-divider">
+
+          <div class="summary-calculations">
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <span>₹<%= summary.totalActualPrice %></span>
+            </div>
+            <div class="summary-row">
+              <span>Discount</span>
+              <span class="discount-text">-₹<%= summary.totalProductDiscount + summary.totalCategoryDiscount %></span>
+            </div>
+            <div class="summary-row">
+              <span>Shipping Charges</span>
+              <span class="free-text">Free</span>
+            </div>
+            <div class="summary-row total-row">
+              <span>Total</span>
+              <span>₹<%= summary.cartTotal %></span>
+            </div>
+          </div>
+
+          <button type="button" class="btn-proceed-payment" id="btnPlaceOrder">PROCEED TO PAYMENT</button>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Order Success Animated Modal -->
+  <div id="orderSuccessModal" class="order-success-modal" style="display: none;">
+    <div class="modal-content">
+      <div class="success-animation">
+        <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+          <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+          <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+        </svg>
+      </div>
+      <h2>Order Placed!</h2>
+      <p>Redirecting to confirmation...</p>
+    </div>
+  </div>
+
+  <%- include('../partials/user-footer') %>
+  <script src="/js/checkout.js"></script>
+</body>
+</html>

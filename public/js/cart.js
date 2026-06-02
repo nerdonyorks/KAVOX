@@ -1,7 +1,3 @@
-/**
- * Kavox Cart & Wishlist Management
- * Refactored for AJAX-based Variant Selection and Custom Modal.
- */
 
 // State for the Add-to-Cart Modal
 let atcData = {
@@ -12,10 +8,10 @@ let atcData = {
     currentVariant: null
 };
 
-/**
- * Open the Add-to-Cart Modal
- * Called from shop grid or product cards
- */
+
+//Open the Add-to-Cart Modal
+
+
 async function openAddToCartModal(productId) {
     // Show a global loading state if needed
     try {
@@ -42,9 +38,9 @@ async function openAddToCartModal(productId) {
     }
 }
 
-/**
- * Render the Custom Modal UI
- */
+
+//Render the Custom Modal UI
+
 function renderAddToCartModal() {
     const { product } = atcData;
     
@@ -113,9 +109,9 @@ function closeAtcModal() {
     }
 }
 
-/**
- * Handle Color Selection
- */
+
+ //Handle Color Selection
+
 function selectAtcColor(color) {
     atcData.selectedColor = color;
     atcData.selectedSize = null; // Reset size
@@ -150,9 +146,9 @@ function selectAtcColor(color) {
     document.getElementById('atcError').style.display = 'none';
 }
 
-/**
- * Handle Size Selection
- */
+
+//Handle Size Selection
+ 
 function selectAtcSize(size, variantId) {
     atcData.selectedSize = size;
     atcData.currentVariant = atcData.product.variants.find(v => v._id === variantId);
@@ -164,9 +160,8 @@ function selectAtcSize(size, variantId) {
     document.getElementById('atcError').style.display = 'none';
 }
 
-/**
- * Handle Qty Update
- */
+ //Handle Qty Update
+
 function updateAtcQty(change) {
     const newQty = atcData.selectedQty + change;
     if (newQty < 1 || newQty > 10) return;
@@ -175,9 +170,9 @@ function updateAtcQty(change) {
     document.getElementById('atcQtyDisplay').textContent = newQty;
 }
 
-/**
- * Submit to Cart
- */
+
+//Submit to Cart
+
 async function submitAddToCart() {
     const errorEl = document.getElementById('atcError');
     
@@ -194,7 +189,10 @@ async function submitAddToCart() {
     try {
         const response = await fetch('/api/cart/add', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
             body: JSON.stringify({
                 productId: atcData.product.id,
                 variantId: atcData.currentVariant._id,
@@ -202,10 +200,20 @@ async function submitAddToCart() {
             })
         });
 
+        if (response.status === 401) {
+            closeAtcModal();
+            KavoxNotify.toast('Please login to add to cart', 'error');
+            setTimeout(() => {
+                window.location.href = '/login?returnTo=' + encodeURIComponent(window.location.pathname + window.location.search);
+            }, 1000);
+            return;
+        }
+
         const result = await response.json();
 
         if (result.success) {
             KavoxNotify.toast("Added to cart successfully!", 'success');
+            if (typeof window.updateBadges === 'function') window.updateBadges();
             setTimeout(() => {
                 window.location.href = '/cart';
             }, 800);
@@ -223,9 +231,9 @@ async function submitAddToCart() {
     }
 }
 
-/**
- * Global Utilities (Replacing old Swal logic)
- */
+
+//Global Utilities (Replacing old Swal logic)
+
 
 async function updateCartQty(itemId, change) {
     const qtyInput = document.getElementById(`qty-${itemId}`);
@@ -270,6 +278,8 @@ async function updateCartQty(itemId, change) {
             
             if (document.getElementById('summaryTotal')) 
                 document.getElementById('summaryTotal').innerText = `₹${s.cartTotal}`;
+
+            if (typeof window.updateBadges === 'function') window.updateBadges();
         } else {
             KavoxNotify.toast(data.message, 'error');
         }
@@ -297,6 +307,7 @@ async function removeFromCart(itemId) {
                     itemRow.style.opacity = '0';
                     setTimeout(() => {
                         itemRow.remove();
+                        if (typeof window.updateBadges === 'function') window.updateBadges();
                         if (data.cartCount === 0) location.reload();
                         else {
                             const s = data.summary;
@@ -334,9 +345,21 @@ async function toggleWishlist(productId, element) {
     try {
         const response = await fetch('/api/wishlist/toggle', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
             body: JSON.stringify({ productId })
         });
+
+        if (response.status === 401) {
+            KavoxNotify.toast('Please login to manage wishlist', 'error');
+            setTimeout(() => {
+                window.location.href = '/login?returnTo=' + encodeURIComponent(window.location.pathname + window.location.search);
+            }, 1000);
+            return;
+        }
+
         const data = await response.json();
 
         if (data.success) {
@@ -344,6 +367,7 @@ async function toggleWishlist(productId, element) {
             if (data.action === 'added') element.classList.add('active');
             else element.classList.remove('active');
 
+            if (typeof window.updateBadges === 'function') window.updateBadges();
             KavoxNotify.toast(data.action === 'added' ? 'Added to Wishlist' : 'Removed from Wishlist', 'success');
         }
     } catch (error) {
@@ -361,3 +385,5 @@ window.selectAtcColor = selectAtcColor;
 window.selectAtcSize = selectAtcSize;
 window.updateAtcQty = updateAtcQty;
 window.submitAddToCart = submitAddToCart;
+
+

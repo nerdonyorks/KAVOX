@@ -4,6 +4,8 @@ const userController = require("../controllers/userController");
 const productController = require("../controllers/productController");
 const cartController = require("../controllers/cartController");
 const wishlistController = require("../controllers/wishlistController");
+const orderController = require("../controllers/orderController");
+const orderManagementController = require("../controllers/orderManagementController");
 const { isLoggedIn, isLoggedOut } = require("../middleware/authMiddleware");
 const upload = require("../middleware/upload");
 
@@ -12,6 +14,7 @@ router.get("/", userController.renderHome);
 router.get("/home", userController.renderHome);
 router.get("/signup", isLoggedOut, userController.renderSignup);
 router.get("/login", isLoggedOut, userController.renderLogin);
+router.get("/api/user/counts", userController.getUserCounts);
 router.get("/verify-otp", userController.renderOtpVerify);
 router.get("/forgot-password", isLoggedOut, userController.renderForgotPassword);
 router.get("/reset-password", isLoggedOut, userController.renderResetPassword);
@@ -28,9 +31,27 @@ router.post("/api/cart/add", isLoggedIn, cartController.addToCart);
 router.patch("/api/cart/quantity", isLoggedIn, cartController.updateQuantity);
 router.delete("/api/cart/remove/:itemId", isLoggedIn, cartController.removeFromCart);
 
+
 // Wishlist Routes
 router.get("/wishlist", isLoggedIn, wishlistController.getWishlist);
 router.post("/api/wishlist/toggle", isLoggedIn, wishlistController.toggleWishlist);
+
+// Checkout & Order Routes
+router.get("/checkout", isLoggedIn, orderController.getCheckout);
+router.post("/api/checkout/place-order", isLoggedIn, orderController.placeOrder);
+router.get("/order-success", isLoggedIn, (req, res) => {
+    const orderId = req.query.id;
+    res.render("user/order-success", { title: "Order Success", orderId });
+});
+
+// Order Management Routes
+router.get("/orders", isLoggedIn, orderManagementController.getUserOrders);
+
+router.get("/order/:id", isLoggedIn, orderManagementController.getOrderDetails);
+router.post("/api/order/:id/cancel", isLoggedIn, orderManagementController.cancelOrder);
+router.post("/api/order/:id/item/:itemId/cancel", isLoggedIn, orderManagementController.cancelOrderItem);
+router.post("/api/order/:id/return", isLoggedIn, orderManagementController.requestReturn);
+router.get("/order/:id/invoice", isLoggedIn, orderManagementController.downloadInvoice);
 
 // Protected User View Routes (Render)
 router.get("/account", isLoggedIn, userController.renderAccount);

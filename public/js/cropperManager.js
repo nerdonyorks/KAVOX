@@ -10,11 +10,7 @@ const CropperManager = {
     modal: null,
     imageElement: null,
 
-    /**
-     * Initializes the Cropper for a file input
-     * @param {File} file - The file selected from an input
-     * @param {Object} options - Configuration (aspectRatio, width, height, callback)
-     */
+    
     init(file, options = {}) {
         if (!file) return;
         

@@ -35,7 +35,7 @@ exports.getProductById = async (req, res) => {
 
 exports.listProducts = async (req, res) => {
   try {
-    const { search, page = 1, limit = 10, category } = req.query;
+    const { search, page = 1, limit = 4, category } = req.query;
     const query = { isDeleted: false };
 
     if (search) {
@@ -413,8 +413,8 @@ exports.userListProducts = async (req, res) => {
     const activeCategories = await Category.find({ isActive: true, isDeleted: false }, "_id").lean();
     const activeCategoryIds = activeCategories.map(cat => cat._id);
 
-    const query = { 
-      isDeleted: false, 
+    const query = {
+      isDeleted: false,
       isActive: true,
       category: { $in: activeCategoryIds }
     };
@@ -425,9 +425,21 @@ exports.userListProducts = async (req, res) => {
     }
 
     // Filter by Category
+    let validatedCategory = category;
     if (category && category !== "all") {
-      const categoryArray = Array.isArray(category) ? category : [category];
-      query.category = { $in: categoryArray };
+      let categoryArray = Array.isArray(category) ? category : [category];
+      // Filter out categories that are not active or deleted
+      categoryArray = categoryArray.filter(catId =>
+        activeCategoryIds.some(id => id.toString() === catId.toString())
+      );
+
+      if (categoryArray.length > 0) {
+        query.category = { $in: categoryArray };
+        validatedCategory = categoryArray;
+      } else {
+        // If no valid categories remain, default back to all active categories
+        validatedCategory = 'all';
+      }
     }
 
     // Filter by Brand
@@ -444,8 +456,7 @@ exports.userListProducts = async (req, res) => {
 
     // Filter by Size (within variants)
     const variantQuery = {
-      isActive: true,
-      quantity: { $gt: 0 }
+      isActive: true
     };
     if (size) {
       const sizeArray = Array.isArray(size) ? size : [size];
@@ -493,7 +504,7 @@ exports.userListProducts = async (req, res) => {
       totalPages: Math.ceil(totalProducts / parseInt(limit)),
       currentPage: parseInt(page),
       sort: sort || 'newest',
-      currentCategory: Array.isArray(category) ? category : (category && category !== 'all' ? [category] : []),
+      currentCategory: Array.isArray(validatedCategory) ? validatedCategory : (validatedCategory && validatedCategory !== 'all' ? [validatedCategory] : []),
       currentBrand: brand || 'all',
       currentSize: Array.isArray(size) ? size : (size ? [size] : []),
       minPrice: minPrice || '',
@@ -508,9 +519,9 @@ exports.userListProducts = async (req, res) => {
           console.error("AJAX Render Error:", err);
           return res.status(500).json({ success: false, message: "Render error" });
         }
-        res.json({ 
-          success: true, 
-          html, 
+        res.json({
+          success: true,
+          html,
           totalProducts: data.totalProducts,
           currentPage: data.currentPage,
           totalPages: data.totalPages,
@@ -536,37 +547,59 @@ exports.userListProducts = async (req, res) => {
 
 exports.userGetProductDetails = async (req, res) => {
   try {
-    const product = await Product.findOne({ _id: req.params.id, isDeleted: false, isActive: true })
+    const product = await Product.findOne({ _id: req.params.id, isDeleted: false })
       .populate("category")
       .lean();
 
-    if (!product || !product.category || !product.category.isActive || product.category.isDeleted) {
+    if (!product || !product.category) {
       return res.redirect("/shop");
     }
 
+    const isBlocked = !product.isActive || !product.category.isActive || product.category.isDeleted;
+
     // Fetch related products from the same category
-    const relatedProducts = await Product.find({
+    let relatedProducts = await Product.find({
       category: product.category._id,
       _id: { $ne: product._id },
       isDeleted: false,
       isActive: true
-    }).limit(4).lean();
+    }).populate("category").limit(3).lean();
+
+    // Fallback: If no related products in the same category, fetch from other categories
+    if (!relatedProducts || relatedProducts.length === 0) {
+      relatedProducts = await Product.find({
+        _id: { $ne: product._id },
+        isDeleted: false,
+        isActive: true
+      }).populate("category").limit(3).lean();
+    }
 
     // Check if product is in wishlist if user is logged in
     let isInWishlist = false;
+    let wishlistProductIds = [];
     const currentUser = req.user || req.session.user;
     if (currentUser) {
       const wishlist = await Wishlist.findOne({ userId: currentUser._id });
       if (wishlist) {
         isInWishlist = wishlist.products.some(pId => pId.toString() === product._id.toString());
+        wishlistProductIds = wishlist.products.map(pId => pId.toString());
       }
     }
+
+    // Calculate total stock for initial display
+    const totalStock = product.variants.reduce((acc, v) => acc + (v.quantity || 0), 0);
+    const stockText = totalStock > 0 ? (totalStock < 10 ? `Only ${totalStock} Left!` : 'In Stock') : 'Out of Stock';
+    const stockClass = totalStock > 0 ? (totalStock < 10 ? 'stock-low' : 'stock-in') : 'stock-out';
 
     res.render("user/product-details", {
       title: `${product.name} - KAVOX`,
       product,
       relatedProducts,
-      isInWishlist
+      isInWishlist,
+      wishlistProductIds,
+      isBlocked,
+      stockText,
+      stockClass
     });
   } catch (error) {
     console.error("User Get Product Details Error:", error);

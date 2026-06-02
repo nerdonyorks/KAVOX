@@ -203,6 +203,68 @@ const KavoxNotify = {
         });
     },
 
+    prompt: function (options) {
+        const { title = 'Enter Details', inputLabel = '', inputPlaceholder = '', confirmButtonText = 'Confirm', confirmButtonColor, inputValidator } = options;
+        const overlay = this._getOverlay();
+
+        const modal = document.createElement('div');
+        modal.className = 'kavox-confirm-modal';
+        modal.innerHTML = `
+            <div class="kavox-confirm-title">${title}</div>
+            ${inputLabel ? `<div class="kavox-confirm-text" style="text-align:left; margin-bottom: 5px;">${inputLabel}</div>` : ''}
+            <textarea class="kavox-prompt-input" placeholder="${inputPlaceholder}" style="width: 100%; min-height: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 15px; resize: vertical; box-sizing: border-box; font-family: inherit; font-size: 14px; outline: none;"></textarea>
+            <div class="kavox-prompt-error" style="color: #dc3545; font-size: 13px; margin-top: -10px; margin-bottom: 15px; text-align: left; display: none;"></div>
+            <div class="kavox-confirm-btns">
+                <button class="kavox-btn-cancel">Cancel</button>
+                <button class="kavox-btn-confirm" ${confirmButtonColor ? `style="background: ${confirmButtonColor}; border-color: ${confirmButtonColor}; color: white;"` : ''}>${confirmButtonText}</button>
+            </div>
+        `;
+
+        const close = () => {
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+            document.removeEventListener('keydown', escHandler);
+        };
+
+        const escHandler = (e) => { if (e.key === 'Escape') { close(); resolve({ isConfirmed: false, value: null }); } };
+        document.addEventListener('keydown', escHandler);
+
+        overlay.replaceChildren(modal);
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        const inputEl = modal.querySelector('.kavox-prompt-input');
+        const errorEl = modal.querySelector('.kavox-prompt-error');
+        
+        setTimeout(() => inputEl.focus(), 100);
+
+        return new Promise((resolve) => {
+            modal.querySelector('.kavox-btn-confirm').onclick = () => {
+                const val = inputEl.value.trim();
+                if (inputValidator) {
+                    const err = inputValidator(val);
+                    if (err) {
+                        errorEl.textContent = err;
+                        errorEl.style.display = 'block';
+                        return;
+                    }
+                }
+                close();
+                resolve({ isConfirmed: true, value: val });
+            };
+            modal.querySelector('.kavox-btn-cancel').onclick = () => {
+                close();
+                resolve({ isConfirmed: false, value: null });
+            };
+            overlay.onclick = (e) => {
+                if (e.target === overlay) {
+                    close();
+                    resolve({ isConfirmed: false, value: null });
+                }
+            };
+        });
+    },
+
     // 3. Robust Loading Overlay
     loading: function (message = 'Processing...') {
         let overlay = document.getElementById('kavox-loading-overlay');

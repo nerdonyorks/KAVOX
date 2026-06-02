@@ -3,6 +3,7 @@ const router = express.Router();
 const adminController = require("../controllers/adminController");
 const categoryController = require("../controllers/categoryController");
 const productController = require("../controllers/productController");
+const adminOrderController = require("../controllers/adminOrderController");
 const { isAdmin, setNoCache, isLoggedOut } = require("../middleware/authMiddleware");
 const upload = require("../middleware/upload");
 
@@ -24,8 +25,8 @@ router.patch("/api/admin/users/:id/toggle-block", isAdmin, adminController.toggl
 const { upload: cloudinaryUpload } = require("../config/cloudinary");
 
 // Category Management Views & APIs
-router.get("/admin/categories", isAdmin, setNoCache, (req, res) => res.render("admin/categories"));
-router.get("/api/admin/category", isAdmin, categoryController.listCategories);
+router.get("/admin/categories", isAdmin, setNoCache, categoryController.listCategories);
+router.get("/api/admin/category", isAdmin, categoryController.getAllCategoriesAPI);
 router.post("/api/admin/category", isAdmin, categoryController.createCategory);
 router.put("/api/admin/category/:id", isAdmin, categoryController.updateCategory);
 router.delete("/api/admin/category/:id", isAdmin, categoryController.deleteCategory);
@@ -37,5 +38,13 @@ router.get("/api/admin/product/:id", isAdmin, productController.getProductById);
 router.post("/api/admin/product", isAdmin, upload.array("images", 10), productController.createProduct);
 router.put("/api/admin/product/:id", isAdmin, upload.array("images", 10), productController.updateProduct);
 router.delete("/api/admin/product/:id", isAdmin, productController.deleteProduct);
+
+// Admin Order Management
+router.get("/admin/orders", isAdmin, setNoCache, adminOrderController.getAdminOrders);
+
+router.get("/admin/order/:id", isAdmin, setNoCache, adminOrderController.getAdminOrderDetails);
+router.patch("/api/admin/order/:id/status", isAdmin, adminOrderController.updateOrderStatus);
+router.patch("/api/admin/order/:orderId/item/:itemId/status", isAdmin, adminOrderController.updateItemStatus);
+router.post("/api/admin/order/:id/return", isAdmin, adminOrderController.handleReturnRequest);
 
 module.exports = router;

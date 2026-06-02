@@ -5,29 +5,49 @@ const { HTTP_STATUS, MESSAGES } = require("../utils/constants");
 
 exports.listCategories = async (req, res) => {
   try {
-    const { search, page = 1, limit = 10 } = req.query;
+    const { search } = req.query;
+    const pageInt = Math.max(1, parseInt(req.query.page) || 1);
+    const limitInt = Math.max(1, parseInt(req.query.limit) || 3); // 4 is fallback if not provided
+
     const query = { isDeleted: false };
 
     if (search) {
       query.name = { $regex: search, $options: "i" };
     }
 
-    const skip = (page - 1) * limit;
+    const skip = (pageInt - 1) * limitInt;
     const total = await Category.countDocuments(query);
     const data = await Category.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(parseInt(limit));
+      .limit(limitInt);
 
-    res.status(HTTP_STATUS.OK).json({
-      success: true,
-      data,
+    res.render("admin/categories", {
+      categories: data,
       total,
-      page: parseInt(page),
-      pages: Math.ceil(total / limit),
+      currentPage: pageInt,
+      totalPages: Math.ceil(total / limitInt),
+      searchQuery: search || ""
     });
   } catch (error) {
     console.error("List Categories Error:", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: MESSAGES.INTERNAL_SERVER_ERROR,
+    });
+  }
+};
+
+// Get all categories for API usage (Dropdowns)
+exports.getAllCategoriesAPI = async (req, res) => {
+  try {
+    const categories = await Category.find({ isDeleted: false }).lean();
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      data: categories
+    });
+  } catch (error) {
+    console.error("API Categories Error:", error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: MESSAGES.INTERNAL_SERVER_ERROR,
@@ -49,8 +69,8 @@ exports.createCategory = async (req, res) => {
 
     const normalizedName = name.trim();
     // Case-insensitive check for ANY existing category (included deleted)
-    const existing = await Category.findOne({ 
-      name: { $regex: new RegExp(`^${normalizedName}$`, "i") } 
+    const existing = await Category.findOne({
+      name: { $regex: new RegExp(`^${normalizedName}$`, "i") }
     });
 
     if (existing) {
@@ -59,7 +79,7 @@ exports.createCategory = async (req, res) => {
         existing.isDeleted = false;
         existing.deletedAt = null;
         existing.offer = Math.min(100, Math.max(0, parseFloat(offer) || 0));
-        existing.isActive = true; 
+        existing.isActive = true;
         await existing.save();
 
         return res.status(HTTP_STATUS.OK).json({
@@ -75,7 +95,7 @@ exports.createCategory = async (req, res) => {
       });
     }
 
-    const category = new Category({ 
+    const category = new Category({
       name: normalizedName,
       offer: Math.min(100, Math.max(0, parseFloat(offer) || 0))
     });

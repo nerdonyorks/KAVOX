@@ -28,8 +28,8 @@
         <!-- Revenue Card -->
         <div class="card stat-card">
           <div class="stat-info">
-            <div class="stat-value">₹<%= typeof totalRevenue !== 'undefined' ? totalRevenue.toLocaleString() : '45,551' %></div>
-            <div class="stat-label">Total Revenue</div>
+            <div class="stat-value">₹<%= typeof totalRevenue !== 'undefined' ? totalRevenue.toLocaleString() : '0' %></div>
+            <div class="stat-label">Total Revenue (Delivered)</div>
           </div>
           <div class="stat-icon-box">
              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
@@ -39,8 +39,8 @@
         <!-- Orders Card -->
         <div class="card stat-card">
           <div class="stat-info">
-            <div class="stat-value"><%= typeof totalOrders !== 'undefined' ? totalOrders : '328' %></div>
-            <div class="stat-label">Orders</div>
+            <div class="stat-value"><%= typeof totalOrders !== 'undefined' ? totalOrders : '0' %></div>
+            <div class="stat-label">Total Orders</div>
           </div>
           <div class="stat-icon-box">
              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
@@ -50,8 +50,8 @@
         <!-- Products Card -->
         <div class="card stat-card">
           <div class="stat-info">
-            <div class="stat-value"><%= typeof totalProducts !== 'undefined' ? totalProducts.toLocaleString() : '1,524' %></div>
-            <div class="stat-label">Products</div>
+            <div class="stat-value"><%= typeof totalProducts !== 'undefined' ? totalProducts.toLocaleString() : '0' %></div>
+            <div class="stat-label">Total Products</div>
           </div>
           <div class="stat-icon-box">
              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="M3.27 6.96L12 12.01l8.73-5.05"/><path d="M12 22.08V12"/></svg>
@@ -61,14 +61,57 @@
         <!-- Customers Card -->
         <div class="card stat-card">
           <div class="stat-info">
-            <div class="stat-value"><%= typeof totalCustomers !== 'undefined' ? totalCustomers : '922' %></div>
-            <div class="stat-label">Customers</div>
+            <div class="stat-value"><%= typeof totalCustomers !== 'undefined' ? totalCustomers : '0' %></div>
+            <div class="stat-label">Total Customers</div>
           </div>
           <div class="stat-icon-box">
              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           </div>
         </div>
       </div>
+
+      <!-- Low Stock Alerts Section -->
+      <% if (typeof lowStockItems !== 'undefined' && lowStockItems.length > 0) { %>
+      <div class="card" style="margin-bottom: 24px; border: 1px solid #fee2e2;">
+        <div class="card-header" style="border-bottom: 1px solid #fee2e2; padding-bottom: 12px;">
+          <h2 style="color: #ef4444; display: flex; align-items: center; gap: 8px;">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            Low Stock Alerts
+          </h2>
+        </div>
+        <div style="width: 100%; overflow-x: auto;">
+          <table class="orders-table" style="margin-top: 10px;">
+            <thead>
+              <tr>
+                <th>Product Name</th>
+                <th>Variant (Size / Color)</th>
+                <th>Quantity Left</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% lowStockItems.forEach(item => { %>
+                <tr>
+                  <td style="display: flex; align-items: center; gap: 12px;">
+                    <img src="<%= item.image %>" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid #eee;">
+                    <strong style="font-size: 13px;"><%= item.name %></strong>
+                  </td>
+                  <td><%= item.size %> / <%= item.color %></td>
+                  <td>
+                    <span class="badge" style="background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; font-weight: 700;">
+                      <%= item.quantity %>
+                    </span>
+                  </td>
+                  <td>
+                    <a href="/admin/products?search=<%= encodeURIComponent(item.name) %>&edit=<%= item.id %>" class="btn-outline" style="padding: 4px 10px; font-size: 11px; text-decoration: none;">Restock</a>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <% } %>
 
       <!-- Recent Orders Section -->
       <div class="card">
@@ -96,23 +139,12 @@
                   <td style="font-weight: 600;"><%= order.customer %></td>
                   <td style="color: var(--text-dim);"><%= order.date %></td>
                   <td style="font-weight: 700;">₹<%= order.total.toLocaleString() %></td>
-                  <td><span class="badge <%= order.status === 'Completed' ? 'badge-success' : 'badge-error' %>"><%= order.status %></span></td>
+                  <td><span class="badge badge-<%= order.status.toLowerCase().replace(' ', '-') %>" style="padding: 4px 8px;"><%= order.status %></span></td>
                 </tr>
               <% }); %>
             <% } else { %>
               <tr>
-                <td><span style="font-family: monospace; color: var(--secondary);">#011</span></td>
-                <td style="font-weight: 600;">Hans Burger</td>
-                <td style="color: var(--text-dim);">12/02/2026</td>
-                <td style="font-weight: 700;">₹2,999.00</td>
-                <td><span class="badge badge-success">Completed</span></td>
-              </tr>
-              <tr>
-                <td><span style="font-family: monospace; color: var(--secondary);">#012</span></td>
-                <td style="font-weight: 600;">Rullia Joberts</td>
-                <td style="color: var(--text-dim);">12/02/2026</td>
-                <td style="font-weight: 700;">₹3,999.00</td>
-                <td><span class="badge badge-error">Pending</span></td>
+                <td colspan="5" style="text-align: center; padding: 20px;">No recent orders.</td>
               </tr>
             <% } %>
             </tbody>

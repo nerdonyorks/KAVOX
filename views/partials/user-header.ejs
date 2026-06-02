@@ -7,8 +7,10 @@
   </div>
 
   <div class="search-box">
-    <input type="text" id="globalSearchInput" placeholder="Search for products, brands & more" value="<%= locals.searchQuery || '' %>">
-    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <input type="text" id="globalSearchInput" placeholder="Search for products, brands & more"
+      value="<%= locals.searchQuery || '' %>">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="cursor: pointer;"
+      onclick="if(typeof executeSearch === 'function') executeSearch()">
       <circle cx="11" cy="11" r="8"></circle>
       <path d="M21 21l-4.35-4.35"></path>
     </svg>
@@ -17,37 +19,41 @@
   <nav class="nav-links">
     <a href="/">HOME</a>
     <a href="/shop">SHOP</a>
-    <a href="/orders">ORDERS</a>
+    <a href="<%= locals.user ? '/orders' : '/login?returnTo=/orders' %>">ORDERS</a>
   </nav>
 
   <div class="header-icons">
-    <a href="/cart" title="Cart">
+    <a href="/cart" title="Cart" style="position: relative;">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
         <line x1="3" y1="6" x2="21" y2="6"></line>
       </svg>
+      <span class="nav-badge" id="cartBadge" style="display: none;">0</span>
     </a>
 
-    <a href="/wishlist" title="Wishlist">
+    <a href="/wishlist" title="Wishlist" style="position: relative;">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+        <path
+          d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+        </path>
       </svg>
+      <span class="nav-badge" id="wishlistBadge" style="display: none;">0</span>
     </a>
 
     <% if (locals.user) { %>
       <a href="/account" title="Account">
         <div class="profile-mini">
-          <% if (user.profileImage && user.profileImage !== "/images/default-user.png") { %>
+          <% if (user.profileImage && user.profileImage !=="/images/default-user.png" ) { %>
             <img src="<%= user.profileImage %>" alt="Profile">
-          <% } else { %>
-            <%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %>
-          <% } %>
+            <% } else { %>
+              <%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %>
+                <% } %>
         </div>
       </a>
       <a href="/api/auth/logout" class="sign-in-btn" style="background-color:#333;">Logout</a>
-    <% } else { %>
-      <a href="/login" class="sign-in-btn">Sign In</a>
-    <% } %>
+      <% } else { %>
+        <a href="/login" class="sign-in-btn">Sign In</a>
+        <% } %>
   </div>
 
   <button class="menu-toggle" onclick="toggleMobileNav()">
@@ -59,11 +65,24 @@
   </button>
 </header>
 
+<!-- Mobile Search Bar (Always visible on mobile) -->
+<div class="mobile-search-container mobile-only">
+  <div class="search-box">
+    <input type="text" class="mobileSearchInput" placeholder="Search for products, brands..."
+      value="<%= locals.searchQuery || '' %>">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+      onclick="executeMobileSearch(this)">
+      <circle cx="11" cy="11" r="8"></circle>
+      <path d="M21 21l-4.35-4.35"></path>
+    </svg>
+  </div>
+</div>
+
 <div class="mobile-nav" id="mobileNav">
   <button class="mobile-nav-close" onclick="toggleMobileNav()">&times;</button>
   <a href="/">HOME</a>
   <a href="/shop">SHOP</a>
-  <a href="/orders">ORDERS</a>
+  <a href="<%= locals.user ? '/orders' : '/login?returnTo=/orders' %>">ORDERS</a>
   <a href="/cart">CART</a>
   <a href="/wishlist">WISHLIST</a>
   <a href="/account">MY ACCOUNT</a>
@@ -75,4 +94,108 @@
     const nav = document.getElementById('mobileNav');
     nav.classList.toggle('active');
   }
+
+  // Global Badge Update
+  async function updateBadges() {
+    try {
+      const response = await fetch('/api/user/counts');
+      const data = await response.json();
+      if (data.success) {
+        const cartBadge = document.getElementById('cartBadge');
+        const wishlistBadge = document.getElementById('wishlistBadge');
+
+        if (data.cartCount > 0) {
+          cartBadge.textContent = data.cartCount;
+          cartBadge.style.display = 'flex';
+        } else {
+          cartBadge.style.display = 'none';
+        }
+
+        if (data.wishlistCount > 0) {
+          wishlistBadge.textContent = data.wishlistCount;
+          wishlistBadge.style.display = 'flex';
+        } else {
+          wishlistBadge.style.display = 'none';
+        }
+      }
+    } catch (err) {
+      console.error('Failed to update badges:', err);
+    }
+  }
+
+  // Initial load
+  document.addEventListener('DOMContentLoaded', () => {
+    updateBadges();
+
+    const searchInput = document.getElementById('globalSearchInput');
+    if (searchInput) {
+      let searchTimeout = null;
+
+      // Live search as you type (only for the shop page, since home page has its own logic)
+      searchInput.addEventListener('input', function (e) {
+        if (window.location.pathname.startsWith('/shop') && typeof window.updateShop === 'function') {
+          clearTimeout(searchTimeout);
+          searchTimeout = setTimeout(() => {
+            executeSearch();
+          }, 500); // 500ms debounce
+        }
+      });
+
+      searchInput.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          executeSearch();
+        }
+      });
+    }
+  });
+
+  // Global Search Handler
+  function executeSearch(inputElement) {
+    const searchInput = inputElement || document.getElementById('globalSearchInput');
+    if (searchInput) {
+      const query = searchInput.value.trim();
+
+      // If we're on the shop page, update the filter form directly to avoid full reload
+      if (window.location.pathname.startsWith('/shop') && typeof window.updateShop === 'function') {
+        const filterForm = document.getElementById('filterForm');
+        if (filterForm) {
+          const hiddenSearch = filterForm.querySelector('input[name="search"]');
+          if (hiddenSearch) hiddenSearch.value = query;
+
+          // Reset to page 1 on new search
+          const formData = new FormData(filterForm);
+          const params = new URLSearchParams(formData);
+          params.set('page', '1');
+          params.set('search', query);
+
+          window.updateShop(params.toString());
+        }
+      } else {
+        // Navigate to shop page with search query
+        window.location.href = `/shop?search=${encodeURIComponent(query)}`;
+      }
+    }
+  }
+
+  function executeMobileSearch(svg) {
+    const input = svg.parentElement.querySelector('.mobileSearchInput');
+    executeSearch(input);
+  }
+
+  // Handle Enter key for all search boxes
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('#globalSearchInput, .mobileSearchInput').forEach(input => {
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          executeSearch(this);
+        }
+      });
+    });
+  });
+
+  // Expose to window for global access
+  window.updateBadges = updateBadges;
+  window.executeSearch = executeSearch;
+  window.executeMobileSearch = executeMobileSearch;
 </script>

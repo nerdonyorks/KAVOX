@@ -2,8 +2,18 @@ const { HTTP_STATUS, MESSAGES } = require("../utils/constants");
 
 // Protect routes that require a user to be logged in (and NOT an admin)
 exports.isLoggedIn = (req, res, next) => {
+  // Handle AJAX/JSON requests (Moved up to handle ALL redirects)
+  const isAjax = req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'));
+
   if (req.isAuthenticated && req.isAuthenticated()) {
     if (req.user && req.user.role === 'admin') {
+        if (isAjax) {
+            return res.status(HTTP_STATUS.FORBIDDEN).json({
+                success: false,
+                message: "Admins cannot perform this action.",
+                redirect: "/admin/dashboard"
+            });
+        }
         return res.redirect("/admin/dashboard");
     }
     // Check if user is active
@@ -12,6 +22,13 @@ exports.isLoggedIn = (req, res, next) => {
             if (err) return next(err);
             req.session.destroy(() => {
                 res.clearCookie('user_sid');
+                if (isAjax) {
+                    return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+                        success: false,
+                        message: "Account suspended.",
+                        redirect: "/login?error=suspended"
+                    });
+                }
                 return res.redirect("/login?error=suspended");
             });
         });
@@ -19,7 +36,18 @@ exports.isLoggedIn = (req, res, next) => {
     }
     return next();
   }
-  res.redirect("/login");
+
+  if (isAjax) {
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+          success: false,
+          message: "Please login to continue.",
+          redirect: "/login"
+      });
+  }
+
+  // For standard page requests, redirect to login with returnTo parameter
+  const returnTo = encodeURIComponent(req.originalUrl || '/');
+  res.redirect(`/login?returnTo=${returnTo}`);
 };
 
 // Protect routes that should not be visible to logged in users (e.g., /login, /signup)

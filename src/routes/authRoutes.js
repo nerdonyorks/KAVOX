@@ -9,7 +9,16 @@ router.post("/api/auth/signup", authController.signup);
 router.post("/signup", authController.signup);
 
 // Google Auth Routes
-router.get("/api/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+router.get("/api/auth/google", (req, res, next) => {
+    const returnTo = req.query.returnTo || "/";
+    const state = Buffer.from(JSON.stringify({ returnTo })).toString('base64');
+    
+    passport.authenticate("google", { 
+        scope: ["profile", "email"], 
+        prompt: "select_account",
+        state: state 
+    })(req, res, next);
+});
 
 router.get("/api/auth/google/callback", (req, res, next) => {
     passport.authenticate("google", (err, user, info) => {
@@ -29,8 +38,27 @@ router.get("/api/auth/google/callback", (req, res, next) => {
 
         req.logIn(user, (err) => {
             if (err) return next(err);
+            
+            let returnTo = "/";
+            if (req.query.state) {
+                try {
+                    const decoded = JSON.parse(Buffer.from(req.query.state, 'base64').toString('utf-8'));
+                    if (decoded && decoded.returnTo) {
+                        returnTo = decoded.returnTo;
+                    }
+                } catch(e) {
+                    console.error("Failed to decode Google auth state:", e);
+                }
+            }
+            
+            // Fallback to session if needed
+            if (returnTo === "/" && req.session.returnTo) {
+                returnTo = req.session.returnTo;
+            }
+            delete req.session.returnTo;
+
             req.session.save(() => {
-                return res.redirect("/home");
+                return res.redirect(returnTo);
             });
         });
     })(req, res, next);

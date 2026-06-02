@@ -362,6 +362,17 @@
         const file = event.target.files[0];
         if (!file) return;
 
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+        if (!allowedTypes.includes(file.type)) {
+          KavoxNotify.alert({
+            title: 'Invalid File Type',
+            text: 'Please upload only image files (JPEG, PNG, WEBP).',
+            icon: 'error'
+          });
+          event.target.value = ''; // Reset input
+          return;
+        }
+
         CropperManager.init(file, {
           aspectRatio: 1,
           width: 500,
@@ -414,10 +425,12 @@
 
             categories.forEach(cat => {
               filter.innerHTML += `<option value="${cat._id}">${cat.name}</option>`;
-              select.innerHTML += `<option value="${cat._id}">${cat.name}</option>`;
+              if (cat.isActive) {
+                select.innerHTML += `<option value="${cat._id}">${cat.name}</option>`;
+              }
             });
           }
-          loadProducts();
+          await loadProducts();
         } catch (err) { console.error(err); }
       }
 
@@ -555,7 +568,21 @@
           const p = currentProducts.find(x => x._id === id);
           if (p) {
             document.getElementById('prodName').value = p.name;
-            document.getElementById('prodCategory').value = p.category._id || p.category;
+            const catSelect = document.getElementById('prodCategory');
+            const catId = p.category._id || p.category;
+            
+            // Check if current category is available in dropdown (active only by default)
+            const exists = Array.from(catSelect.options).some(opt => opt.value === catId);
+            if (!exists) {
+              const catObj = categories.find(c => c._id === catId);
+              if (catObj) {
+                const opt = document.createElement('option');
+                opt.value = catId;
+                opt.textContent = `${catObj.name} (Inactive)`;
+                catSelect.appendChild(opt);
+              }
+            }
+            catSelect.value = catId;
             document.getElementById('prodPrice').value = p.price;
             document.getElementById('prodDescription').value = p.description;
             document.getElementById('prodOffer').value = p.productOffer || 0;
@@ -753,7 +780,22 @@
       document.getElementById('prodPrice').addEventListener('input', () => hideFieldError('prodPrice', 'priceError'));
       document.getElementById('prodDescription').addEventListener('input', () => hideFieldError('prodDescription', 'descriptionError'));
 
-      window.onload = loadData;
+      window.onload = async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchParam = urlParams.get('search');
+        const editParam = urlParams.get('edit');
+        if (searchParam) {
+          document.getElementById('searchInput').value = searchParam;
+        }
+        await loadData();
+        
+        if (editParam) {
+          // Slight delay to ensure the DOM is ready after table render
+          setTimeout(() => {
+            openProductModal(editParam);
+          }, 300);
+        }
+      };
     </script>
     <%- include('../partials/cropperModal') %>
 </body>

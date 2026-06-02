@@ -18,25 +18,29 @@ const getDetailedTotals = (items) => {
     items.forEach(item => {
         const product = item.productId;
         const qty = item.quantity;
-        const basePriceTotal = product.price * qty;
+        const basePrice = product.price;
+        const basePriceTotal = basePrice * qty;
         totalActualPrice += basePriceTotal;
 
         const pOffer = product.productOffer || 0;
         const cOffer = (product.category && product.category.offer) ? product.category.offer : 0;
-        
-        // We calculate what was saved. 
-        // If pOffer >= cOffer, we consider the savings as "Product Discount"
-        // If cOffer > pOffer, we consider it as "Category Discount"
-        const finalItemPrice = item.price;
-        const totalSavedOnItem = basePriceTotal - (finalItemPrice * qty);
 
+        // Always apply whichever offer is greater
+        const bestOffer = Math.max(pOffer, cOffer);
+        const finalItemPrice = bestOffer > 0
+            ? Math.round(basePrice * (1 - bestOffer / 100))
+            : basePrice;
+
+        const savedOnItem = (basePrice - finalItemPrice) * qty;
+
+        // Attribute saving to the winning offer type
         if (pOffer >= cOffer && pOffer > 0) {
-            totalProductDiscount += totalSavedOnItem;
+            totalProductDiscount += savedOnItem;
         } else if (cOffer > pOffer && cOffer > 0) {
-            totalCategoryDiscount += totalSavedOnItem;
+            totalCategoryDiscount += savedOnItem;
         }
 
-        cartTotal += (finalItemPrice * qty);
+        cartTotal += finalItemPrice * qty;
     });
 
     return {
@@ -161,15 +165,15 @@ exports.addToCart = async (req, res) => {
 
         // 4. Check for existing item with same variant
         const existingItemIndex = cart.items.findIndex(
-            item => item.productId.toString() === productId && 
-                    item.size === variant.size && 
-                    item.color === variant.color
+            item => item.productId.toString() === productId &&
+                item.size === variant.size &&
+                item.color === variant.color
         );
 
         const pOffer = product.productOffer || 0;
         const cOffer = (product.category && product.category.offer) ? product.category.offer : 0;
         const discount = Math.max(pOffer, cOffer);
-        const finalPrice = Math.round(product.price * (1 - discount/100));
+        const finalPrice = Math.round(product.price * (1 - discount / 100));
 
         if (existingItemIndex > -1) {
             const newQty = cart.items[existingItemIndex].quantity + parseInt(quantity);
@@ -204,7 +208,7 @@ exports.addToCart = async (req, res) => {
         res.status(HTTP_STATUS.OK).json({
             success: true,
             message: "Added to cart successfully.",
-            cartCount: cart.items.length
+            cartCount: cart.items.reduce((acc, item) => acc + item.quantity, 0)
         });
 
     } catch (error) {
@@ -237,7 +241,7 @@ exports.updateQuantity = async (req, res) => {
 
         if (newQty < 1) return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Quantity cannot be less than 1." });
         if (newQty > 10) return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Max 10 units allowed per product." });
-        
+
         if (newQty > variant.quantity) {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Insufficient stock available." });
         }
@@ -260,7 +264,8 @@ exports.updateQuantity = async (req, res) => {
             success: true,
             newQty: item.quantity,
             itemTotal: item.totalPrice,
-            summary
+            summary,
+            cartCount: cart.items.reduce((acc, item) => acc + item.quantity, 0)
         });
 
     } catch (error) {
@@ -286,11 +291,11 @@ exports.removeFromCart = async (req, res) => {
 
         const summary = getDetailedTotals(cart.items);
 
-        res.json({ 
-            success: true, 
-            message: "Item removed from cart.", 
+        res.json({
+            success: true,
+            message: "Item removed from cart.",
             summary,
-            cartCount: cart.items.length
+            cartCount: cart.items.reduce((acc, item) => acc + item.quantity, 0)
         });
     } catch (error) {
         console.error("Remove from Cart Error:", error);

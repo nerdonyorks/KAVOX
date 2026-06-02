@@ -1,4 +1,6 @@
 const User = require("../models/userModel");
+const Order = require("../models/orderModel");
+const Product = require("../models/productModel");
 const { HTTP_STATUS, MESSAGES } = require("../utils/constants");
 
 exports.renderLogin = (req, res) => {
@@ -60,7 +62,76 @@ exports.loginAdmin = async (req, res) => {
   }
 };
 
-exports.renderDashboard = (req, res) => res.render("admin/dashboard");
+exports.renderDashboard = async (req, res) => {
+    try {
+        // Calculate Total Revenue
+        const revenueAggregation = await Order.aggregate([
+            { $match: { orderStatus: 'Delivered' } },
+            { $group: { _id: null, total: { $sum: "$pricing.total" } } }
+        ]);
+        const totalRevenue = revenueAggregation.length > 0 ? revenueAggregation[0].total : 0;
+
+        const totalOrders = await Order.countDocuments();
+        const totalCustomers = await User.countDocuments({ role: 'user' });
+        const totalProducts = await Product.countDocuments(); // Active + Inactive
+
+        // Low Stock Products — only active, non-deleted products with active variants under 10 stock
+        const lowStockProducts = await Product.find({
+            isDeleted: false,
+            isActive: true,
+            'variants.quantity': { $lt: 10 }
+        }).populate('category', 'isActive isDeleted').select('name variants images category');
+
+        const lowStockItems = [];
+        lowStockProducts.forEach(product => {
+            // Skip if category is deleted or inactive
+            if (!product.category || product.category.isDeleted || !product.category.isActive) return;
+
+            product.variants.forEach(variant => {
+                // Only include active variants that are low stock
+                if (variant.isActive && variant.quantity < 10) {
+                    lowStockItems.push({
+                        id: product._id,
+                        name: product.name,
+                        size: variant.size,
+                        color: variant.color,
+                        quantity: variant.quantity,
+                        image: (variant.images && variant.images[0]) ? (variant.images[0].url || variant.images[0]) : (product.images && product.images[0] ? (product.images[0].url || product.images[0]) : '/images/placeholder.png')
+                    });
+                }
+            });
+        });
+
+
+        // Recent Orders — exclude cancelled orders
+        const recentOrdersData = await Order.find({ orderStatus: { $ne: 'Cancelled' } })
+            .populate('userId', 'name')
+            .sort({ createdAt: -1 })
+            .limit(5);
+
+        const recentOrders = recentOrdersData.map(order => ({
+            id: order.orderId,
+            customer: order.userId ? order.userId.name : 'Unknown',
+            date: new Date(order.createdAt).toLocaleDateString(),
+            total: order.pricing.total,
+            status: order.orderStatus
+        }));
+
+        res.render("admin/dashboard", {
+            totalRevenue,
+            totalOrders,
+            totalCustomers,
+            totalProducts,
+            lowStockItems,
+            orders: recentOrders
+        });
+    } catch (error) {
+        console.error("Dashboard Error:", error);
+        res.render("admin/dashboard", {
+            totalRevenue: 0, totalOrders: 0, totalCustomers: 0, totalProducts: 0, lowStockItems: [], orders: []
+        });
+    }
+};
 
 exports.renderUserManagement = async (req, res) => {
   try {
@@ -192,14 +263,29 @@ exports.renderUserDetails = async (req, res, next) => {
         return res.status(HTTP_STATUS.NOT_FOUND).send(MESSAGES.USER_NOT_FOUND);
     }
 
-    // Demo purchase history data
-    const orders = [
-        { id: "ORD-9923", date: "2026-03-01", total: 4500, status: "Delivered", method: "Razorpay" },
-        { id: "ORD-1120", date: "2026-03-10", total: 1299, status: "Processing", method: "COD" },
-        { id: "ORD-7281", date: "2026-02-15", total: 2499, status: "Cancelled", method: "Wallet" }
-    ];
+    // Real purchase history data
+    const realOrders = await Order.find({ userId: user._id }).sort({ createdAt: -1 }).lean();
+    
+    let totalSpent = 0;
+    const orders = realOrders.map(order => {
+        if (order.orderStatus === 'Delivered') {
+            totalSpent += order.pricing.total;
+        }
+        return {
+            id: order.orderId,
+            date: new Date(order.createdAt).toLocaleDateString(),
+            total: order.pricing.total,
+            status: order.orderStatus,
+            method: order.paymentMethod
+        };
+    });
 
-    res.render("admin/user-details", { user, orders });
+    const analytics = {
+        totalOrders: orders.length,
+        totalSpent: totalSpent
+    };
+
+    res.render("admin/user-details", { user, orders, analytics });
   } catch (error) {
     console.error("View User Error:", error);
     next(error);

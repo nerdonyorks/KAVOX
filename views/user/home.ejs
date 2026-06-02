@@ -8,152 +8,153 @@
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/shimmer.js"></script>
 </head>
+
 <body class="user-layout">
   <%- include('../partials/user-header') %>
 
 
-  <!-- Hero Banner -->
-  <section class="hero">
-    <div class="hero-content">
-      <h1>ELEVATE YOUR<br>FOOTWEAR GAME</h1>
-      <p>EXPERIENCE PREMIUM COMFORT & STYLE</p>
-      <a href="/shop" class="shop-now-btn">EXPLORE COLLECTION</a>
-    </div>
-    <img src="/images/banner.jpg" alt="Kavox" class="hero-image">
-  </section>
+    <!-- Hero Banner -->
+    <section class="hero">
+      <div class="hero-content">
+        <h1>ELEVATE YOUR<br>FOOTWEAR GAME</h1>
+        <p>EXPERIENCE PREMIUM COMFORT & STYLE</p>
+        <a href="/shop" class="shop-now-btn">EXPLORE COLLECTION</a>
+      </div>
+      <img src="/images/banner.jpg" alt="Kavox" class="hero-image">
+    </section>
 
-  <!-- New Arrivals -->
-  <section class="section">
-    <h2 class="section-title" id="resultsTitle">NEW ARRIVALS</h2>
-    <div class="products-grid" id="productGrid">
-      <% if (typeof products !=='undefined' && products.length> 0) { %>
-        <% products.forEach(function(product) { %>
-          <%- include('partials/product-card', { product: product }) %>
-        <% }); %>
-      <% } else { %>
-          <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #888;">
-            <p>No products available right now. Check back later!</p>
+    <!-- New Arrivals -->
+    <section class="section">
+      <h2 class="section-title" id="resultsTitle">NEW ARRIVALS</h2>
+      <div class="products-grid" id="productGrid">
+        <% if (typeof products !=='undefined' && products.length> 0) { %>
+          <% products.forEach(function(product) { %>
+            <%- include('partials/product-card', { product: product }) %>
+              <% }); %>
+                <% } else { %>
+                  <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #888;">
+                    <p>No products available right now. Check back later!</p>
+                  </div>
+                  <% } %>
+      </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services-section">
+      <p class="services-title">OUR SERVICES</p>
+      <div class="services-grid">
+        <div class="service-item">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+              <line x1="2" y1="10" x2="22" y2="10"></line>
+            </svg>
           </div>
-      <% } %>
-    </div>
-  </section>
-
-  <!-- Services Section -->
-  <section class="services-section">
-    <p class="services-title">OUR SERVICES</p>
-    <div class="services-grid">
-      <div class="service-item">
-        <div class="service-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <rect x="2" y="5" width="20" height="14" rx="2"></rect>
-            <line x1="2" y1="10" x2="22" y2="10"></line>
-          </svg>
+          <h4>5% OFF</h4>
+          <p>5% OFF on Pre-paid orders</p>
         </div>
-        <h4>5% OFF</h4>
-        <p>5% OFF on Pre-paid orders</p>
-      </div>
-      <div class="service-item">
-        <div class="service-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M12 6v6l4 2"></path>
-            <text x="7" y="20" font-size="5" fill="currentColor">48h</text>
-          </svg>
+        <div class="service-item">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 6v6l4 2"></path>
+              <text x="7" y="20" font-size="5" fill="currentColor">48h</text>
+            </svg>
+          </div>
+          <h4>SHIPPING WITHIN 48 HOURS</h4>
+          <p>Your order will be shipped within 48 hours from the time since order is placed</p>
         </div>
-        <h4>SHIPPING WITHIN 48 HOURS</h4>
-        <p>Your order will be shipped within 48 hours from the time since order is placed</p>
-      </div>
-      <div class="service-item">
-        <div class="service-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-            <path d="M2 17l10 5 10-5"></path>
-            <path d="M2 12l10 5 10-5"></path>
-          </svg>
+        <div class="service-item">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+              <path d="M2 17l10 5 10-5"></path>
+              <path d="M2 12l10 5 10-5"></path>
+            </svg>
+          </div>
+          <h4>QUALITY CRAFTED</h4>
+          <p>Crafted with quality and care in India, from raw materials to the final product.</p>
         </div>
-        <h4>QUALITY CRAFTED</h4>
-        <p>Crafted with quality and care in India, from raw materials to the final product.</p>
-      </div>
-      <div class="service-item">
-        <div class="service-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path
-              d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
-            </path>
-            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-            <line x1="12" y1="22.08" x2="12" y2="12"></line>
-          </svg>
+        <div class="service-item">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path
+                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+              </path>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+              <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
+          </div>
+          <h4>DURABLE FOOTWEAR</h4>
+          <p>Durable, stylish footwear built for everyday comfort.</p>
         </div>
-        <h4>DURABLE FOOTWEAR</h4>
-        <p>Durable, stylish footwear built for everyday comfort.</p>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <%- include('../partials/user-footer') %>
+    <%- include('../partials/user-footer') %>
 
-  <script>
-    function toggleMobileNav() {
-      document.getElementById('mobileNav').classList.toggle('active');
-    }
+      <script>
+        function toggleMobileNav() {
+          document.getElementById('mobileNav').classList.toggle('active');
+        }
 
-    function buyNow(productId) {
-      // Buy now logic
-      window.location.href = '/product/' + productId;
-    }
+        function buyNow(productId) {
+          // Buy now logic
+          window.location.href = '/product/' + productId;
+        }
 
-    // Modern Search Implementation
-    const searchInput = document.getElementById('globalSearchInput');
-    const productGrid = document.getElementById('productGrid');
-    const resultsTitle = document.getElementById('resultsTitle');
+        // Modern Search Implementation
+        const searchInput = document.getElementById('globalSearchInput');
+        const productGrid = document.getElementById('productGrid');
+        const resultsTitle = document.getElementById('resultsTitle');
 
-    let searchTimeout = null;
+        let searchTimeout = null;
 
-    if (searchInput) {
-      searchInput.addEventListener('input', function(e) {
-          const searchTerm = e.target.value.trim();
-          
-          clearTimeout(searchTimeout);
-          
-          // Apply shimmer overlay instead of skeletons
-          productGrid.classList.add('is-loading-container');
-          
-          searchTimeout = setTimeout(() => {
+        if (searchInput) {
+          searchInput.addEventListener('input', function (e) {
+            const searchTerm = e.target.value.trim();
+
+            clearTimeout(searchTimeout);
+
+            // Apply shimmer overlay instead of skeletons
+            productGrid.classList.add('is-loading-container');
+
+            searchTimeout = setTimeout(() => {
               performSearch(searchTerm);
-          }, 500); // 500ms debounce
-      });
-    }
+            }, 500); // 500ms debounce
+          });
+        }
 
-    function showSkeletons() {
-        // Removed in favor of global shimmer overlay
-    }
+        function showSkeletons() {
+          // Removed in favor of global shimmer overlay
+        }
 
-    async function performSearch(query) {
-        try {
+        async function performSearch(query) {
+          try {
             // Guarantee a minimum shimmer duration of 600ms for a premium feel
             const [response] = await Promise.all([
-                fetch(`/?search=${encodeURIComponent(query)}`, {
-                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
-                }),
-                new Promise(resolve => setTimeout(resolve, 600))
+              fetch(`/?search=${encodeURIComponent(query)}`, {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+              }),
+              new Promise(resolve => setTimeout(resolve, 600))
             ]);
 
             const data = await response.json();
-            
+
             productGrid.classList.remove('is-loading-container');
 
             if (data.success) {
-                renderProducts(data.products, query);
+              renderProducts(data.products, query);
             }
-        } catch (err) {
+          } catch (err) {
             console.error('Search error:', err);
+          }
         }
-    }
 
-    function renderProducts(products, query) {
-        resultsTitle.textContent = query ? `SEARCH RESULTS FOR "${query.toUpperCase()}"` : 'NEW ARRIVALS';
-        
-        if (products.length === 0) {
+        function renderProducts(products, query) {
+          resultsTitle.textContent = query ? `SEARCH RESULTS FOR "${query.toUpperCase()}"` : 'NEW ARRIVALS';
+
+          if (products.length === 0) {
             productGrid.innerHTML = `
                 <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #666;">
                     <h3>No products found for "${query}"</h3>
@@ -161,14 +162,14 @@
                 </div>
             `;
             return;
-        }
+          }
 
-        productGrid.innerHTML = products.map(product => {
+          productGrid.innerHTML = products.map(product => {
             const discount = product.productOffer || 0;
-            const finalPrice = Math.round(product.price * (1 - discount/100));
-            const imgSrc = product.images && product.images.length > 0 
-                ? (product.images.find(img => img.isPrimary)?.url || product.images[0].url) 
-                : product.image;
+            const finalPrice = Math.round(product.price * (1 - discount / 100));
+            const imgSrc = product.images && product.images.length > 0
+              ? (product.images.find(img => img.isPrimary)?.url || product.images[0].url)
+              : product.image;
 
             return `
             <div class="product-card">
@@ -202,9 +203,9 @@
                 </div>
             </div>
             `;
-        }).join('');
-    }
-  </script>
+          }).join('');
+        }
+      </script>
 </body>
 
 </html>

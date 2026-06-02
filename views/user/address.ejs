@@ -9,168 +9,10 @@
     <script src="/js/notifications.js"></script>
     <script src="/js/shimmer.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #ffffff;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            color: #333;
-        }
-
-        /* Header Styles */
-        .header {
-            background-color: #1a1a1a;
-            padding: 12px 30px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .logo-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .logo-img {
-            height: 40px;
-            filter: invert(0);
-        }
-
-        .logo-sub {
-            font-size: 9px;
-            color: #fff;
-            letter-spacing: 8px;
-            margin-top: 2px;
-            text-transform: uppercase;
-        }
-
-        .search-box {
-            flex: 1;
-            max-width: 400px;
-            display: flex;
-            align-items: center;
-            background-color: #333;
-            border-radius: 4px;
-            padding: 8px 12px;
-            gap: 10px;
-        }
-
-        .search-box input {
-            flex: 1;
-            background: none;
-            border: none;
-            outline: none;
-            color: #fff;
-            font-size: 13px;
-        }
-
-        .search-box input::placeholder {
-            color: #888;
-        }
-
-        .search-box svg {
-            color: #888;
-            width: 18px;
-            height: 18px;
-        }
-
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 25px;
-        }
-
-        .nav-links a {
-            color: #fff;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-        }
-
-        .nav-links a:hover {
-            color: #4ade80;
-        }
-
-        .header-icons {
-            display: flex;
-            align-items: center;
-            gap: 18px;
-        }
-
-        .header-icons a {
-            color: #fff;
-            display: flex;
-            align-items: center;
-        }
-
-        .header-icons svg {
-            width: 22px;
-            height: 22px;
-        }
-
-        .sign-in-btn {
-            background-color: #e91e63;
-            color: #fff;
-            border: none;
-            padding: 8px 18px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        .sign-in-btn:hover {
-            background-color: #c2185b;
-        }
-
-        .menu-toggle {
-            display: none;
-            background: none;
-            border: none;
-            color: #fff;
-            cursor: pointer;
-        }
-
-        .profile-mini {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background-color: #333;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: 600;
-            text-decoration: none;
-            border: 1px solid #4ade80;
-        }
-
-        .profile-mini img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
         /* Main Content */
         .main-content {
             flex: 1;
-            padding: 40px 60px;
+            padding: 40px 20px;
             max-width: 1000px;
             width: 100%;
             margin: 0 auto;
@@ -194,10 +36,12 @@
             margin-bottom: 20px;
             cursor: pointer;
             transition: border-color 0.2s;
+            background: #fff;
         }
 
         .add-address-card:hover {
             border-color: #999;
+            background-color: #fafafa;
         }
 
         .add-address-text {
@@ -215,6 +59,7 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
+            background: #fff;
         }
 
         .address-content {
@@ -275,169 +120,10 @@
             color: #fff;
         }
 
-        /* Mobile Navigation */
-        .mobile-nav {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 200;
-            flex-direction: column;
-            padding: 60px 30px;
-        }
-
-        .mobile-nav.active {
-            display: flex;
-        }
-
-        .mobile-nav-close {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: none;
-            border: none;
-            color: #fff;
-            font-size: 30px;
-            cursor: pointer;
-        }
-
-        .mobile-nav a {
-            color: #fff;
-            text-decoration: none;
-            font-size: 18px;
-            padding: 15px 0;
-            border-bottom: 1px solid #333;
-        }
-
-        /* Footer */
-        .footer {
-            background-color: #1a1a1a;
-            padding: 50px 30px 20px;
-            color: #fff;
-            margin-top: auto;
-        }
-
-        .footer-content {
-            display: grid;
-            grid-template-columns: 1fr 2fr 1fr;
-            gap: 40px;
-            max-width: 1200px;
-            margin: 0 auto 30px;
-        }
-
-        .footer-logo {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            padding-left: 20px;
-        }
-
-        .footer-logo .logo-img {
-            height: 40px;
-            filter: invert(0);
-            margin-bottom: 5px;
-        }
-
-        .footer-logo .logo-sub {
-            font-size: 10px;
-            color: #fff;
-            letter-spacing: 8px;
-            text-align: center;
-        }
-
-        .footer-links {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-        }
-
-        .footer-links-column h4 {
-            font-size: 12px;
-            font-weight: 400;
-            margin-bottom: 15px;
-            color: #888;
-        }
-
-        .footer-links-column a {
-            display: block;
-            color: #ccc;
-            text-decoration: none;
-            font-size: 13px;
-            margin-bottom: 10px;
-        }
-
-        .footer-links-column a:hover {
-            color: #4ade80;
-        }
-
-        .footer-social h4 {
-            font-size: 14px;
-            margin-bottom: 15px;
-        }
-
-        .footer-social a,
-        .footer-social p {
-            display: block;
-            color: #ccc;
-            text-decoration: none;
-            font-size: 13px;
-            margin-bottom: 10px;
-        }
-
-        .footer-social a:hover {
-            color: #4ade80;
-        }
-
-        .footer-bottom {
-            text-align: center;
-            padding-top: 20px;
-            border-top: 1px solid #333;
-        }
-
-        .footer-bottom p {
-            font-size: 11px;
-            color: #666;
-        }
-
         /* Responsive */
-        @media (max-width: 992px) {
-            .footer-content {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
-
-            .footer-links {
-                justify-content: center;
-            }
-        }
-
         @media (max-width: 768px) {
-            .header {
-                padding: 12px 15px;
-            }
-
-            .search-box {
-                display: none;
-            }
-
-            .nav-links {
-                display: none;
-            }
-
-            .menu-toggle {
-                display: block;
-            }
-
             .main-content {
                 padding: 30px 20px;
-            }
-
-            .page-title {
-                font-size: 20px;
             }
 
             .address-card {
@@ -457,20 +143,6 @@
         }
 
         @media (max-width: 480px) {
-            .header-icons {
-                gap: 12px;
-            }
-
-            .header-icons svg {
-                width: 18px;
-                height: 18px;
-            }
-
-            .sign-in-btn {
-                padding: 6px 12px;
-                font-size: 11px;
-            }
-
             .main-content {
                 padding: 20px 15px;
             }
@@ -483,247 +155,141 @@
     </style>
 </head>
 
-<body>
-    <!-- Header -->
-    <header class="header">
-        <div class="logo-container">
-            <img src="/images/logo.png" alt="KAVOX" class="logo-img">
-            <span class="logo-sub">S O L E &nbsp; L A B</span>
-        </div>
+<body class="user-layout">
+    <%- include('../partials/user-header') %>
 
-        <div class="search-box">
-            <input type="text" placeholder="Search for products,brands & more">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="M21 21l-4.35-4.35"></path>
-            </svg>
-        </div>
 
-        <nav class="nav-links">
-            <a href="/">HOME</a>
-            <a href="/shop">SHOP</a>
-            <a href="/orders">ORDERS</a>
-        </nav>
+        <!-- Main Content -->
+        <main class="main-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h1 class="page-title">ADDRESS</h1>
+                <a href="<%= locals.returnTo ? returnTo : '/account' %>"
+                    style="text-decoration: none; color: #e91e63; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 5px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                    <%= locals.returnTo ? 'BACK TO CHECKOUT' : 'BACK TO PROFILE' %>
+                </a>
+            </div>
 
-        <div class="header-icons">
-            <a href="/cart" title="Cart">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                </svg>
-            </a>
-            <a href="/wishlist" title="Wishlist">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path
-                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
-                    </path>
-                </svg>
-            </a>
-            <% if (locals.user) { %>
-                <a href="/account" title="Account">
-                    <% if (user.profileImage) { %>
-                        <div class="profile-mini">
-                            <img src="<%= user.profileImage %>" alt="Profile">
+            <!-- Add New Address -->
+            <div class="add-address-card" onclick="window.location.href='/address/add<%= locals.returnTo ? '?returnTo=' + returnTo : '' %>'">
+                <span class="add-address-text">ADD NEW ADDRESS</span>
+            </div>
+
+            <!-- Address List -->
+            <% if (typeof addresses !=='undefined' && addresses.length> 0) { %>
+                <% addresses.forEach(function(address, index) { %>
+                    <div class="address-card">
+                        <div class="address-content">
+                            <input type="checkbox" class="address-checkbox" <%=address.isDefault ? 'checked' : '' %>
+                            onchange="setDefaultAddress('<%= address._id %>')">
+                                <div class="address-details">
+                                    <span class="address-type">(<%= address.type || 'HOME' %>)</span>
+                                    <span class="address-line">
+                                        <%= address.street %>
+                                    </span>
+                                    <span class="address-line">
+                                        <%= address.city %> - <%= address.pincode %>
+                                    </span>
+                                    <span class="address-line">
+                                        <%= address.state %>
+                                    </span>
+                                    <span class="address-line">Mobile : <%= address.mobile %></span>
+                                </div>
                         </div>
+                        <div class="address-actions">
+                            <button class="delete-btn" style="margin-bottom: 8px; border-color: #333; color: #333;"
+                                onclick="window.location.href='/address/edit/<%= address._id %><%= locals.returnTo ? '?returnTo=' + returnTo : '' %>'">Edit Address</button>
+                            <button class="delete-btn" onclick="deleteAddress('<%= address._id %>')">Delete
+                                Address</button>
+                        </div>
+                    </div>
+                    <% }); %>
                         <% } else { %>
-                            <div class="profile-mini">
-                                <%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %>
+                            <div
+                                style="text-align: center; padding: 40px; background: #fafafa; border-radius: 8px; border: 1px dashed #ccc;">
+                                <p style="color: #888; margin-bottom: 20px;">No addresses saved yet.</p>
+
                             </div>
                             <% } %>
-                </a>
-                <a href="/api/auth/logout" class="sign-in-btn" style="background-color: #333;">Logout</a>
-                <% } else { %>
-                    <a href="/login" class="sign-in-btn">Sign In</a>
-                    <% } %>
-        </div>
+        </main>
 
-        <button class="menu-toggle" onclick="toggleMobileNav()">
-            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-        </button>
-    </header>
+        <%- include('../partials/user-footer') %>
 
-    <!-- Mobile Navigation -->
-    <div class="mobile-nav" id="mobileNav">
-        <button class="mobile-nav-close" onclick="toggleMobileNav()">&times;</button>
-        <a href="/">HOME</a>
-        <a href="/shop">SHOP</a>
-        <a href="/orders">ORDERS</a>
-        <a href="/cart">CART</a>
-        <a href="/wishlist">WISHLIST</a>
-        <a href="/account">MY ACCOUNT</a>
-        <a href="/login">SIGN IN</a>
-    </div>
+            <script>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <h1 class="page-title">ADDRESS</h1>
-            <a href="/account"
-                style="text-decoration: none; color: #e91e63; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 5px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7" />
-                </svg>
-                BACK TO PROFILE
-            </a>
-        </div>
 
-        <!-- Add New Address -->
-        <div class="add-address-card" onclick="window.location.href='/address/add'">
-            <span class="add-address-text">ADD NEW ADDRESS</span>
-        </div>
+                async function deleteAddress(addressId) {
+                    const confirmed = await KavoxNotify.confirm({
+                        title: 'Are you sure?',
+                        text: "You won't be able to revert this!",
+                        icon: 'warning',
+                        confirmText: 'Yes, delete it!'
+                    });
 
-        <!-- Address List -->
-        <% if (typeof addresses !=='undefined' && addresses.length> 0) { %>
-            <% addresses.forEach(function(address, index) { %>
-                <div class="address-card">
-                    <div class="address-content">
-                        <input type="checkbox" class="address-checkbox" <%=address.isDefault ? 'checked' : '' %>
-                        onchange="setDefaultAddress('<%= address._id %>')">
-                            <div class="address-details">
-                                <span class="address-type">(<%= address.type || 'HOME' %>)</span>
-                                <span class="address-line">
-                                    <%= address.street %>
-                                </span>
-                                <span class="address-line">
-                                    <%= address.city %> - <%= address.pincode %>
-                                </span>
-                                <span class="address-line">
-                                    <%= address.state %>
-                                </span>
-                                <span class="address-line">Mobile : <%= address.mobile %></span>
-                            </div>
-                    </div>
-                    <div class="address-actions">
-                        <button class="delete-btn" style="margin-bottom: 8px; border-color: #333; color: #333;"
-                            onclick="window.location.href='/address/edit/<%= address._id %>'">Edit Address</button>
-                        <button class="delete-btn" onclick="deleteAddress('<%= address._id %>')">Delete Address</button>
-                    </div>
-                </div>
-                <% }); %>
-                    <% } else { %>
-                        <div
-                            style="text-align: center; padding: 40px; background: #fafafa; border-radius: 8px; border: 1px dashed #ccc;">
-                            <p style="color: #888; margin-bottom: 20px;">No addresses saved yet.</p>
+                    const isConfirmed = confirmed.isConfirmed;
 
-                        </div>
-                        <% } %>
-    </main>
+                    if (isConfirmed) {
+                        const mainContent = document.querySelector('.main-content');
+                        mainContent.classList.add('is-loading-container');
+                        try {
+                            const [response] = await Promise.all([
+                                fetch(`/api/users/addresses/${addressId}`, {
+                                    method: 'DELETE',
+                                    headers: { 'Accept': 'application/json' }
+                                }),
+                                new Promise(resolve => setTimeout(resolve, 600))
+                            ]);
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-content">
-            <div class="footer-logo">
-                <img src="/images/logo.png" alt="KAVOX" class="logo-img">
-                <span class="logo-sub">S O L E &nbsp; L A B</span>
-            </div>
-
-            <div class="footer-links">
-                <div class="footer-links-column">
-                    <a href="/cancellation">Cancellation & Returns</a>
-                    <a href="/orders">orders</a>
-                    <a href="/">Home</a>
-                    <a href="/shop">Shope</a>
-                    <a href="/account">My Account</a>
-                </div>
-                <div class="footer-links-column">
-                    <a href="/payments">Payments</a>
-                    <a href="/shipping">Shipping</a>
-                    <a href="/terms">Terms of Use</a>
-                    <a href="/security">Security</a>
-                    <a href="/privacy">Privacy</a>
-                </div>
-            </div>
-
-            <div class="footer-social">
-                <h4>Find us on social</h4>
-                <p>Email : kavox@gmail.com</p>
-                <a href="#">Instagram</a>
-                <a href="#">Facebook</a>
-                <a href="#">Twiter</a>
-            </div>
-        </div>
-
-        <div class="footer-bottom">
-            <p>&copy; 2026 Nonstop Fashion & Lifestyle</p>
-            <p>All Rights Reserved</p>
-        </div>
-    </footer>
-
-    <script>
-        function toggleMobileNav() {
-            const mobileNav = document.getElementById('mobileNav');
-            mobileNav.classList.toggle('active');
-        }
-
-        async function deleteAddress(addressId) {
-            const confirmed = await KavoxNotify.confirm({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                confirmText: 'Yes, delete it!'
-            });
-            
-            const isConfirmed = confirmed.isConfirmed;
-
-            if (isConfirmed) {
-                const mainContent = document.querySelector('.main-content');
-                mainContent.classList.add('is-loading-container');
-                try {
-                    const [response] = await Promise.all([
-                        fetch(`/api/users/addresses/${addressId}`, {
-                            method: 'DELETE',
-                            headers: { 'Accept': 'application/json' }
-                        }),
-                        new Promise(resolve => setTimeout(resolve, 600))
-                    ]);
-                    
-                    const data = await response.json();
-                    if (data.success) {
-                        await KavoxNotify.alert({ title: 'Deleted!', text: data.message, icon: 'success' });
-                        window.location.reload();
-                    } else {
-                        mainContent.classList.remove('is-loading-container');
-                        KavoxNotify.alert({ title: 'Error', text: data.message || 'Failed to delete address', icon: 'error' });
+                            const data = await response.json();
+                            if (data.success) {
+                                await KavoxNotify.alert({ title: 'Deleted!', text: data.message, icon: 'success' });
+                                window.location.reload();
+                            } else {
+                                mainContent.classList.remove('is-loading-container');
+                                KavoxNotify.alert({ title: 'Error', text: data.message || 'Failed to delete address', icon: 'error' });
+                            }
+                        } catch (error) {
+                            mainContent.classList.remove('is-loading-container');
+                            console.error('Delete Address Error:', error);
+                            KavoxNotify.alert({ title: 'Error', text: 'An internal error occurred', icon: 'error' });
+                        }
                     }
-                } catch (error) {
-                    mainContent.classList.remove('is-loading-container');
-                    console.error('Delete Address Error:', error);
-                    KavoxNotify.alert({ title: 'Error', text: 'An internal error occurred', icon: 'error' });
                 }
-            }
-        }
 
-        async function setDefaultAddress(addressId) {
-            const mainContent = document.querySelector('.main-content');
-            mainContent.classList.add('is-loading-container');
-            try {
-                const [response] = await Promise.all([
-                    fetch(`/api/users/addresses/${addressId}/default`, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                        body: JSON.stringify({ isDefault: true })
-                    }),
-                    new Promise(resolve => setTimeout(resolve, 600))
-                ]);
+                async function setDefaultAddress(addressId) {
+                    const mainContent = document.querySelector('.main-content');
+                    mainContent.classList.add('is-loading-container');
+                    try {
+                        const [response] = await Promise.all([
+                            fetch(`/api/users/addresses/${addressId}/default`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                                body: JSON.stringify({ isDefault: true })
+                            }),
+                            new Promise(resolve => setTimeout(resolve, 600))
+                        ]);
 
-                const data = await response.json();
-                if (data.success) {
-                    window.location.reload();
-                } else {
-                    mainContent.classList.remove('is-loading-container');
-                    KavoxNotify.alert({ title: 'Error', text: data.message || 'Failed to set default address', icon: 'error' });
+                        const data = await response.json();
+                        if (data.success) {
+                            const returnUrl = '<%= locals.returnTo || "" %>';
+                            if (returnUrl) {
+                                window.location.href = returnUrl;
+                            } else {
+                                window.location.reload();
+                            }
+                        } else {
+                            mainContent.classList.remove('is-loading-container');
+                            KavoxNotify.alert({ title: 'Error', text: data.message || 'Failed to set default address', icon: 'error' });
+                        }
+                    } catch (error) {
+                        mainContent.classList.remove('is-loading-container');
+                        console.error('Set Default Address Error:', error);
+                        KavoxNotify.alert({ title: 'Error', text: 'An internal error occurred', icon: 'error' });
+                    }
                 }
-            } catch (error) {
-                mainContent.classList.remove('is-loading-container');
-                console.error('Set Default Address Error:', error);
-                KavoxNotify.alert({ title: 'Error', text: 'An internal error occurred', icon: 'error' });
-            }
-        }
-    </script>
+            </script>
 </body>
 
 </html>

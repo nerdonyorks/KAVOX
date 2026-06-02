@@ -5,694 +5,118 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>User Profile - KAVOX SOLE LAB</title>
+  <link rel="stylesheet" href="/css/style.css">
   <script src="/js/notifications.js"></script>
   <script src="/js/shimmer.js"></script>
   <!-- Cropper.js -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
   <script src="/js/cropperManager.js"></script>
-  <style>
-    .profile-avatar:hover .hover-overlay {
-      opacity: 1 !important;
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #ffffff;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      color: #333;
-    }
-
-    /* Header Styles */
-    .header {
-      background-color: #1a1a1a;
-      padding: 12px 30px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .logo-container {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-    }
-
-    .logo-img {
-      height: 30px;
-      filter: invert(0);
-    }
-
-    .logo-sub {
-      font-size: 12px;
-      color: #4ade80;
-      letter-spacing: 6.5px;
-    }
-
-    .logo-sub-footer {
-      font-size: 14px;
-      color: #4ade80;
-      letter-spacing: 10px;
-    }
-
-    .search-box {
-      flex: 1;
-      max-width: 400px;
-      display: flex;
-      align-items: center;
-      background-color: #333;
-      border-radius: 4px;
-      padding: 8px 12px;
-      gap: 10px;
-    }
-
-    .search-box input {
-      flex: 1;
-      background: none;
-      border: none;
-      outline: none;
-      color: #fff;
-      font-size: 13px;
-    }
-
-    .search-box input::placeholder {
-      color: #888;
-    }
-
-    .search-box svg {
-      color: #888;
-      width: 18px;
-      height: 18px;
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 25px;
-    }
-
-    .nav-links a {
-      color: #fff;
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 500;
-      letter-spacing: 0.5px;
-    }
-
-    .nav-links a:hover {
-      color: #4ade80;
-    }
-
-    .header-icons {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-    }
-
-    .header-icons a {
-      color: #fff;
-      display: flex;
-      align-items: center;
-    }
-
-    .header-icons svg {
-      width: 22px;
-      height: 22px;
-    }
-
-    .sign-in-btn {
-      background-color: #e91e63;
-      color: #fff;
-      border: none;
-      padding: 8px 18px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      text-decoration: none;
-    }
-
-    .sign-in-btn:hover {
-      background-color: #c2185b;
-    }
-
-    .menu-toggle {
-      display: none;
-      background: none;
-      border: none;
-      color: #fff;
-      cursor: pointer;
-    }
-
-    .profile-mini {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background-color: #333;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      font-weight: 600;
-      text-decoration: none;
-      border: 1px solid #4ade80;
-    }
-
-    .profile-mini img {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    /* Main Content */
-    .main-content {
-      flex: 1;
-      padding: 40px 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    /* Profile Card */
-    .profile-card {
-      border: 2px solid #000000;
-      border-radius: 8px;
-      padding: 30px 40px;
-      max-width: 700px;
-      width: 100%;
-      position: relative;
-    }
-
-    .profile-title {
-      font-size: 28px;
-      font-weight: bold;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .profile-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 30px;
-    }
-
-    .profile-avatar {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      overflow: hidden;
-      border: 3px solid #e91e63;
-    }
-
-    .profile-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .profile-avatar-placeholder {
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(135deg, #e91e63, #ff5252);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 42px;
-      font-weight: 600;
-      color: #fff;
-      text-transform: uppercase;
-    }
-
-    .edit-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 5px;
-    }
-
-    .edit-btn svg {
-      width: 24px;
-      height: 24px;
-      stroke: #000000;
-      fill: none;
-      stroke-width: 2;
-    }
-
-    .profile-info {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .profile-info p {
-      font-size: 16px;
-      line-height: 1.5;
-    }
-
-    .profile-info strong {
-      font-weight: 600;
-    }
-
-    /* Action Buttons */
-    .action-buttons {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      max-width: 700px;
-      width: 100%;
-      margin-top: 40px;
-    }
-
-    .action-btn {
-      border: 2px solid #000000;
-      background: #ffffff;
-      padding: 16px 24px;
-      font-size: 13px;
-      font-weight: 500;
-      text-transform: uppercase;
-      cursor: pointer;
-      border-radius: 4px;
-      text-align: center;
-      text-decoration: none;
-      color: #000000;
-      transition: background-color 0.2s;
-    }
-
-    .action-btn:hover {
-      background-color: #f5f5f5;
-    }
-
-    /* Footer */
-    .footer {
-      background-color: #1a1a1a;
-      padding: 50px 30px 20px;
-      color: #fff;
-    }
-
-    .footer-content {
-      display: grid;
-      grid-template-columns: 1fr 2fr 1fr;
-      gap: 40px;
-      max-width: 1200px;
-      margin: 0 auto 30px;
-    }
-
-    .footer-logo .logo-img {
-      height: 40px;
-      filter: invert(0);
-      margin-bottom: 5px;
-    }
-
-    .footer-logo .logo-sub {
-      font-size: 10px;
-      color: #4ade80;
-      letter-spacing: 3px;
-    }
-
-    .footer-links {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-    }
-
-    .footer-links-column h4 {
-      font-size: 12px;
-      font-weight: 400;
-      margin-bottom: 15px;
-      color: #888;
-    }
-
-    .footer-links-column a {
-      display: block;
-      color: #ccc;
-      text-decoration: none;
-      font-size: 13px;
-      margin-bottom: 10px;
-    }
-
-    .footer-links-column a:hover {
-      color: #4ade80;
-    }
-
-    .footer-social h4 {
-      font-size: 14px;
-      margin-bottom: 15px;
-    }
-
-    .footer-social a {
-      display: block;
-      color: #ccc;
-      text-decoration: none;
-      font-size: 13px;
-      margin-bottom: 10px;
-    }
-
-    .footer-social a:hover {
-      color: #4ade80;
-    }
-
-    .footer-bottom {
-      text-align: center;
-      padding-top: 20px;
-      border-top: 1px solid #333;
-    }
-
-    .footer-bottom p {
-      font-size: 11px;
-      color: #666;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      .header {
-        padding: 12px 20px;
-        flex-wrap: wrap;
-      }
-
-      .search-container {
-        order: 3;
-        flex: 1 1 100%;
-        margin-top: 12px;
-      }
-
-      .nav-links {
-        display: none;
-      }
-
-      .action-buttons {
-        grid-template-columns: 1fr;
-      }
-
-      .footer-content {
-        flex-direction: column;
-      }
-
-      .footer-links {
-        flex-direction: column;
-        gap: 30px;
-      }
-    }
-  </style>
 </head>
 
-<body>
-  <!-- Header -->
-  <header class="header">
-    <div class="logo-container">
-      <img src="/images/logo.png" alt="KAVOX" class="logo-img">
-      <span class="logo-sub">SOLE LAB</span>
-    </div>
+<body class="user-layout">
+  <%- include('../partials/user-header') %>
 
-    <div class="search-box">
-      <input type="text" placeholder="Search for products, brands & more">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <circle cx="11" cy="11" r="8"></circle>
-        <path d="M21 21l-4.35-4.35"></path>
-      </svg>
-    </div>
-
-    <nav class="nav-links">
-      <a href="/">HOME</a>
-      <a href="/shop">SHOP</a>
-      <a href="/orders">ORDERS</a>
-    </nav>
-
-    <div class="header-icons">
-      <a href="/cart" title="Cart">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-          <line x1="3" y1="6" x2="21" y2="6"></line>
-        </svg>
-      </a>
-      <a href="/wishlist" title="Wishlist">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path
-            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
-          </path>
-        </svg>
-      </a>
-      <% if (locals.user) { %>
-        <a href="/account" title="Account">
-          <div class="profile-mini">
-            <% if (user.profileImage && user.profileImage !=="/images/default-user.png" ) { %>
-              <img src="<%= user.profileImage %>" alt="Profile">
-              <% } else { %>
-                <%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %>
-                  <% } %>
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="profile-container">
+        <div class="profile-card">
+          <div class="profile-card-header">
+            <h1>USER PROFILE</h1>
+            <a href="/profile/edit" class="edit-btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+            </a>
           </div>
-        </a>
-        <a href="/api/auth/logout" class="sign-in-btn" style="background-color: #333;">Logout</a>
-        <% } else { %>
-          <a href="/login" class="sign-in-btn">Sign In</a>
-          <% } %>
-    </div>
 
-    <button class="menu-toggle" onclick="toggleMobileNav()">
-      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <line x1="3" y1="12" x2="21" y2="12"></line>
-        <line x1="3" y1="6" x2="21" y2="6"></line>
-        <line x1="3" y1="18" x2="21" y2="18"></line>
-      </svg>
-    </button>
-  </header>
+          <div class="profile-main-section">
+            <div class="profile-avatar" onclick="document.getElementById('profileImageInput').click()">
+              <% if (user.profileImage && user.profileImage !=="/images/default-user.png" ) { %>
+                <img src="<%= user.profileImage %>" alt="Profile Image">
+                <% } else { %>
+                  <div class="profile-initials">
+                    <%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %>
+                  </div>
+                  <% } %>
+            </div>
 
-  <!-- Main Content -->
-  <main class="main-content">
-    <div class="profile-container" style="max-width: 800px; width: 100%;">
-      <div class="profile-card"
-        style="border: 2px solid #000; box-shadow: 0 10px 40px rgba(0,0,0,0.06); background: #fff; padding: 40px; border-radius: 20px; transition: transform 0.3s ease;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px;">
-          <h1 style="font-size: 24px; font-weight: 800; color: #1a1a1a; margin: 0; letter-spacing: -0.5px;">USER PROFILE
-          </h1>
-          <a href="/profile/edit" class="edit-btn"
-            style="background: #f8fafc; padding: 10px; border-radius: 10px; transition: all 0.2s; text-decoration: none; display: flex; align-items: center; justify-content: center; border: 1px solid #edf2f7;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            <div class="profile-info-grid">
+              <div class="info-row">
+                <span class="info-label">Full Name</span>
+                <span class="info-value">
+                  <%= user.name || 'N/A' %>
+                </span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Email</span>
+                <span class="info-value">
+                  <%= user.email || 'N/A' %>
+                </span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Address</span>
+                <span class="info-value">
+                  <% let defaultAddr=user.addresses ? user.addresses.find(a=> a.isDefault) : null;
+                    if (!defaultAddr && user.addresses && user.addresses.length > 0) defaultAddr = user.addresses[0];
+                    %>
+                    <%= defaultAddr ? `${defaultAddr.street}, ${defaultAddr.city}` : 'N/A' %>
+                </span>
+              </div>
+              <div class="info-row no-border">
+                <span class="info-label">Mobile No.</span>
+                <span class="info-value">
+                  <%= user.phone || 'N/A' %>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="profile-actions-grid">
+          <a href="/cart" class="profile-action-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e91e63" stroke-width="2">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
             </svg>
+            <span>MY CART</span>
+          </a>
+          <a href="/wishlist" class="profile-action-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e91e63" stroke-width="2">
+              <path
+                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+              </path>
+            </svg>
+            <span>MY WISHLIST</span>
+          </a>
+          <a href="/user/address" class="profile-action-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e91e63" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+            <span>ADDRESSES</span>
+          </a>
+          <a href="/wallet" class="profile-action-btn">
+            <span>WALLET</span>
+          </a>
+          <a href="/coupons" class="profile-action-btn">
+            <span>COUPONS</span>
+          </a>
+          <a href="/referral" class="profile-action-btn">
+            <span>REFERRAL</span>
           </a>
         </div>
-
-        <div style="display: flex; gap: 40px; align-items: center;">
-          <div class="profile-avatar"
-            style="width: 140px; height: 140px; flex-shrink: 0; border-radius: 24px; overflow: hidden; background: #f1f5f9; cursor: pointer; position: relative; border: 4px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"
-            onclick="document.getElementById('profileImageInput').click()">
-            <% if (user.profileImage && user.profileImage !=="/images/default-user.png" ) { %>
-              <img src="<%= user.profileImage %>" alt="Profile Image"
-                style="width: 100%; height: 100%; object-fit: cover;">
-              <% } else { %>
-                <div
-                  style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 48px; font-weight: 700; color: #e91e63; background: #fff1f2;">
-                  <%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %>
-                </div>
-                <% } %>
-                  <div class="hover-overlay"
-                    style="position: absolute; inset: 0; background: rgba(0,0,0,0.4); color: white; font-size: 11px; font-weight: 600; text-transform: uppercase; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s; pointer-events: none;">
-                    Change
-                  </div>
-                  <input type="file" id="profileImageInput" name="profileImage" style="display: none;" accept="image/*"
-                    onchange="handleProfileImageSelect(event)">
-          </div>
-
-          <div class="profile-info" style="flex: 1; display: grid; gap: 20px;">
-            <div
-              style="display: grid; grid-template-columns: 140px 1fr; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
-              <span
-                style="font-size: 13px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Full
-                Name</span>
-              <span style="font-size: 16px; font-weight: 600; color: #1e293b;">
-                <%= user.name || 'N/A' %>
-              </span>
-            </div>
-            <div
-              style="display: grid; grid-template-columns: 140px 1fr; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
-              <span
-                style="font-size: 13px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Email</span>
-              <span style="font-size: 16px; font-weight: 600; color: #1e293b;">
-                <%= user.email || 'N/A' %>
-              </span>
-            </div>
-            <div
-              style="display: grid; grid-template-columns: 140px 1fr; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
-              <span
-                style="font-size: 13px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Address</span>
-              <span style="font-size: 15px; font-weight: 500; color: #475569;">
-                <% let defaultAddr=user.addresses ? user.addresses.find(a=> a.isDefault) : null;
-                  if (!defaultAddr && user.addresses && user.addresses.length > 0) defaultAddr = user.addresses[0];
-                  %>
-                  <%= defaultAddr ? `${defaultAddr.street}, ${defaultAddr.city}` : 'N/A' %>
-              </span>
-            </div>
-            <div style="display: grid; grid-template-columns: 140px 1fr;">
-              <span
-                style="font-size: 13px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Mobile
-                No.</span>
-              <span style="font-size: 16px; font-weight: 600; color: #1e293b;">
-                <%= user.phone || 'N/A' %>
-              </span>
-            </div>
-          </div>
-        </div>
       </div>
+    </main>
 
-      <!-- Action Buttons -->
-      <div class="action-buttons"
-        style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 32px;">
-        <a href="/orders" class="action-btn"
-          style="border: 2px solid #000; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px; border-radius: 12px; transition: transform 0.2s;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e91e63" stroke-width="2">
-            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-          </svg>
-          <span style="font-weight: 700; font-size: 11px; letter-spacing: 1px;">MY ORDERS</span>
-        </a>
-        <a href="/wishlist" class="action-btn"
-          style="border: 2px solid #000; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px; border-radius: 12px; transition: transform 0.2s;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e91e63" stroke-width="2">
-            <path
-              d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
-            </path>
-          </svg>
-          <span style="font-weight: 700; font-size: 11px; letter-spacing: 1px;">MY WISHLIST</span>
-        </a>
-        <a href="/user/address" class="action-btn"
-          style="border: 2px solid #000; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px; border-radius: 12px; transition: transform 0.2s;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e91e63" stroke-width="2">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-            <circle cx="12" cy="10" r="3"></circle>
-          </svg>
-          <span style="font-weight: 700; font-size: 11px; letter-spacing: 1px;">ADDRESSES</span>
-        </a>
-        <a href="/wallet" class="action-btn"
-          style="border: 2px solid #000; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px; border-radius: 12px; transition: transform 0.2s;">
-          <span style="font-weight: 700; font-size: 11px; letter-spacing: 1px;">WALLET</span>
-        </a>
-        <a href="/coupons" class="action-btn"
-          style="border: 2px solid #000; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px; border-radius: 12px; transition: transform 0.2s;">
-          <span style="font-weight: 700; font-size: 11px; letter-spacing: 1px;">COUPONS</span>
-        </a>
-        <a href="/referral" class="action-btn"
-          style="border: 2px solid #000; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px; border-radius: 12px; transition: transform 0.2s;">
-          <span style="font-weight: 700; font-size: 11px; letter-spacing: 1px;">REFERRAL</span>
-        </a>
-      </div>
-    </div>
-  </main>
+    <%- include('../partials/user-footer') %>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-content">
-      <div class="footer-logo">
-        <img src="/images/logo.png" alt="KAVOX" class="logo-img">
-        <p class="logo-sub-footer">SOLE LAB</p>
-      </div>
 
-      <div class="footer-links">
-        <div class="footer-links-column">
-          <a href="/cancellation">Cancellation & Returns</a>
-          <a href="/orders">Orders</a>
-          <a href="/">Home</a>
-          <a href="/shop">Shop</a>
-          <a href="/account">My Account</a>
-        </div>
-        <div class="footer-links-column">
-          <h4>Payments</h4>
-          <a href="/shipping">Shipping</a>
-          <a href="/terms">Terms of Use</a>
-          <a href="/security">Security</a>
-          <a href="/privacy">Privacy</a>
-        </div>
-      </div>
+      <%- include('../partials/cropperModal') %>
 
-      <div class="footer-social">
-        <h4>Find us on social</h4>
-        <a href="mailto:kavox@gmail.com">Email: kavox@gmail.com</a>
-        <a href="#">Instagram</a>
-        <a href="#">Facebook</a>
-        <a href="#">Twitter</a>
-      </div>
-    </div>
-
-    <div class="footer-bottom">
-      <p>&copy; 2026 Nonstop Fashion & Lifestyle</p>
-      <p>All Rights Reserved</p>
-    </div>
-  </footer>
-
-  <%- include('../partials/cropperModal') %>
-
-    <script>
-      function handleProfileImageSelect(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        CropperManager.init(file, {
-          aspectRatio: 1,
-          width: 500,
-          height: 500,
-          callback: (croppedFile, previewUrl) => {
-            if (croppedFile) {
-              uploadProfileImage(croppedFile);
-            }
-          }
-        });
-      }
-
-      async function uploadProfileImage(file) {
-        const formData = new FormData();
-        formData.append('profileImage', file);
-
-        try {
-          KavoxNotify.loading('Uploading Profile Image...');
-
-          const response = await fetch('/api/users/profile/upload', {
-            method: 'POST',
-            body: formData,
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-          });
-
-          const result = await response.json();
-          KavoxNotify.closeLoading();
-
-          if (result.success) {
-            KavoxNotify.toast('Profile picture updated successfully', 'success');
-            setTimeout(() => {
-              location.reload();
-            }, 1500);
-          } else {
-            KavoxNotify.alert({
-              title: 'Upload Failed',
-              text: result.message || 'The image could not be updated.',
-              icon: 'error'
-            });
-          }
-        } catch (error) {
-          KavoxNotify.closeLoading();
-          console.error('Upload Error:', error);
-          KavoxNotify.alert({
-            title: 'Connection Error',
-            text: 'Could not connect to the server. Please check your connection.',
-            icon: 'error'
-          });
-        }
-      }
-    </script>
 </body>
 
 </html>
