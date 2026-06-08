@@ -2,7 +2,7 @@ const Order = require("../models/orderModel");
 const Product = require("../models/productModel");
 const User = require("../models/userModel");
 const { HTTP_STATUS } = require("../utils/constants");
-const { getCalculatedOrderStatus } = require("../utils/orderHelpers");
+const { getCalculatedOrderStatus, updateOrderPricingAndRefund } = require("../utils/orderHelpers");
 
 exports.getAdminOrders = async (req, res) => {
     // AJAX request → return JSON; browser navigation → render page
@@ -140,6 +140,9 @@ exports.updateOrderStatus = async (req, res) => {
                 }
             }
             order.cancellationReason = 'Cancelled by Administrator';
+
+            // Update pricing and refund
+            await updateOrderPricingAndRefund(order, null, true);
         }
 
         // Recalculate main order status based on items
@@ -193,6 +196,9 @@ exports.updateItemStatus = async (req, res) => {
                 }
             }
             item.cancellationReason = 'Cancelled by Administrator';
+
+            // Update pricing and refund
+            await updateOrderPricingAndRefund(order, item, false);
         }
 
         item.itemStatus = status;
@@ -243,7 +249,8 @@ exports.handleReturnRequest = async (req, res) => {
                     }
                 }
                 
-                // Later: Handle refund
+                // Update pricing and refund
+                await updateOrderPricingAndRefund(order, item, false);
             } else if (action === 'reject') {
                 item.itemStatus = 'Return Rejected';
             }
@@ -272,6 +279,8 @@ exports.handleReturnRequest = async (req, res) => {
                         }
                     }
                 }
+                // Update pricing and refund
+                await updateOrderPricingAndRefund(order, null, true);
             } else if (action === 'reject') {
                 order.items.forEach(item => {
                     if (item.itemStatus === 'Return Requested') {

@@ -86,11 +86,19 @@ exports.signup = async (req, res) => {
       return res.status(HTTP_STATUS.BAD_REQUEST).render("user/signup", { error: MESSAGES.PASSWORDS_NOT_MATCH, ...req.body });
     }
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    const existingEmailUser = await User.findOne({ email });
+    if (existingEmailUser) {
       if (isAjax) return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.EMAIL_ALREADY_EXISTS });
       return res.status(HTTP_STATUS.BAD_REQUEST).render("user/signup", { error: MESSAGES.EMAIL_ALREADY_EXISTS, ...req.body });
     }
+
+    const firstNameRegex = new RegExp(`^${firstName}(\\s|$)`, 'i');
+    const existingNameUser = await User.findOne({ name: { $regex: firstNameRegex } });
+    if (existingNameUser) {
+      if (isAjax) return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.FIRST_NAME_TAKEN });
+      return res.status(HTTP_STATUS.BAD_REQUEST).render("user/signup", { error: MESSAGES.FIRST_NAME_TAKEN, ...req.body });
+    }
+
 
     // Store signup data in session
     req.session.signupData = { firstName, lastName, email, phone, referralCode, password };

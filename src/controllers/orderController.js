@@ -142,8 +142,11 @@ exports.placeOrder = async (req, res) => {
             if (!variant || !variant.isActive) {
                 return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: `Variant for ${product.name} is no longer available.` });
             }
+            if (variant.quantity <= 0) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: `${product.name} (${item.size}/${item.color}) is out of stock.` });
+            }
             if (variant.quantity < item.quantity) {
-                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: `Insufficient stock for ${product.name}.` });
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: `Insufficient stock for ${product.name} (${item.size}/${item.color}). Only ${variant.quantity} available.` });
             }
 
             // Deduct stock

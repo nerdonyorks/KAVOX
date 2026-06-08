@@ -613,8 +613,8 @@ exports.userGetProductDetails = async (req, res) => {
 
 exports.checkProductStatus = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
-    if (!product || product.isDeleted || !product.isActive) {
+    const product = await Product.findById(req.params.id).populate("category");
+    if (!product || product.isDeleted || !product.isActive || !product.category || !product.category.isActive || product.category.isDeleted) {
       return res.status(HTTP_STATUS.OK).json({
         success: true,
         isActive: false,
@@ -645,7 +645,7 @@ exports.userGetProductVariants = async (req, res) => {
       .populate("category")
       .lean();
 
-    if (!product || !product.category || !product.category.isActive) {
+    if (!product || !product.category || !product.category.isActive || product.category.isDeleted) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({
         success: false,
         message: "Product not found or unavailable."

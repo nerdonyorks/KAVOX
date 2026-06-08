@@ -3,10 +3,10 @@ const Product = require("../models/productModel");
 const User = require("../models/userModel");
 const PDFDocument = require("pdfkit");
 const { HTTP_STATUS } = require("../utils/constants");
-const { getCalculatedOrderStatus } = require("../utils/orderHelpers");
+const { getCalculatedOrderStatus, updateOrderPricingAndRefund } = require("../utils/orderHelpers");
 
 exports.getUserOrders = async (req, res) => {
-    // AJAX request → return JSON data; browser navigation → render shell
+  
     const isAjax = req.accepts('json') && !req.accepts('html');
 
     if (!isAjax) {
@@ -108,8 +108,8 @@ exports.cancelOrder = async (req, res) => {
         order.orderStatus = 'Cancelled';
         order.cancellationReason = reason || 'No reason provided';
 
-        // Handle Wallet refund if payment method is not COD and payment was completed (for future)
-        // if (order.paymentMethod !== 'COD' && order.paymentStatus === 'Completed') { ... }
+        // Update pricing and refund
+        await updateOrderPricingAndRefund(order, null, true);
 
         await order.save();
 
@@ -161,8 +161,8 @@ exports.cancelOrderItem = async (req, res) => {
             order.cancellationReason = 'All items cancelled';
         }
 
-        // Update totals (Optional: Depending on business logic, we might need to recalculate subtotal/total)
-        // For simplicity, we just mark the item as cancelled. The actual totals might remain to show the history.
+        // Update pricing and refund
+        await updateOrderPricingAndRefund(order, item, false);
 
         await order.save();
 

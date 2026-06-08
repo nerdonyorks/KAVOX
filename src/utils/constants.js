@@ -40,6 +40,7 @@ const MESSAGES = {
     INVALID_PASSWORD_FORMAT: "Password must contain uppercase, lowercase, number and symbol (min 8 chars).",
     PASSWORDS_NOT_MATCH: "Passwords do not match.",
     EMAIL_ALREADY_EXISTS: "An account with this email already exists.",
+    FIRST_NAME_TAKEN: "First name is already taken. Please choose another.",
     OTP_SENT_SUCCESS: "OTP sent successfully",
     SIGNUP_FAILED: "Signup failed due to server error.",
     INVALID_OTP: "Invalid or expired OTP",
