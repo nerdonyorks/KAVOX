@@ -1,0 +1,41 @@
+<footer class="footer">
+  <div class="footer-content">
+    <div class="footer-logo">
+      <img src="/images/logo.png" alt="KAVOX" class="logo-img">
+      <p class="logo-sub-footer">SOLE LAB</p>
+    </div>
+
+    <div class="footer-links">
+      <div class="footer-links-column">
+        <h4>About</h4>
+        <a href="/cancellation">Cancellation & Returns</a>
+        <a href="<%= locals.user ? '/cart' : '/login?returnTo=/cart' %>">Orders</a>
+        <a href="/">Home</a>
+        <a href="/shop">Shop</a>
+        <a href="/account">My Account</a>
+      </div>
+      <div class="footer-links-column">
+        <h4>Payments</h4>
+        <a href="/shipping">Shipping</a>
+        <a href="/terms">Terms of Use</a>
+        <a href="/security">Security</a>
+        <a href="/privacy">Privacy</a>
+      </div>
+    </div>
+
+    <div class="footer-social">
+      <h4>Find us on social</h4>
+      <a href="mailto:kavox@gmail.com">Email: kavox@gmail.com</a>
+      <a href="#">Instagram</a>
+      <a href="#">Facebook</a>
+      <a href="#">Twitter</a>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p>&copy; 2026 Nonstop Fashion & Lifestyle</p>
+    <p>All Rights Reserved</p>
+  </div>
+  <script src="/js/notifications.js"></script>
+  <script src="/js/cart.js"></script>
+</footer>

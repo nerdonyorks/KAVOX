@@ -1,0 +1,77 @@
+<!-- Results Info -->
+<div class="shop-top-bar" id="shopTopBar">
+  <div class="results-count">
+    Showing <%= products.length %> of <%= totalProducts %> products
+  </div>
+  <div class="custom-sort-wrapper" id="customSort">
+    <span class="sort-label">SORT BY:</span>
+    <div class="sort-trigger" onclick="toggleSortMenu()">
+      <span id="currentSortText">
+        <%= sort === 'newest' ? 'Newest First' : 
+            sort === 'priceLowHigh' ? 'Price: Low to High' : 
+            sort === 'priceHighLow' ? 'Price: High to Low' : 
+            sort === 'nameAZ' ? 'Name: A to Z' : 'Newest First' %>
+      </span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    </div>
+    <ul class="sort-options">
+      <li class="sort-item <%= sort === 'newest' ? 'active' : '' %>" onclick="updateSort('newest')">Newest First</li>
+      <li class="sort-item <%= sort === 'priceLowHigh' ? 'active' : '' %>" onclick="updateSort('priceLowHigh')">Price: Low to High</li>
+      <li class="sort-item <%= sort === 'priceHighLow' ? 'active' : '' %>" onclick="updateSort('priceHighLow')">Price: High to Low</li>
+      <li class="sort-item <%= sort === 'nameAZ' ? 'active' : '' %>" onclick="updateSort('nameAZ')">Name: A to Z</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Product Grid -->
+<% if (products.length === 0) { %>
+  <div class="empty-state" style="text-align: center; padding: 100px 0;">
+    <h3 style="font-size: 24px; color: #888;">No products found.</h3>
+    <a href="javascript:void(0)" onclick="clearFilters()" style="color: #e91e63; text-decoration: underline;">Clear filters</a>
+  </div>
+<% } else { %>
+  <div class="product-grid">
+    <% products.forEach(product => { %>
+      <%- include('product-card', { product: product }) %>
+    <% }) %>
+  </div>
+
+  <!-- Pagination -->
+  <% if (totalPages > 1) { %>
+    <div class="pagination-container">
+      <% 
+        // Helper to generate query string for pagination
+        function getPageUrl(pageNum) {
+          const params = new URLSearchParams();
+          if (searchQuery) params.set('search', searchQuery);
+          if (currentCategory && currentCategory !== 'all') params.set('category', currentCategory);
+          if (currentBrand && currentBrand !== 'all') params.set('brand', currentBrand);
+          if (minPrice) params.set('minPrice', minPrice);
+          if (maxPrice) params.set('maxPrice', maxPrice);
+          if (currentSize) params.set('size', currentSize);
+          if (sort) params.set('sort', sort);
+          params.set('page', pageNum);
+          return '/shop?' + params.toString();
+        }
+      %>
+      
+      <a href="<%= getPageUrl(Math.max(1, currentPage - 1)) %>" 
+         class="page-link <%= currentPage === 1 ? 'disabled' : '' %>"
+         data-page="<%= Math.max(1, currentPage - 1) %>">PREV</a>
+
+      <% for(let i = 1; i <= totalPages; i++) { %>
+        <a href="<%= getPageUrl(i) %>" 
+           class="page-link <%= currentPage === i ? 'active' : '' %>"
+           data-page="<%= i %>">
+          <%= i %>
+        </a>
+      <% } %>
+
+      <a href="<%= getPageUrl(Math.min(totalPages, currentPage + 1)) %>" 
+         class="page-link <%= currentPage === totalPages ? 'disabled' : '' %>"
+         data-page="<%= Math.min(totalPages, currentPage + 1) %>">NEXT</a>
+    </div>
+  <% } %>
+<% } %>

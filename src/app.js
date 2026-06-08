@@ -57,9 +57,18 @@ const userSession = session({
 });
 
 app.use((req, res, next) => {
-  if (req.path.startsWith('/admin')) {
+  // Static paths shouldn't log session info to avoid noise
+  const isStatic = req.path.includes('.') || req.path.startsWith('/images') || req.path.startsWith('/css') || req.path.startsWith('/js');
+  
+  if (!isStatic) {
+    console.log(`[SESSION] Path: ${req.path}, Cookies: ${JSON.stringify(req.headers.cookie || 'NONE')}`);
+  }
+
+  if (req.path.startsWith('/admin') || req.path.startsWith('/api/admin')) {
+    if (!isStatic) console.log(`[SESSION] ADMIN session used`);
     adminSession(req, res, next);
   } else {
+    if (!isStatic) console.log(`[SESSION] USER session used`);
     userSession(req, res, next);
   }
 });
@@ -72,13 +81,51 @@ passport.serializeUser((user, done) => {
   done(null, user.id);
 });
 
+// Immediate Account Suspension Check Middleware
+app.use((req, res, next) => {
+  if (req.isAuthenticated() && req.user && req.user.role === 'user' && !req.user.isActive) {
+    console.log(`[AUTH] Immediate Logout: User ${req.user.email} is suspended.`);
+    req.logout((err) => {
+      if (err) return next(err);
+      req.session.destroy(() => {
+        res.clearCookie('user_sid');
+        return res.redirect("/login?error=suspended");
+      });
+    });
+  } else {
+    next();
+  }
+});
+
 passport.deserializeUser(async (id, done) => {
   try {
     const user = await User.findById(id);
+    if (!user && !id.includes('.')) console.log(`[AUTH] Deserialize failed for ID: ${id}`);
     done(null, user);
   } catch (err) {
+    console.error(`[AUTH] Deserialize ERROR for ID: ${id}:`, err);
     done(err, null);
   }
+});
+
+// ---------- ROLE SECURITY LAYER ----------
+// Ensure that an admin user in one session doesn't "leak" into the other context
+app.use((req, res, next) => {
+  if (req.user) {
+    const isAdminPath = req.path.startsWith('/admin') || req.path.startsWith('/api/admin');
+    
+    // If admin is in a USER session context, hide them
+    if (req.user.role === 'admin' && !isAdminPath) {
+        if (!req.path.includes('.')) console.log(`[AUTH] Hiding Admin user on non-admin path: ${req.path}`);
+        req.user = undefined;
+    }
+    // If a regular user is in an ADMIN session context, hide them
+    else if (req.user.role !== 'admin' && isAdminPath) {
+        if (!req.path.includes('.')) console.log(`[AUTH] Hiding regular user on admin path: ${req.path}`);
+        req.user = undefined;
+    }
+  }
+  next();
 });
 
 // ---------- GLOBAL LOCALS ----------
@@ -86,8 +133,12 @@ passport.deserializeUser(async (id, done) => {
 // Apply Cache-Control headers globally so browsers don't cache protected pages on back-button
 app.use(setNoCache);
 
-// Pass user object to all templates universally
+const { HTTP_STATUS, MESSAGES } = require("./utils/constants");
+
+// Pass constants and user object to all templates universally
 app.use((req, res, next) => {
+  res.locals.HTTP_STATUS = HTTP_STATUS;
+  res.locals.MESSAGES = MESSAGES;
   res.locals.user = req.user || null;
   next();
 });

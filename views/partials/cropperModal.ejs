@@ -1,0 +1,113 @@
+<!-- Refined Standardized Cropper Modal -->
+<div id="cropperModal" class="cropper-modal-global">
+    <div class="cropper-content-global">
+        <div class="cropper-header-global">
+            <h3>Crop Your Image</h3>
+            <button type="button" class="close-cropper" onclick="if(window.CropperManager) CropperManager.cancel()">&times;</button>
+        </div>
+        <div class="cropper-body-global">
+            <img id="cropperImageGlobal" src="" alt="To be cropped">
+        </div>
+        <div class="cropper-footer-global">
+            <button type="button" class="btn-cropper-secondary" onclick="if(window.CropperManager) CropperManager.cancel()">Cancel</button>
+            <button type="button" class="btn-cropper-primary" onclick="if(window.CropperManager) CropperManager.save()">Crop & Save</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .cropper-modal-global {
+        display: none;
+        position: fixed;
+        inset: 0 !important; /* Forces fixed centering regardless of parent */
+        background: rgba(0, 0, 0, 0.7) !important;
+        z-index: 10000 !important; /* Ensures it sits above any other modals */
+        display: none; /* Controlled by JS flex */
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(8px);
+        padding: 20px;
+    }
+
+    .cropper-content-global {
+        background: #fff;
+        width: 100%;
+        max-width: 500px; /* Standardize for perfect fit */
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        position: relative; /* Contain all children */
+    }
+
+    .cropper-header-global {
+        padding: 16px 24px;
+        border-bottom: 1px solid #f3f4f6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .cropper-header-global h3 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 700;
+        color: #111;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .close-cropper {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: #9ca3af;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .cropper-body-global {
+        padding: 0;
+        background: #000;
+        height: 400px;
+        position: relative; /* Important for Cropper.js */
+        display: block; /* Ensure it occupies full width */
+    }
+
+    #cropperImageGlobal {
+        max-width: 100%;
+        display: block;
+    }
+
+    .cropper-footer-global {
+        padding: 16px 24px;
+        border-top: 1px solid #f3f4f6;
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        background: #fff;
+    }
+
+    .btn-cropper-primary {
+        background: #000;
+        color: #fff;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        text-transform: uppercase;
+    }
+
+    .btn-cropper-secondary {
+        background: #fff;
+        color: #6b7280;
+        border: 1px solid #e5e7eb;
+        padding: 10px 24px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        text-transform: uppercase;
+    }
+</style>

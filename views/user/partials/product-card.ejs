@@ -1,0 +1,73 @@
+<% const pOffer=product.productOffer || 0; const cOffer=(product.category && product.category.offer) ?
+  product.category.offer : 0; const discount=Math.max(pOffer, cOffer); const finalPrice=Math.round(product.price * (1 -
+  discount/100)); const totalStock=(product.variants || []).reduce((acc, v)=> acc + (v.isActive !== false ? (v.quantity
+  || 0) : 0), 0);
+  const isOutOfStock = totalStock <= 0; %>
+    <div class="product-card <%= isOutOfStock ? 'out-of-stock' : '' %>"
+      style="<%= isOutOfStock ? 'opacity: 0.8;' : '' %>">
+      <div class="product-image-wrapper" style="<%= isOutOfStock ? 'position: relative;' : '' %>">
+        <% if (isOutOfStock) { %>
+          <div class="out-of-stock-overlay"
+            style="position: absolute; inset: 0; background: rgba(255, 255, 255, 0.6); backdrop-filter: grayscale(80%); z-index: 10; display: flex; align-items: center; justify-content: center;">
+            <span
+              style="background: rgba(0,0,0,0.9); color: white; padding: 8px 16px; font-weight: 800; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">Out
+              of Stock</span>
+          </div>
+          <% } else if (discount> 0) { %>
+            <div class="badge-offer">-<%= discount %>% OFF</div>
+            <% } %>
+
+              <a href="/product/<%= product._id %>">
+                <% let imgSrc='/images/placeholder.jpg' ; if (product.images && product.images.length> 0) {
+                  imgSrc = product.images.find(img => img.isPrimary)?.url || product.images[0].url;
+                  } else if (product.image) {
+                  imgSrc = product.image;
+                  }
+                  %>
+                  <img src="<%= imgSrc %>" alt="<%= product.name %>" loading="lazy">
+              </a>
+
+              <!-- Quick Actions on Image -->
+              <div class="product-quick-actions">
+                <% const isWishlisted=(typeof wishlistProductIds !=='undefined' &&
+                  wishlistProductIds.includes(product._id.toString())); %>
+                  <button class="wishlist-btn <%= isWishlisted ? 'active' : '' %>" title="Add to Wishlist"
+                    onclick="toggleWishlist('<%= product._id %>', this)">
+                    <svg viewBox="0 0 24 24" <%=isWishlisted ? 'fill="#e91e63"' : 'fill="none"' %> stroke="currentColor"
+                      stroke-width="2">
+                      <path
+                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                      </path>
+                    </svg>
+                  </button>
+
+              </div>
+      </div>
+
+      <div class="product-card-info">
+        <span class="product-brand">
+          <%= product.brand || 'KAVOX' %>
+        </span>
+        <a href="/product/<%= product._id %>" class="product-name" title="<%= product.name %>">
+          <%= product.name %>
+        </a>
+
+        <div class="product-pricing">
+          <span class="final-price">₹<%= finalPrice %></span>
+          <% if (discount> 0) { %>
+            <span class="base-price">₹<%= product.price %></span>
+            <% } %>
+        </div>
+
+        <!-- Desktop Action Buttons -->
+        <div class="product-card-actions">
+          <% if (isOutOfStock) { %>
+            <button class="btn-action" style="opacity: 0.5; cursor: not-allowed;">Out of Stock</button>
+            <% } else { %>
+              <button class="btn-action" onclick="openAddToCartModal('<%= product._id %>')">Add to Cart</button>
+              <% } %>
+                <button class="btn-action" onclick="window.location.href='/product/<%= product._id %>'">View
+                  Details</button>
+        </div>
+      </div>
+    </div>

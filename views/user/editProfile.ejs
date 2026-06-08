@@ -4,639 +4,36 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Profile - KAVOX SOLE LAB</title>
-  <!-- SweetAlert2 -->
-  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.all.min.js"></script>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #fff;
-      color: #333;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Header */
-    .header {
-      background-color: #1a1a1a;
-      padding: 12px 30px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .logo-container {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-    }
-
-    .logo-img {
-      height: 30px;
-      filter: invert(0);
-    }
-
-    .logo-sub {
-      font-size: 12px;
-      color: #4ade80;
-      letter-spacing: 6.5px;
-    }
-    .logo-sub-footer {
-      font-size: 14px;
-      color: #4ade80;
-      letter-spacing: 10px;
-    }
-
-    .search-box {
-      flex: 1;
-      max-width: 400px;
-      display: flex;
-      align-items: center;
-      background-color: #333;
-      border-radius: 4px;
-      padding: 8px 12px;
-      gap: 10px;
-    }
-
-    .search-box input {
-      flex: 1;
-      background: none;
-      border: none;
-      outline: none;
-      color: #fff;
-      font-size: 13px;
-    }
-
-    .search-box input::placeholder {
-      color: #888;
-    }
-
-    .search-box svg {
-      color: #888;
-      width: 18px;
-      height: 18px;
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 25px;
-    }
-
-    .nav-links a {
-      color: #fff;
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 500;
-      letter-spacing: 0.5px;
-    }
-
-    .nav-links a:hover {
-      color: #4ade80;
-    }
-
-    .header-icons {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-    }
-
-    .header-icons a {
-      color: #fff;
-      display: flex;
-      align-items: center;
-    }
-
-    .header-icons svg {
-      width: 22px;
-      height: 22px;
-    }
-
-    .sign-in-btn {
-      background-color: #e91e63;
-      color: #fff;
-      border: none;
-      padding: 8px 18px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      text-decoration: none;
-    }
-
-    .sign-in-btn:hover {
-      background-color: #c2185b;
-    }
-
-    .menu-toggle {
-      display: none;
-      background: none;
-      border: none;
-      color: #fff;
-      cursor: pointer;
-    }
-
-    .profile-mini {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background-color: #333;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      font-weight: 600;
-      text-decoration: none;
-      border: 1px solid #4ade80;
-    }
-    
-    .profile-mini img {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    /* Mobile Menu */
-    .mobile-nav {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.95);
-      z-index: 200;
-      flex-direction: column;
-      padding: 60px 30px;
-    }
-
-    .mobile-nav.active {
-      display: flex;
-    }
-
-    .mobile-nav-close {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: none;
-      border: none;
-      color: #fff;
-      font-size: 30px;
-      cursor: pointer;
-    }
-
-    .mobile-nav a {
-      color: #fff;
-      text-decoration: none;
-      font-size: 18px;
-      padding: 15px 0;
-      border-bottom: 1px solid #333;
-    }
-
-    /* Main Content */
-    .main-content {
-    flex: 1;
-    padding: 40px 60px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    }
-
-    .page-title {
-      font-size: 18px;
-      font-weight: 600;
-      text-decoration: underline;
-      margin-bottom: 40px;
-      color: #000;
-    }
-
-    /* Profile Form Card */
-    .profile-card {
-      border: 1px solid #ddd;
-      border-radius: 12px;
-      padding: 40px;
-      max-width: 850px;
-    }
-
-    .profile-avatar-container {
-      position: relative;
-      width: 100px;
-      height: 100px;
-      margin-bottom: 30px;
-    }
-
-    .profile-avatar {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      overflow: hidden;
-      border: 2px solid #ddd;
-      position: relative;
-      cursor: pointer;
-      display: block;
-    }
-
-    .profile-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .profile-avatar-placeholder {
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(135deg, #e91e63, #ff5252);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 40px;
-      font-weight: 600;
-      color: #fff;
-      text-transform: uppercase;
-    }
-
-    .profile-avatar-overlay {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: rgba(0, 0, 0, 0.6);
-      color: #fff;
-      text-align: center;
-      padding: 6px 0;
-      font-size: 11px;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-
-    .profile-avatar:hover .profile-avatar-overlay {
-      opacity: 1;
-    }
-
-    .profile-avatar-input {
-      display: none;
-    }
-
-    .camera-icon {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      width: 28px;
-      height: 28px;
-      background: linear-gradient(135deg, #e91e63, #ff5252);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      border: 2px solid #fff;
-    }
-
-    .camera-icon svg {
-      width: 14px;
-      height: 14px;
-      fill: #fff;
-    }
-
-    .profile-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 50px;
-      margin-bottom: 30px;
-    }
-
-    .form-column {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 40px;
-      margin-bottom: 24px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .form-group.full-width {
-      grid-column: 1 / -1;
-      max-width: calc(50% - 20px);
-    }
-
-    .form-group label {
-      font-size: 14px;
-      color: #333;
-      margin-bottom: 8px;
-      font-weight: 400;
-    }
-
-    .form-group input {
-      padding: 12px 16px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 14px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .form-group input:focus {
-      border-color: #e91e63;
-    }
-
-    .form-actions {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-top: 30px;
-      gap: 15px;
-    }
-
-    .update-btn {
-      background: linear-gradient(to right, #e91e63, #ff5252);
-      color: #fff;
-      border: none;
-      padding: 14px 80px;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-
-    .update-btn:hover {
-      opacity: 0.9;
-    }
-
-    .password-reset {
-      font-size: 14px;
-      color: #333;
-    }
-
-    .password-reset a {
-      color: #2196F3;
-      text-decoration: none;
-    }
-
-    .password-reset a:hover {
-      text-decoration: underline;
-    }
-
-    /* Footer */
-    .footer {
-      background-color: #1a1a1a;
-      padding: 50px 30px 20px;
-      color: #fff;
-    }
-
-    .footer-content {
-      display: grid;
-      grid-template-columns: 1fr 2fr 1fr;
-      gap: 40px;
-      max-width: 1200px;
-      margin: 0 auto 30px;
-    }
-
-    .footer-logo .logo-img {
-      height: 40px;
-      filter: invert(0);
-      margin-bottom: 5px;
-    }
-
-    .footer-logo .logo-sub {
-      font-size: 10px;
-      color: #4ade80;
-      letter-spacing: 3px;
-    }
-
-    .footer-links {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-    }
-
-    .footer-links-column h4 {
-      font-size: 12px;
-      font-weight: 400;
-      margin-bottom: 15px;
-      color: #888;
-    }
-
-    .footer-links-column a {
-      display: block;
-      color: #ccc;
-      text-decoration: none;
-      font-size: 13px;
-      margin-bottom: 10px;
-    }
-
-    .footer-links-column a:hover {
-      color: #4ade80;
-    }
-
-    .footer-social h4 {
-      font-size: 14px;
-      margin-bottom: 15px;
-    }
-
-    .footer-social a {
-      display: block;
-      color: #ccc;
-      text-decoration: none;
-      font-size: 13px;
-      margin-bottom: 10px;
-    }
-
-    .footer-social a:hover {
-      color: #4ade80;
-    }
-
-    .footer-bottom {
-      text-align: center;
-      padding-top: 20px;
-      border-top: 1px solid #333;
-    }
-
-    .footer-bottom p {
-      font-size: 11px;
-      color: #666;
-    }
-
-    /* Responsive */
-    @media (max-width: 992px) {
-      .footer-content {
-        grid-template-columns: 1fr;
-        text-align: center;
-      }
-
-      .footer-links {
-        justify-content: center;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .header {
-        padding: 12px 15px;
-      }
-
-      .search-box {
-        display: none;
-      }
-
-      .nav-links {
-        display: none;
-      }
-
-      .menu-toggle {
-        display: block;
-      }
-
-      .main-content {
-        padding: 30px 20px;
-      }
-
-      .profile-card {
-        padding: 30px 20px;
-      }
-
-      .profile-grid {
-        grid-template-columns: 1fr;
-        gap: 20px;
-      }
-      .form-row {
-        grid-template-columns: 1fr;
-        gap: 20px;
-      }
-
-      .form-group.full-width {
-        max-width: 100%;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .header-icons {
-        gap: 12px;
-      }
-
-      .header-icons svg {
-        width: 18px;
-        height: 18px;
-      }
-
-      .sign-in-btn {
-        padding: 6px 12px;
-        font-size: 11px;
-      }
-    }
-  </style>
+    <!-- Cropper.js -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/shimmer.js"></script>
+    <script src="/js/cropperManager.js"></script>
 </head>
-<body>
-  <!-- Header -->
-  <header class="header">
-    <div class="logo-container">
-      <img src="/images/logo.png" alt="KAVOX" class="logo-img">
-      <span class="logo-sub">SOLE LAB</span>
-    </div>
+<body class="user-layout">
+  <%- include('../partials/user-header') %>
 
-    <div class="search-box">
-      <input type="text" placeholder="Search for products, brands & more">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <circle cx="11" cy="11" r="8"></circle>
-        <path d="M21 21l-4.35-4.35"></path>
-      </svg>
-    </div>
-
-    <nav class="nav-links">
-      <a href="/">HOME</a>
-      <a href="/shop">SHOP</a>
-      <a href="/orders">ORDERS</a>
-    </nav>
-
-    <div class="header-icons">
-      <a href="/cart" title="Cart">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-          <line x1="3" y1="6" x2="21" y2="6"></line>
-        </svg>
-      </a>
-      <a href="/wishlist" title="Wishlist">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-        </svg>
-      </a>
-      <% if (locals.user) { %>
-        <a href="/account" title="Account">
-          <div class="profile-mini">
-            <% if (user.profileImage && user.profileImage !== "/images/default-user.png") { %>
-              <img src="<%= user.profileImage %>" alt="Profile">
-            <% } else { %>
-              <%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %>
-            <% } %>
-          </div>
-        </a>
-        <a href="/api/auth/logout" class="sign-in-btn" style="background-color: #333;">Logout</a>
-      <% } else { %>
-        <a href="/login" class="sign-in-btn">Sign In</a>
-      <% } %>
-    </div>
-
-    <button class="menu-toggle" onclick="toggleMobileNav()">
-      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <line x1="3" y1="12" x2="21" y2="12"></line>
-        <line x1="3" y1="6" x2="21" y2="6"></line>
-        <line x1="3" y1="18" x2="21" y2="18"></line>
-      </svg>
-    </button>
-  </header>
-
-  <!-- Mobile Navigation -->
-  <div class="mobile-nav" id="mobileNav">
-    <button class="mobile-nav-close" onclick="toggleMobileNav()">&times;</button>
-    <a href="/">HOME</a>
-    <a href="/shop">SHOP</a>
-    <a href="/orders">ORDERS</a>
-    <a href="/cart">CART</a>
-    <a href="/wishlist">WISHLIST</a>
-    <a href="/account">MY ACCOUNT</a>
-    <a href="/login">SIGN IN</a>
-  </div>
 
   <!-- Main Content -->
   <main class="main-content">
-    <h1 class="page-title">PROFILE</h1>
+    <h1 class="page-title" style="text-align: center; margin-bottom: 30px;">PROFILE</h1>
 
     <!-- Profile Form Card -->
     <div class="profile-card">
       <% if (typeof error !== 'undefined' && error) { %>
           <script>
             document.addEventListener('DOMContentLoaded', () => {
-              Swal.fire({
+              KavoxNotify.alert({
                 icon: 'error',
                 title: 'Update Failed',
-                text: '<%= error %>',
-                confirmButtonColor: '#e91e63'
+                text: '<%= error %>'
               });
             });
           </script>
       <% } %>
 
-      <form action="/profile/update" method="POST" enctype="multipart/form-data">
+      <form id="editProfileForm" action="/profile/update" method="POST" enctype="multipart/form-data">
         <div class="profile-avatar-container">
           <label for="profileImage" class="profile-avatar" style="display: flex; align-items: center; justify-content: center; background: #f0f0f0;">
             <% if (user.profileImage && user.profileImage !== "/images/default-user.png") { %>
@@ -735,74 +132,48 @@
     </div>
   </main>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-content">
-      <div class="footer-logo">
-        <img src="/images/logo.png" alt="KAVOX" class="logo-img">
-        <p class="logo-sub-footer">SOLE LAB</p>
-      </div>
+  <%- include('../partials/cropperModal') %>
 
-      <div class="footer-links">
-        <div class="footer-links-column">
-          <a href="/cancellation">Cancellation & Returns</a>
-          <a href="/orders">Orders</a>
-          <a href="/">Home</a>
-          <a href="/shop">Shop</a>
-          <a href="/account">My Account</a>
-        </div>
-        <div class="footer-links-column">
-          <h4>Payments</h4>
-          <a href="/shipping">Shipping</a>
-          <a href="/terms">Terms of Use</a>
-          <a href="/security">Security</a>
-          <a href="/privacy">Privacy</a>
-        </div>
-      </div>
-
-      <div class="footer-social">
-        <h4>Find us on social</h4>
-        <a href="mailto:kavox@gmail.com">Email: kavox@gmail.com</a>
-        <a href="#">Instagram</a>
-        <a href="#">Facebook</a>
-        <a href="#">Twitter</a>
-      </div>
-    </div>
-
-    <div class="footer-bottom">
-      <p>&copy; 2026 Nonstop Fashion & Lifestyle</p>
-      <p>All Rights Reserved</p>
-    </div>
-  </footer>
-
+  <%- include('../partials/user-footer') %>
+  <script src="/js/notifications.js"></script>
   <script>
-    function toggleMobileNav() {
-      document.getElementById('mobileNav').classList.toggle('active');
-    }
 
-    // Profile picture preview
+
+    // Profile picture preview & Cropping
+    let croppedFile = null;
+
     document.getElementById('profileImage').addEventListener('change', function(e) {
       const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const preview = document.getElementById('profilePreview');
-          const placeholder = document.getElementById('avatarPlaceholder');
-          
-          preview.src = e.target.result;
-          preview.style.display = 'block';
-          
-          if (placeholder) {
-            placeholder.style.display = 'none';
-          }
-        };
-        reader.readAsDataURL(file);
+      if (!file) return;
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+      if (!allowedTypes.includes(file.type)) {
+          KavoxNotify.toast('Please upload only image files (JPEG, PNG, WEBP).', 'error');
+          this.value = ''; // Reset input
+          return;
       }
+
+      CropperManager.init(file, {
+        aspectRatio: 1,
+        width: 400,
+        height: 400,
+        callback: (file, previewUrl) => {
+            if (file) {
+                croppedFile = file;
+                const preview = document.getElementById('profilePreview');
+                const placeholder = document.getElementById('avatarPlaceholder');
+                
+                preview.src = previewUrl;
+                preview.style.display = 'block';
+                if (placeholder) placeholder.style.display = 'none';
+            }
+        }
+      });
     });
 
     // Form Validation
     document.addEventListener('DOMContentLoaded', () => {
-      const form = document.querySelector('form[action="/profile/update"]');
+      const form = document.getElementById('editProfileForm');
       const firstNameInput = document.getElementById('firstName');
       const lastNameInput = document.getElementById('lastName');
       const mobileInput = document.getElementById('mobile');
@@ -889,60 +260,75 @@
       mobileInput.addEventListener('input', validateMobile);
       emailInput.addEventListener('input', validateEmail);
 
-      form.addEventListener('submit', (e) => {
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
         const isFirstNameValid = validateFirstName();
         const isLastNameValid = validateLastName();
         const isMobileValid = validateMobile();
         const isEmailValid = validateEmail();
 
         if (!isFirstNameValid || !isLastNameValid || !isMobileValid || !isEmailValid) {
-          e.preventDefault();
+          return;
+        }
+
+        // Start Premium Loading Experience
+        const profileCard = document.querySelector('.profile-card');
+        const submitBtn = document.querySelector('.update-btn');
+        
+        profileCard.classList.add('is-loading-container');
+        submitBtn.classList.add('btn-loading');
+        submitBtn.disabled = true;
+
+        try {
+          const formData = new FormData(this);
+          
+          // Replace profileImage with the cropped version if available
+          if (croppedFile) {
+            formData.set('profileImage', croppedFile);
+          }
+          
+          // Use minDelay (600ms) to ensure shimmer is visible
+          const [response] = await Promise.all([
+            fetch('/profile/update', {
+              method: 'POST',
+              body: formData,
+              headers: { 'Accept': 'application/json' }
+            }),
+            new Promise(resolve => setTimeout(resolve, 600))
+          ]);
+
+          const data = await response.json();
+
+          if (response.ok || data.success) {
+            if (data.redirect && data.redirect.includes('verify-otp')) {
+                window.location.href = data.redirect;
+            } else {
+                KavoxNotify.alert({
+                  icon: 'success',
+                  title: 'Profile Updated',
+                  text: 'Your profile has been saved successfully.'
+                }).then(() => {
+                  window.location.href = '/account';
+                });
+            }
+          } else {
+            profileCard.classList.remove('is-loading-container');
+            submitBtn.classList.remove('btn-loading');
+            submitBtn.disabled = false;
+            
+            KavoxNotify.toast(data.message || 'Could not update profile', 'error');
+          }
+        } catch (error) {
+          profileCard.classList.remove('is-loading-container');
+          submitBtn.classList.remove('btn-loading');
+          submitBtn.disabled = false;
+          
+          console.error('Update Profile Error:', error);
+          KavoxNotify.toast('An internal error occurred. Please try again.', 'error');
         }
       });
     });
-
-    document.querySelector('form').addEventListener('submit', function(e) {
-      const fName = document.getElementById('firstName').value.trim();
-      const mobile = document.getElementById('mobile').value.trim();
-      const email = emailInput.value.trim();
-
-      // Clear errors
-      document.querySelectorAll('.error-msg').forEach(el => {
-        el.textContent = '';
-        el.style.display = 'none';
-      });
-      document.querySelectorAll('input').forEach(el => el.style.borderColor = '#ddd');
-
-      let isValid = true;
-
-      if (!fName) {
-        showError('firstName', 'First name is required');
-        isValid = false;
-      }
-
-      if (mobile && !/^\d{10}$/.test(mobile)) {
-        showError('mobile', 'Mobile number must be 10 digits');
-        isValid = false;
-      }
-
-      if (!email) {
-        showError('email', 'Email is required');
-        isValid = false;
-      }
-
-      if (!isValid) {
-        e.preventDefault();
-      }
-    });
-
-    function showError(id, msg) {
-      const err = document.getElementById(id + 'Error');
-      if (err) {
-        err.textContent = msg;
-        err.style.display = 'block';
-      }
-      document.getElementById(id).style.borderColor = '#e91e63';
-    }
   </script>
 </body>
 </html>

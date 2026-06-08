@@ -5,9 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OTP Verification - KAVOX SOLE LAB</title>
-    <!-- SweetAlert2 -->
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.all.min.js"></script>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/notifications.js"></script>
+    <script src="/js/shimmer.js"></script>
     <style>
         * {
             margin: 0;
@@ -20,9 +20,15 @@
             background-color: #ffffff;
             min-height: 100vh;
             display: flex;
-            align-items: center;
+            flex-direction: column;
+        }
+        
+        .main-container {
+            flex: 1;
+            display: flex;
             justify-content: center;
-            padding: 20px;
+            align-items: center;
+            padding: 40px 20px;
         }
 
         .otp-container {
@@ -51,111 +57,7 @@
             font-family: 'Arial Black', sans-serif;
         }
 
-        /* Header Styles */
-        .header {
-            background-color: #1a1a1a;
-            padding: 12px 30px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            width: 100%;
-            position: absolute;
-            /* Lock to top for centered body layouts */
-        }
 
-        .header-logo-container {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .header-logo-img {
-            height: 30px;
-            filter: invert(0);
-        }
-
-        .header-logo-sub {
-            font-size: 12px;
-            color: #4ade80;
-            letter-spacing: 6.5px;
-        }
-
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 25px;
-        }
-
-        .nav-links a {
-            color: #fff;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-        }
-
-        .nav-links a:hover {
-            color: #4ade80;
-        }
-
-        .header-icons {
-            display: flex;
-            align-items: center;
-            gap: 18px;
-        }
-
-        .header-icons a {
-            color: #fff;
-            display: flex;
-            align-items: center;
-        }
-
-        .header-icons svg {
-            width: 22px;
-            height: 22px;
-        }
-
-        .sign-in-btn {
-            background-color: #e91e63;
-            color: #fff;
-            border: none;
-            padding: 8px 18px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        .sign-in-btn:hover {
-            background-color: #c2185b;
-        }
-
-        .profile-mini {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background-color: #333;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: 600;
-            text-decoration: none;
-            border: 1px solid #4ade80;
-        }
-
-        .profile-mini img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-        }
 
         .logo-text .k {
             font-style: italic;
@@ -297,54 +199,10 @@
     </style>
 </head>
 
-<body>
-    <!-- Header -->
-    <header class="header">
-        <div class="header-logo-container">
-            <img src="/images/logo.png" alt="KAVOX" class="header-logo-img">
-            <span class="header-logo-sub">SOLE LAB</span>
-        </div>
-
-        <nav class="nav-links">
-            <a href="/">HOME</a>
-            <a href="/shop">SHOP</a>
-            <a href="/orders">ORDERS</a>
-        </nav>
-
-        <div class="header-icons">
-            <a href="/cart" title="Cart">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                </svg>
-            </a>
-            <a href="/wishlist" title="Wishlist">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path
-                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
-                    </path>
-                </svg>
-            </a>
-            <% if (locals.user) { %>
-                <a href="/account" title="Account">
-                    <% if (user.profileImage) { %>
-                        <div class="profile-mini">
-                            <img src="<%= user.profileImage %>" alt="Profile">
-                        </div>
-                        <% } else { %>
-                            <div class="profile-mini">
-                                <%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %>
-                            </div>
-                            <% } %>
-                </a>
-                <a href="/api/auth/logout" class="sign-in-btn" style="background-color: #333;">Logout</a>
-                <% } else { %>
-                    <a href="/login" class="sign-in-btn">Sign In</a>
-                    <% } %>
-        </div>
-    </header>
-
-    <div class="otp-container" style="margin-top: 80px;">
+<body class="user-layout">
+    <%- include('../partials/user-header') %>
+    <div class="main-container">
+    <div class="otp-container">
         <div class="logo">
             <img src="/images/logo.png" alt="KAVOX" class="logo-img">
             <div class="logo-subtitle">S O L E &nbsp;&nbsp; L A B</div>
@@ -496,14 +354,14 @@
                     });
                     const data = await res.json();
                     if (res.ok) {
-                        Swal.fire({ icon: 'success', title: 'OTP Resent', text: 'OTP resent to your email.', confirmButtonColor: '#ff1e56' });
-                        localStorage.removeItem(timerKey); // Clear old timer so startTimer creates a fresh one
+                        KavoxNotify.toast('OTP resent to your email.', 'success');
+                        localStorage.removeItem(timerKey); 
                         startTimer(TIMER_DURATION);
                     } else {
-                        Swal.fire({ icon: 'error', title: 'Failed to Resend', text: data.message || 'Failed to resend OTP.', confirmButtonColor: '#ff1e56' });
+                        KavoxNotify.alert({ icon: 'error', title: 'Failed to Resend', text: data.message || 'Failed to resend OTP.' });
                     }
                 } catch (err) {
-                    Swal.fire({ icon: 'error', title: 'Server Error', text: 'An error occurred while resending OTP.', confirmButtonColor: '#ff1e56' });
+                    KavoxNotify.toast('An error occurred while resending OTP.', 'error');
                 }
             });
 
@@ -531,13 +389,19 @@
                 const currentEmail = emailInput.value;
                 const currentType = flowTypeInput.value;
 
-                inlineError.style.display = 'none';
-                inputFieldErrors.style.display = 'none';
+                const ajaxErrorDiv = document.getElementById('ajaxErrorDiv');
+                const otpInputError = document.getElementById('otpInputError');
+                const submitBtn = document.querySelector('button[type="submit"]');
 
-                if (otp.length < 4) { inputFieldErrors.style.display = 'block'; return; }
+                ajaxErrorDiv.style.display = 'none';
+                otpInputError.style.display = 'none';
+                submitBtn.classList.add('btn-loading');
+                submitBtn.disabled = true;
+
+                if (otp.length < 4) { otpInputError.style.display = 'block'; submitBtn.classList.remove('btn-loading'); submitBtn.disabled = false; return; }
 
                 try {
-                    const response = await fetch('/verify-otp', {
+                    const response = await fetch('/api/auth/verify-otp', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                         body: JSON.stringify({ email: currentEmail, otp, type: currentType })
@@ -546,18 +410,22 @@
                     if (response.ok && data.success) {
                         window.location.href = data.redirect;
                     } else {
-                        inlineError.textContent = data.message || 'Invalid or expired OTP. Please try again.';
-                        inlineError.style.display = 'block';
+                        ajaxErrorDiv.textContent = data.message || 'Invalid or expired OTP. Please try again.';
+                        ajaxErrorDiv.style.display = 'block';
                         otpInputs.forEach(input => input.value = '');
                         otpInputs[0].focus();
                     }
                 } catch (err) {
-                    inlineError.textContent = 'An error occurred during verification. Please try again.';
-                    inlineError.style.display = 'block';
+                    ajaxErrorDiv.textContent = 'An error occurred during verification. Please try again.';
+                    ajaxErrorDiv.style.display = 'block';
+                } finally {
+                    submitBtn.classList.remove('btn-loading');
+                    submitBtn.disabled = false;
                 }
             });
         })();
     </script>
+    </div>
+    <%- include('../partials/user-footer') %>
 </body>
-
 </html>

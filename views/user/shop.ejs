@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+    <%= title %>
+  </title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="user-layout">
+  <%- include('../partials/user-header') %>
+
+    <!-- Mobile Filter Bar (Visible only on mobile) -->
+    <div class="mobile-filter-bar">
+      <button type="button" class="btn-mobile-filter" onclick="toggleFilterDrawer()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="4" y1="21" x2="4" y2="14"></line>
+          <line x1="4" y1="10" x2="4" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12" y2="3"></line>
+          <line x1="20" y1="21" x2="20" y2="16"></line>
+          <line x1="20" y1="12" x2="20" y2="3"></line>
+          <line x1="1" y1="14" x2="7" y2="14"></line>
+          <line x1="9" y1="8" x2="15" y2="8"></line>
+          <line x1="17" y1="16" x2="23" y2="16"></line>
+        </svg>
+        FILTER & SORT
+      </button>
+    </div>
+
+      <!-- Overlay for Mobile Drawer -->
+      <div class="drawer-overlay" id="drawerOverlay" onclick="toggleFilterDrawer()"></div>
+
+      <main class="shop-container">
+      <!-- Sidebar Filters -->
+      <aside class="filters-sidebar" id="filterDrawer">
+        <div class="filter-drawer-header">
+          <button type="button" class="close-drawer-btn" onclick="toggleFilterDrawer()">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+          </button>
+          <h2 class="shop-title-main">Filters</h2>
+          <div style="width: 40px;"></div>
+        </div>
+        
+        <!-- Edge Toggle Arrow (Visible on Mobile edge) -->
+        <button type="button" class="drawer-edge-close mobile-only" onclick="toggleFilterDrawer()">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+        <h2 class="shop-title-main desktop-only">Shop</h2>
+
+        <form id="filterForm" action="/shop" method="GET">
+          <input type="hidden" name="search" value="<%= searchQuery %>">
+          <input type="hidden" name="sort" id="filterSort" value="<%= sort %>">
+
+          <!-- Price Accordion -->
+          <div class="filter-section">
+            <div class="filter-header"
+              onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+              <h3>Price Range</h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+            <div class="filter-content">
+              <div class="price-slider-container">
+                <div class="price-slider-track"></div>
+                <div class="price-slider-range" id="priceRangeLine"></div>
+                <input type="range" class="price-input-range" id="minPriceRange" min="100" max="5000" step="100"
+                  value="<%= minPrice || 100 %>">
+                <input type="range" class="price-input-range" id="maxPriceRange" min="100" max="5000" step="100"
+                  value="<%= maxPrice || 5000 %>">
+              </div>
+              <div class="price-display">
+                <span class="price-value" id="minPriceDisplay">₹<%= minPrice || 100 %></span>
+                <span class="price-value" id="maxPriceDisplay">₹<%= maxPrice || 5000 %></span>
+              </div>
+              <!-- Hidden inputs for actual form submission -->
+              <input type="hidden" name="minPrice" id="minPrice" value="<%= minPrice || 100 %>">
+              <input type="hidden" name="maxPrice" id="maxPrice" value="<%= maxPrice || 5000 %>">
+            </div>
+          </div>
+
+          <!-- Size Accordion -->
+          <div class="filter-section">
+            <div class="filter-header"
+              onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+              <h3>Size</h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+            <div class="filter-content">
+              <div class="size-grid">
+                <% [6, 7, 8, 9, 10, 11, 12].forEach(s=> { %>
+                  <label class="size-box">
+                    UK <%= s %>
+                      <input type="checkbox" name="size" value="<%= s %>" <%=currentSize.includes(s.toString())
+                        ? 'checked' : '' %>>
+                  </label>
+                  <% }) %>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category Accordion -->
+          <div class="filter-section">
+            <div class="filter-header"
+              onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+              <h3>Category</h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+            <div class="filter-content category-pills">
+              <% categories.forEach(cat=> { %>
+                <label class="category-pill">
+                  <input type="checkbox" name="category" value="<%= cat._id %>"
+                    <%=currentCategory.includes(cat._id.toString()) ? 'checked' : '' %>>
+                  <span>
+                    <%= cat.name %>
+                  </span>
+                </label>
+                <% }) %>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="filter-actions">
+            <div class="filter-actions-row">
+              <button type="button" class="btn-filter-clear" onclick="clearFilters()">Clear Filter</button>
+            </div>
+          </div>
+        </form>
+      </aside>
+
+      <!-- Main Content -->
+      <section class="shop-main">
+        <div id="shopGridContainer">
+          <%- include('partials/shop-grid') %>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      // Slider Logic remains inline for immediate UI responsiveness
+      const minInput = document.getElementById('minPriceRange');
+      const maxInput = document.getElementById('maxPriceRange');
+      const minDisplay = document.getElementById('minPriceDisplay');
+      const maxDisplay = document.getElementById('maxPriceDisplay');
+      const minHidden = document.getElementById('minPrice');
+      const maxHidden = document.getElementById('maxPrice');
+      const rangeLine = document.getElementById('priceRangeLine');
+
+      function updateSlider(e) {
+        let minVal = parseInt(minInput.value);
+        let maxVal = parseInt(maxInput.value);
+
+        if (maxVal - minVal < 500) {
+          if (e && e.target === minInput) {
+            minInput.value = maxVal - 500;
+          } else if (e && e.target === maxInput) {
+            maxInput.value = minVal + 500;
+          }
+        }
+
+        const minPercent = ((minInput.value - 100) / (5000 - 100)) * 100;
+        const maxPercent = ((maxInput.value - 100) / (5000 - 100)) * 100;
+
+        rangeLine.style.left = minPercent + '%';
+        rangeLine.style.width = (maxPercent - minPercent) + '%';
+
+        minDisplay.textContent = '₹' + minInput.value;
+        maxDisplay.textContent = '₹' + maxInput.value;
+
+        minHidden.value = minInput.value;
+        maxHidden.value = maxInput.value;
+      }
+
+      minInput.addEventListener('input', updateSlider);
+      maxInput.addEventListener('input', updateSlider);
+
+      // Initialize slider
+      updateSlider();
+
+      // Mobile Drawer Logic
+      function toggleFilterDrawer() {
+        const drawer = document.getElementById('filterDrawer');
+        drawer.classList.toggle('active');
+        document.body.classList.toggle('drawer-open');
+      }
+
+      // Sort menu outside click listener
+      window.addEventListener('click', function (e) {
+        const sortWrapper = document.getElementById('customSort');
+        if (sortWrapper && !sortWrapper.contains(e.target)) {
+          sortWrapper.classList.remove('active');
+        }
+      });
+    </script>
+    <%- include('../partials/user-footer') %>
+      <script src="/js/shop.js"></script>
+</body>
+
+</html>

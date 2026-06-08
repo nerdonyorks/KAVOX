@@ -1,136 +1,250 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Details - KAVOX Admin</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/shimmer.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #f9fafb; color: #111827; }
-        
-        .header { background: #374151; padding: 1.5rem 2rem; color: #fff; display: flex; justify-content: space-between; align-items: center; }
-        .header h1 { font-size: 1.25rem; font-weight: 600; }
-        .back-btn { color: #fff; text-decoration: none; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem; }
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 32px;
+        }
 
-        .content { padding: 2rem; max-width: 1200px; margin: 0 auto; }
-        
-        .profile-grid { display: grid; grid-template-columns: 350px 1fr; gap: 2rem; }
-        
-        .card { background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 1.5rem; }
-        .card-title { font-size: 1rem; font-weight: 600; margin-bottom: 1.5rem; color: #374151; border-bottom: 1px solid #f3f4f6; padding-bottom: 0.75rem; }
+        .card-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: #111827;
+            border-bottom: 1px solid #f3f4f6;
+            padding-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
 
         /* Profile Card */
-        .profile-card { text-align: center; }
-        .avatar-large { width: 100px; height: 100px; border-radius: 50%; background: #f3f4f6; color: #6b7280; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 700; margin: 0 auto 1rem; border: 2px solid #e5e7eb; }
-        .user-image-large { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem; }
-        .profile-name { font-size: 1.25rem; font-weight: 700; color: #111827; margin-bottom: 0.25rem; }
-        .profile-email { color: #6b7280; font-size: 0.875rem; margin-bottom: 1.5rem; }
-        
-        .info-row { display: flex; justify-content: space-between; margin-bottom: 1rem; font-size: 0.875rem; }
-        .info-label { color: #6b7280; }
-        .info-value { color: #111827; font-weight: 500; }
+        .profile-card {
+            text-align: center;
+        }
 
-        /* Table Style */
-        .order-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        .order-table th { text-align: left; padding: 0.75rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
-        .order-table td { padding: 1rem 0.75rem; font-size: 0.875rem; border-bottom: 1px solid #f3f4f6; }
-        
-        .status-badge { padding: 0.25rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
-        .status-delivered { background: #def7ec; color: #03543f; }
-        .status-processing { background: #e1effe; color: #1e429f; }
-        .status-cancelled { background: #fde8e8; color: #9b1c1c; }
+        .avatar-large {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #f3f4f6;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0 auto 16px;
+            border: 2px solid #e5e7eb;
+        }
 
-        .badge-active { background: #def7ec; color: #03543f; font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 4px; }
-        .badge-blocked { background: #fde8e8; color: #9b1c1c; font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 4px; }
+        .user-image-large {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 16px;
+            display: block;
+            border: 2px solid #e5e7eb;
+        }
+
+        .profile-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+
+        .profile-email {
+            color: #6b7280;
+            font-size: 13px;
+            margin-bottom: 24px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+
+        .info-label {
+            color: #6b7280;
+        }
+
+        .info-value {
+            color: #111827;
+            font-weight: 600;
+        }
+
+        /* Table Specifics */
+        .order-table th:nth-child(1),
+        .order-table td:nth-child(1) {
+            width: 25%;
+            font-family: monospace;
+        }
+
+        .order-table th:nth-child(2),
+        .order-table td:nth-child(2) {
+            width: 20%;
+        }
+
+        .order-table th:nth-child(3),
+        .order-table td:nth-child(3) {
+            width: 20%;
+            font-weight: 700;
+        }
+
+        .order-table th:nth-child(4),
+        .order-table td:nth-child(4) {
+            width: 20%;
+        }
+
+        .order-table th:nth-child(5),
+        .order-table td:nth-child(5) {
+            width: 15%;
+            text-align: right;
+        }
+
+        .order-table th {
+            text-align: left;
+        }
     </style>
 </head>
-<body>
-    <header class="header">
-        <a href="/admin/users" class="back-btn">
-            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-            BACK TO USERS
-        </a>
-        <h1>CUSTOMER DETAILS</h1>
-        <div style="width: 100px;"></div> <!-- Spacer -->
-    </header>
 
-    <main class="content">
-        <div class="profile-grid">
-            <!-- Sidebar: User Info -->
-            <div class="sidebar-col">
-                <div class="card profile-card">
-                    <% if (user.profilePicture) { %>
-                        <img src="<%= user.profilePicture %>" alt="User" class="user-image-large">
-                    <% } else { %>
-                        <div class="avatar-large"><%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %></div>
-                    <% } %>
-                    <h2 class="profile-name"><%= user.name %></h2>
-                    <p class="profile-email"><%= user.email %></p>
-                    
-                    <div class="info-row">
-                        <span class="info-label">Status</span>
-                        <span class="<%= user.isActive ? 'badge-active' : 'badge-blocked' %>">
-                            <%= user.isActive ? 'Active' : 'Blocked' %>
-                        </span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Mobile</span>
-                        <span class="info-value"><%= user.phone || 'Not Provided' %></span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Joined On</span>
-                        <span class="info-value"><%= new Date(user.createdAt).toLocaleDateString() %></span>
-                    </div>
-                </div>
+<body class="admin-layout">
 
-                <div class="card" style="margin-top: 2rem;">
-                    <h3 class="card-title">Analytics</h3>
-                    <div class="info-row">
-                        <span class="info-label">Total Orders</span>
-                        <span class="info-value">3</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Total Spent</span>
-                        <span class="info-value">₹8,298.00</span>
-                    </div>
-                </div>
-            </div>
+    <%- include('partials/sidebar', { activePage: 'users' }) %>
 
-            <!-- Main: Purchase History -->
-            <div class="orders-col">
-                <div class="card">
-                    <h3 class="card-title">Purchase History</h3>
-                    <div class="table-wrapper">
-                        <table class="order-table">
-                            <thead>
-                                <tr>
-                                    <th>Order ID</th>
-                                    <th>Date</th>
-                                    <th>Total</th>
-                                    <th>Method</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% orders.forEach(function(order) { %>
-                                    <tr>
-                                        <td style="font-weight: 600; color: #2563eb;">#<%= order.id %></td>
-                                        <td><%= order.date %></td>
-                                        <td style="font-weight: 600;">₹<%= order.total.toLocaleString() %></td>
-                                        <td><%= order.method %></td>
-                                        <td>
-                                            <span class="status-badge status-<%= order.status.toLowerCase() %>">
-                                                <%= order.status %>
+        <main class="main-content">
+            <header class="header" style="display: flex; align-items: center; gap: 16px;">
+                <a href="/admin/users" style="color: #fff; display: flex; align-items: center;">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                </a>
+                <h1>CUSTOMER DETAILS</h1>
+            </header>
+
+            <div class="content-wrapper">
+                <div class="profile-grid">
+                    <!-- Sidebar: User Info -->
+                    <div class="sidebar-col">
+                        <div class="card profile-card">
+                            <% if (user.profilePicture) { %>
+                                <img src="<%= user.profilePicture %>" alt="User" class="user-image-large">
+                                <% } else { %>
+                                    <div class="avatar-large">
+                                        <%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %>
+                                    </div>
+                                    <% } %>
+                                        <h2 class="profile-name">
+                                            <%= user.name %>
+                                        </h2>
+                                        <p class="profile-email">
+                                            <%= user.email %>
+                                        </p>
+
+                                        <div class="info-row">
+                                            <span class="info-label">Status</span>
+                                            <span class="badge <%= user.isActive ? 'badge-success' : 'badge-error' %>">
+                                                <%= user.isActive ? 'ACTIVE' : 'BLOCKED' %>
                                             </span>
-                                        </td>
-                                    </tr>
-                                <% }); %>
-                            </tbody>
-                        </table>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="info-label">Mobile</span>
+                                            <span class="info-value">
+                                                <%= user.phone || 'Not Provided' %>
+                                            </span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="info-label">Joined On</span>
+                                            <span class="info-value">
+                                                <%= new Date(user.createdAt).toLocaleDateString() %>
+                                            </span>
+                                        </div>
+                        </div>
+
+                        <div class="card" style="margin-top: 32px;">
+                            <h3 class="card-title">Analytics</h3>
+                            <div class="info-row">
+                                <span class="info-label">Total Orders</span>
+                                <span class="info-value">
+                                    <%= typeof analytics !=='undefined' ? analytics.totalOrders : '0' %>
+                                </span>
+                            </div>
+                            <div class="info-row" style="margin-bottom: 0;">
+                                <span class="info-label">Total Spent (Delivered)</span>
+                                <span class="info-value">₹<%= typeof analytics !=='undefined' ?
+                                        analytics.totalSpent.toLocaleString() : '0' %></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main: Purchase History -->
+                    <div class="orders-col">
+                        <div class="card" style="padding: 0;">
+                            <div style="padding: 24px 32px; border-bottom: 1px solid #f3f4f6;">
+                                <h3 class="card-title" style="margin-bottom: 0; border: none; padding: 0;">Purchase
+                                    History</h3>
+                            </div>
+                            <div class="table-wrapper">
+                                <table class="order-table" style="width: 100%;">
+                                    <thead>
+                                        <tr>
+                                            <th>Order ID</th>
+                                            <th>Date</th>
+                                            <th>Total</th>
+                                            <th>Method</th>
+                                            <th style="text-align: right;">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% if (typeof orders !=='undefined' && orders.length> 0) { %>
+                                            <% orders.forEach(function(order) { %>
+                                                <tr>
+                                                    <td style="color: var(--secondary);">#<%= order.id %>
+                                                    </td>
+                                                    <td>
+                                                        <%= order.date %>
+                                                    </td>
+                                                    <td>₹<%= order.total.toLocaleString() %>
+                                                    </td>
+                                                    <td>
+                                                        <%= order.method %>
+                                                    </td>
+                                                    <td style="text-align: right;">
+                                                        <span
+                                                            class="badge badge-<%= order.status.toLowerCase().replace(' ', '-') %>"
+                                                            style="padding: 4px 8px;">
+                                                            <%= order.status %>
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                <% }); %>
+                                                    <% } else { %>
+                                                        <tr>
+                                                            <td colspan="5"
+                                                                style="text-align: center; padding: 32px; color: #6b7280;">
+                                                                No purchase history available.
+                                                            </td>
+                                                        </tr>
+                                                        <% } %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </main>
+        </main>
 </body>
+
 </html>

@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Management - KAVOX Admin</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/notifications.js"></script>
+  <!-- Cropper.js -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+  <script src="/js/shimmer.js"></script>
+  <script src="/js/cropperManager.js"></script>
+  <style>
+    /* Admin Table Specifics */
+    .admin-layout .product-img {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      object-fit: cover;
+    }
+
+    .admin-layout .products-table {
+      width: 100%;
+      table-layout: fixed;
+      font-size: 13px;
+    }
+
+    .admin-layout .products-table th,
+    .admin-layout .products-table td {
+      padding: 10px 8px;
+      vertical-align: middle;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .admin-layout .products-table th {
+      background: #f1f5f9;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+    }
+
+    /* Column Widths */
+    .col-product { width: 18%; }
+    .col-category { width: 10%; }
+    .col-price { width: 8%; }
+    .col-p-offer { width: 8%; }
+    .col-c-offer { width: 8%; }
+    .col-final { width: 10%; }
+    .col-variants { width: 9%; }
+    .col-stock { width: 9%; }
+    .col-status { width: 10%; }
+    .col-action { width: 10%; }
+
+    .action-btns {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-start;
+    }
+
+    .btn-view {
+      padding: 4px !important;
+      width: 32px !important;
+      height: 32px !important;
+    }
+
+    /* Status Colors */
+    .status-listed {
+      background: #dcfce7 !important;
+      color: #166534 !important;
+      border: 1px solid #bbf7d0 !important;
+    }
+
+    .status-unlisted {
+      background: #fee2e2 !important;
+      color: #991b1b !important;
+      border: 1px solid #fecaca !important;
+    }
+
+    .btn-status {
+      width: 100%;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      text-transform: uppercase;
+      padding: 6px 0 !important;
+    }
+
+    .btn-status:hover {
+      opacity: 0.8;
+      transform: translateY(-1px);
+    }
+  </style>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/shimmer.js"></script>
+</head>
+
+<body class="admin-layout">
+  <%- include('partials/sidebar', { activePage: 'products' }) %>
+
+    <main class="main-content">
+      <header class="header">
+        <h1>PRODUCT MANAGEMENT</h1>
+      </header>
+
+      <div class="content">
+        <div class="card" style="margin-bottom: 32px; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+          <div class="search-bar-container" style="display: flex; align-items: center; gap: 12px; width: 100%;">
+            <div class="search-input-wrapper" style="flex: 1; max-width: 600px;">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8" />
+                <path d="M21 21l-4.35-4.35" />
+              </svg>
+              <input type="text" id="searchInput" class="form-control" placeholder="Search by product name..."
+                style="height: 42px;">
+            </div>
+            <select id="categoryFilter" class="form-control filter-select" style="flex: 0 0 200px; height: 42px;">
+              <option value="all">All Categories</option>
+            </select>
+            <button class="btn-primary" onclick="openProductModal()"
+              style="white-space: nowrap; height: 42px; display: flex; align-items: center; gap: 8px;">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M12 4v16m8-8H4"></path>
+              </svg>
+              ADD PRODUCT
+            </button>
+          </div>
+        </div>
+
+        <div class="card" style="padding: 0;">
+          <div class="table-wrapper">
+            <table class="products-table">
+              <thead>
+                <tr>
+                  <th class="col-product">PRODUCT</th>
+                  <th class="col-category">CATEGORY</th>
+                  <th class="col-price">PRICE</th>
+                  <th class="col-p-offer">P.OFFER</th>
+                  <th class="col-c-offer">C.OFFER</th>
+                  <th class="col-final">FINAL</th>
+                  <th class="col-variants">VARIANTS</th>
+                  <th class="col-stock">STOCK</th>
+                  <th class="col-status">STATUS</th>
+                  <th class="col-action">ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="productTableBody">
+                <!-- Data will be loaded via AJAX with Skeletons -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="pagination-footer">
+          <div id="pagination" class="pagination">
+            <!-- Pagination handled by JS -->
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div id="productModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modalTitle" style="margin: 0; font-size: 18px; font-weight: 700;">Add New Product</h2>
+          <button type="button" onclick="closeModal()"
+            style="background: none; border: none; color: #9ca3af; cursor: pointer;">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <form id="productForm">
+          <div class="modal-body">
+            <input type="hidden" id="productId">
+
+            <!-- Product Info Section -->
+            <div class="modal-section">
+              <h3 class="modal-section-title">General Information</h3>
+              <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 24px;">
+                <div>
+                  <div class="form-group">
+                    <label class="form-label">Product Name</label>
+                    <input type="text" id="prodName" class="form-control" placeholder="e.g. Nike Air Max">
+                    <div class="error-msg" id="nameError">Product name is required.</div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select id="prodCategory" class="form-control"></select>
+                    <div class="error-msg" id="categoryError">Please select a category.</div>
+                  </div>
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label">Base Price (₹)</label>
+                    <input type="number" id="prodPrice" class="form-control no-spinner" placeholder="0.00">
+                    <div class="error-msg" id="priceError">Price must be a positive number.</div>
+                  </div>
+                </div>
+                <div style="display: flex; flex-direction: column;">
+                  <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label class="form-label">Description</label>
+                    <textarea id="prodDescription" class="form-control"
+                      style="height: 180px; resize: none; overflow-y: auto;"
+                      placeholder="Describe the product features..."></textarea>
+                    <div class="error-msg" id="descriptionError">Description is required.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pricing & Status Section -->
+            <div class="modal-section">
+              <h3 class="modal-section-title">Pricing & Status</h3>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                <div class="form-group">
+                  <label class="form-label">Offer (%)</label>
+                  <input type="number" id="prodOffer" class="form-control no-spinner" placeholder="Enter discount %" step="0.01" min="0" max="100">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Status</label>
+                  <select id="prodStatus" class="form-control">
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Product Variants Section -->
+            <div class="modal-section" style="margin-bottom: 0;">
+              <div class="modal-section-title">
+                <span>Product Variants</span>
+                <button type="button" class="btn-primary" style="padding: 6px 12px; font-size: 11px; height: 32px;"
+                  onclick="addVariantRow()">+ ADD VARIANT</button>
+              </div>
+              <div id="variantList">
+                <!-- Variants will be injected here -->
+              </div>
+              <div class="error-msg" id="variantError">At least one variant with size, color, and 3 images is required.
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-secondary" style="height: 44px; padding: 0 24px;"
+              onclick="closeModal()">CANCEL</button>
+            <button type="submit" class="btn-primary" style="height: 44px; padding: 0 24px;">SAVE PRODUCT</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      let categories = [];
+      let currentProducts = [];
+      let variantFiles = {}; // Structure: { variantId: [file0, file1, file2] }
+
+      function addVariantRow(data = { size: '', color: '', quantity: '', images: [], isActive: true }) {
+        const vId = 'v_' + Math.random().toString(36).substr(2, 9);
+        // Important: Store existing image URLs or Files
+        variantFiles[vId] = data.images.map(img => img.url || img) || [null, null, null];
+        while (variantFiles[vId].length < 3) variantFiles[vId].push(null);
+
+        const html = `
+            <div class="variant-card-modern" id="${vId}">
+                <div class="btn-remove-v" onclick="removeVariantRow('${vId}')">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Size</label>
+                        <select class="form-control v-size" onchange="hideFieldError('', 'error_${vId}')">
+                            <option value="">Select Size</option>
+                            ${[6, 7, 8, 9, 10, 11, 12].map(s => `
+                                <option value="UK ${s}" ${data.size === 'UK ' + s ? 'selected' : ''}>UK ${s}</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Color</label>
+                        <select class="form-control v-color" onchange="hideFieldError('', 'error_${vId}')">
+                            <option value="">Select Color</option>
+                            ${['Red', 'Black', 'White', 'Blue'].map(c => `
+                                <option value="${c}" ${data.color === c ? 'selected' : ''}>${c}</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" class="form-control v-quantity no-spinner" value="${data.quantity}" placeholder="0">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Status</label>
+                        <select class="form-control v-status">
+                            <option value="true" ${data.isActive !== false ? 'selected' : ''}>Active</option>
+                            <option value="false" ${data.isActive === false ? 'selected' : ''}>Inactive</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="form-label">Product Images (3 REQUIRED)</label>
+                    <div class="image-upload-grid">
+                        ${[0, 1, 2].map(i => `
+                            <div class="image-box" onclick="triggerVFileInput('${vId}', ${i})">
+                                <span class="plus-icon" id="plus_${vId}_${i}" style="${data.images[i] ? 'display:none' : ''}">+</span>
+                                <span class="image-box-label" id="label_${vId}_${i}" style="${data.images[i] ? 'display:none' : ''}">${i === 0 ? 'Primary' : 'Angle ' + i}</span>
+                                <input type="file" id="file_${vId}_${i}" hidden accept="image/*" onchange="handleVImageSelect(event, '${vId}', ${i})">
+                                <img src="${data.images[i] ? (data.images[i].url || data.images[i]) : ''}" id="prev_${vId}_${i}" style="${data.images[i] ? 'display:block' : 'display:none'}">
+                                ${i === 0 ? '<div class="primary-badge">PRIMARY</div>' : ''}
+                                <div class="remove-img-btn" id="rm_${vId}_${i}" style="${data.images[i] ? 'display:flex' : 'display:none'}" onclick="removeVImage(event, '${vId}', ${i})">&times;</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="error-msg" id="error_${vId}" style="margin-top: 10px;"></div>
+            </div>
+        `;
+        document.getElementById('variantList').insertAdjacentHTML('beforeend', html);
+        document.getElementById(vId).scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      function removeVariantRow(vId) {
+        const el = document.getElementById(vId);
+        if (el) {
+          el.remove();
+          delete variantFiles[vId]; // Cleanup state
+        }
+      }
+
+      function removeVImage(event, vId, idx) {
+        event.stopPropagation();
+        variantFiles[vId][idx] = null;
+        const prevImg = document.getElementById(`prev_${vId}_${idx}`);
+        prevImg.src = "";
+        prevImg.style.display = "none";
+        document.getElementById(`plus_${vId}_${idx}`).style.display = "block";
+        document.getElementById(`label_${vId}_${idx}`).style.display = "block";
+        document.getElementById(`rm_${vId}_${idx}`).style.display = "none";
+      }
+
+      function removeVariantRow(vId) {
+        document.getElementById(vId).remove();
+        delete variantFiles[vId];
+      }
+
+      function triggerVFileInput(vId, idx) {
+        document.getElementById(`file_${vId}_${idx}`).click();
+      }
+
+      function handleVImageSelect(event, vId, idx) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+        if (!allowedTypes.includes(file.type)) {
+          KavoxNotify.alert({
+            title: 'Invalid File Type',
+            text: 'Please upload only image files (JPEG, PNG, WEBP).',
+            icon: 'error'
+          });
+          event.target.value = ''; // Reset input
+          return;
+        }
+
+        CropperManager.init(file, {
+          aspectRatio: 1,
+          width: 500,
+          height: 500,
+          callback: (croppedFile, previewUrl) => {
+            if (croppedFile) {
+              variantFiles[vId][idx] = croppedFile;
+              const prevImg = document.getElementById(`prev_${vId}_${idx}`);
+              prevImg.src = previewUrl;
+              prevImg.style.display = "block";
+
+              // Hide plus and label when image is present
+              document.getElementById(`plus_${vId}_${idx}`).style.display = "none";
+              document.getElementById(`label_${vId}_${idx}`).style.display = "none";
+              document.getElementById(`rm_${vId}_${idx}`).style.display = "flex";
+            }
+          }
+        });
+      }
+
+      function hideErrors() {
+        document.querySelectorAll('.error-msg').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+      }
+
+      function hideFieldError(inputId, errorId) {
+        if (inputId) document.getElementById(inputId).classList.remove('is-invalid');
+        if (errorId) document.getElementById(errorId).style.display = 'none';
+      }
+
+      function showError(inputId, errorId) {
+        const input = document.getElementById(inputId);
+        const error = document.getElementById(errorId);
+        if (input) input.classList.add('is-invalid');
+        if (error) error.style.display = 'block';
+      }
+
+      async function loadData() {
+        try {
+          const catRes = await fetch('/api/admin/category?limit=100');
+          const catResult = await catRes.json();
+          if (catResult.success) {
+            categories = catResult.data;
+            const filter = document.getElementById('categoryFilter');
+            const select = document.getElementById('prodCategory');
+
+            // Set defaults
+            filter.innerHTML = '<option value="all">All Categories</option>';
+            select.innerHTML = '<option value="">Select Category</option>';
+
+            categories.forEach(cat => {
+              filter.innerHTML += `<option value="${cat._id}">${cat.name}</option>`;
+              if (cat.isActive) {
+                select.innerHTML += `<option value="${cat._id}">${cat.name}</option>`;
+              }
+            });
+          }
+          await loadProducts();
+        } catch (err) { console.error(err); }
+      }
+
+      let searchTimeout = null;
+      const tableBody = document.getElementById('productTableBody');
+      const pagination = document.getElementById('pagination');
+
+      function showTableSkeleton() {
+        const skeletonHTML = Array(5).fill(0).map(() => `
+          <tr class="skeleton-row">
+            <td>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="skeleton" style="width: 44px; height: 44px; border-radius: 8px;"></div>
+                <div class="skeleton" style="height: 12px; width: 140px;"></div>
+              </div>
+            </td>
+            <td><div class="skeleton" style="height: 12px; width: 100px;"></div></td>
+            <td><div class="skeleton" style="height: 12px; width: 80px;"></div></td>
+            <td><div class="skeleton" style="height: 12px; width: 50px;"></div></td>
+            <td><div class="skeleton skeleton-pill"></div></td>
+            <td><div class="skeleton" style="height: 12px; width: 70px;"></div></td>
+            <td><div class="skeleton skeleton-pill"></div></td>
+            <td><div class="skeleton" style="height: 12px; width: 60px; margin: 0 auto;"></div></td>
+          </tr>
+        `).join('');
+        tableBody.innerHTML = skeletonHTML;
+        tableBody.style.opacity = '1';
+        pagination.style.opacity = '0.5';
+        pagination.style.pointerEvents = 'none';
+      }
+
+      async function loadProducts(page = 1) {
+        showTableSkeleton();
+        try {
+          const search = document.getElementById('searchInput').value;
+          const cat = document.getElementById('categoryFilter').value;
+          const url = `/api/admin/product?page=${page}&search=${encodeURIComponent(search)}&category=${cat}`;
+
+          const [response] = await Promise.all([
+            fetch(url),
+            new Promise(resolve => setTimeout(resolve, 400)) // Artificial delay for shimmer
+          ]);
+
+          const result = await response.json();
+          if (result.success) {
+            tableBody.classList.remove('fade-in');
+            void tableBody.offsetWidth; // Force reflow
+            tableBody.classList.add('fade-in');
+            renderTable(result);
+            pagination.style.opacity = '1';
+            pagination.style.pointerEvents = 'auto';
+          }
+        } catch (err) { console.error(err); }
+      }
+
+      function renderTable(result) {
+        const tbody = document.getElementById('productTableBody');
+        currentProducts = result.data;
+        tbody.innerHTML = result.data.map(p => {
+          const primaryImg = p.variants?.[0]?.images?.[0]?.url || '/images/placeholder.png';
+          const price = p.price || 0;
+          const pOffer = p.productOffer || 0;
+          const cOffer = p.category?.offer || 0;
+          const effectiveOffer = Math.max(pOffer, cOffer);
+          const finalPrice = Math.round(price * (1 - effectiveOffer / 100));
+          const stock = p.variants?.reduce((acc, v) => acc + (v.quantity || 0), 0) || 0;
+
+          return `
+                <tr>
+                    <td class="col-product">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <img src="${primaryImg}" class="product-img">
+                            <span class="user-name" style="font-size: 13px;">${p.name}</span>
+                        </div>
+                    </td>
+                    <td class="col-category">${p.category?.name || 'N/A'}</td>
+                    <td class="col-price">₹${price.toLocaleString()}</td>
+                    <td class="col-p-offer">${pOffer}%</td>
+                    <td class="col-c-offer" style="color: ${cOffer > 0 ? 'var(--primary)' : 'inherit'}">${cOffer}%</td>
+                    <td class="col-final" style="font-weight: 700; color: ${effectiveOffer > 0 ? '#166534' : 'inherit'}">₹${finalPrice.toLocaleString()}</td>
+                    <td class="col-variants">
+                        <span class="badge ${p.variants?.every(v => v.isActive) ? 'badge-success' : (p.variants?.some(v => v.isActive) ? 'badge-warning' : 'badge-error')}" 
+                              style="min-width: 44px; text-transform: uppercase; font-weight: 700; font-size: 11px; padding: 4px 8px;">
+                            ${(p.variants || []).filter(v => v.isActive !== false).length}/${(p.variants || []).length}
+                        </span>
+                    </td>
+                    <td class="col-stock">
+                         <span style="color: ${stock < 10 ? 'var(--error)' : '#6b7280'}; font-weight: 500;">
+                            ${stock} Left
+                        </span>
+                    </td>
+                    <td class="col-status">
+                        <button onclick="toggleProductStatus('${p._id}', ${p.isActive})" 
+                                class="btn-status ${p.isActive ? 'status-listed' : 'status-unlisted'}" 
+                                style="border: none;">
+                            ${p.isActive ? 'LISTED' : 'UNLISTED'}
+                        </button>
+                    </td>
+                    <td class="col-action">
+                        <div class="action-btns">
+                            <a href="javascript:void(0)" onclick="openProductModal('${p._id}')" class="btn-view" title="Edit Product">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            </a>
+                            <a href="javascript:void(0)" onclick="deleteProduct('${p._id}')" class="btn-view" title="Delete Product" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.1);">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+        renderPagination(result);
+      }
+
+      function renderPagination(result) {
+        const pagin = document.getElementById('pagination');
+        let html = "";
+        for (let i = 1; i <= result.pages; i++) {
+          html += `<button class="${i === result.page ? 'active' : ''}" onclick="loadProducts(${i})">${i}</button>`;
+        }
+        pagin.innerHTML = html;
+      }
+
+      async function openProductModal(id = null) {
+        document.getElementById('productForm').reset();
+        document.getElementById('productId').value = id || "";
+        document.getElementById('modalTitle').innerText = id ? "Edit Product" : "Create New Product";
+        document.getElementById('variantList').innerHTML = "";
+        variantFiles = {};
+        hideErrors();
+
+        if (id) {
+          document.getElementById('modalTitle').textContent = "Edit Product";
+          document.getElementById('productId').value = id;
+          const p = currentProducts.find(x => x._id === id);
+          if (p) {
+            document.getElementById('prodName').value = p.name;
+            const catSelect = document.getElementById('prodCategory');
+            const catId = p.category._id || p.category;
+            
+            // Check if current category is available in dropdown (active only by default)
+            const exists = Array.from(catSelect.options).some(opt => opt.value === catId);
+            if (!exists) {
+              const catObj = categories.find(c => c._id === catId);
+              if (catObj) {
+                const opt = document.createElement('option');
+                opt.value = catId;
+                opt.textContent = `${catObj.name} (Inactive)`;
+                catSelect.appendChild(opt);
+              }
+            }
+            catSelect.value = catId;
+            document.getElementById('prodPrice').value = p.price;
+            document.getElementById('prodDescription').value = p.description;
+            document.getElementById('prodOffer').value = p.productOffer || 0;
+            document.getElementById('prodStatus').value = p.isActive.toString();
+
+            if (p.variants && p.variants.length > 0) {
+              p.variants.forEach(v => addVariantRow(v));
+            }
+          }
+        } else {
+          document.getElementById('modalTitle').textContent = "Add New Product";
+          document.getElementById('productId').value = '';
+          addVariantRow();
+        }
+        document.getElementById('productModal').classList.add('active');
+      }
+
+      function closeModal() {
+        document.getElementById('productModal').classList.remove('active');
+        variantFiles = {};
+      }
+
+      document.getElementById('productForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideErrors();
+
+        const data = {
+          name: document.getElementById('prodName').value.trim(),
+          category: document.getElementById('prodCategory').value,
+          price: document.getElementById('prodPrice').value,
+          description: document.getElementById('prodDescription').value.trim(),
+          productOffer: document.getElementById('prodOffer').value,
+          isActive: document.getElementById('prodStatus').value === "true",
+          showOnHome: false
+        };
+
+        let isValid = true;
+
+        // Name: Alphanumeric and spaces only
+        const nameRegex = /^[a-zA-Z0-9\s]+$/;
+        if (!data.name) {
+          showError('prodName', 'nameError');
+          document.getElementById('nameError').textContent = "Product name is required.";
+          isValid = false;
+        } else if (!nameRegex.test(data.name)) {
+          showError('prodName', 'nameError');
+          document.getElementById('nameError').textContent = "Product name can only contain letters and numbers.";
+          isValid = false;
+        }
+
+        if (!data.category) { showError('prodCategory', 'categoryError'); isValid = false; }
+        if (!data.price || data.price <= 0) { showError('prodPrice', 'priceError'); isValid = false; }
+
+        // Description: Min 5 characters
+        if (!data.description) {
+          showError('prodDescription', 'descriptionError');
+          document.getElementById('descriptionError').textContent = "Description is required.";
+          isValid = false;
+        } else if (data.description.length < 5) {
+          showError('prodDescription', 'descriptionError');
+          document.getElementById('descriptionError').textContent = "Description must be at least 5 characters.";
+          isValid = false;
+        }
+
+        const vCards = document.querySelectorAll('.variant-card-modern');
+        const variants = [];
+        const formData = new FormData();
+
+        vCards.forEach(card => {
+          const vId = card.id;
+          const vData = {
+            size: card.querySelector('.v-size').value.trim(),
+            color: card.querySelector('.v-color').value.trim(),
+            quantity: card.querySelector('.v-quantity').value,
+            isActive: card.querySelector('.v-status').value === "true",
+            images: [] // Metadata: strings or "__NEW_FILE__"
+          };
+
+          const filesArr = variantFiles[vId] || [null, null, null];
+          let validImgCount = 0;
+
+          for (let i = 0; i < 3; i++) {
+            const item = filesArr[i];
+            if (item instanceof File) {
+              vData.images.push("__NEW_FILE__");
+              formData.append('images', item);
+              validImgCount++;
+            } else if (item && (typeof item === 'string' || (typeof item === 'object' && item.url)) && (item.url || item).startsWith('/uploads')) {
+              vData.images.push(item.url || item);
+              validImgCount++;
+            } else {
+              vData.images.push(null);
+            }
+          }
+
+          if (vData.size && vData.color && validImgCount === 3) {
+            variants.push(vData);
+          } else {
+            let errorMsg = "";
+            if (!vData.size) errorMsg = `Please select a size for this variant.`;
+            else if (!vData.color) errorMsg = `Please select a color for this variant.`;
+            else if (validImgCount < 3) errorMsg = `Each variant requires exactly 3 images (Current: ${validImgCount}).`;
+
+            const errorDiv = document.getElementById(`error_${vId}`);
+            if (errorDiv) {
+              errorDiv.textContent = errorMsg;
+              errorDiv.style.display = 'block';
+            }
+            isValid = false;
+            return;
+          }
+        });
+
+        if (variants.length === 0) {
+          document.getElementById('variantError').style.display = 'block';
+          isValid = false;
+        }
+
+        if (!isValid) return;
+
+        formData.append('name', data.name);
+        formData.append('category', data.category);
+        formData.append('price', data.price);
+        formData.append('description', data.description);
+        formData.append('productOffer', data.productOffer);
+        formData.append('isActive', data.isActive);
+        formData.append('variants', JSON.stringify(variants));
+
+        try {
+          KavoxNotify.loading('Saving Product...');
+          const id = document.getElementById('productId').value;
+          const url = id ? `/api/admin/product/${id}` : '/api/admin/product';
+          const method = id ? 'PUT' : 'POST';
+
+          const res = await fetch(url, { method, body: formData });
+          const result = await res.json();
+          KavoxNotify.closeLoading();
+          if (result.success) {
+            KavoxNotify.toast(result.message, 'success');
+            closeModal();
+            loadProducts();
+          } else {
+            KavoxNotify.alert({ title: 'Error', text: result.message, icon: 'error' });
+          }
+        } catch (err) { 
+          KavoxNotify.closeLoading();
+          KavoxNotify.toast('Submission failed', 'error'); 
+        }
+      });
+
+      document.getElementById('searchInput').oninput = function () {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => loadProducts(1), 300);
+      };
+
+      document.getElementById('categoryFilter').addEventListener('change', () => loadProducts(1));
+
+      async function toggleProductStatus(id, currentStatus) {
+        try {
+          const res = await fetch(`/api/admin/product/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ isActive: !currentStatus })
+          });
+          const result = await res.json();
+          if (result.success) {
+            KavoxNotify.toast(`Product ${!currentStatus ? 'Listed' : 'Unlisted'}`, 'success');
+            loadProducts(1);
+          }
+        } catch (err) { KavoxNotify.toast('Failed to update status', 'error'); }
+      }
+
+      async function deleteProduct(id) {
+        const confirm = await KavoxNotify.confirm({
+          title: 'Are you sure?',
+          text: "This will soft-delete the product!",
+          icon: 'warning',
+          confirmText: 'Yes, delete it!'
+        });
+
+        if (confirm.isConfirmed) {
+          try {
+            const res = await fetch(`/api/admin/product/${id}`, { method: 'DELETE' });
+            const result = await res.json();
+            if (result.success) {
+              KavoxNotify.toast('Product has been deleted.', 'success');
+              loadProducts(1);
+            }
+          } catch (err) { KavoxNotify.toast('Failed to delete product', 'error'); }
+        }
+      }
+
+      document.getElementById('prodName').addEventListener('input', () => hideFieldError('prodName', 'nameError'));
+      document.getElementById('prodCategory').addEventListener('change', () => hideFieldError('prodCategory', 'categoryError'));
+      document.getElementById('prodPrice').addEventListener('input', () => hideFieldError('prodPrice', 'priceError'));
+      document.getElementById('prodDescription').addEventListener('input', () => hideFieldError('prodDescription', 'descriptionError'));
+
+      window.onload = async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchParam = urlParams.get('search');
+        const editParam = urlParams.get('edit');
+        if (searchParam) {
+          document.getElementById('searchInput').value = searchParam;
+        }
+        await loadData();
+        
+        if (editParam) {
+          // Slight delay to ensure the DOM is ready after table render
+          setTimeout(() => {
+            openProductModal(editParam);
+          }, 300);
+        }
+      };
+    </script>
+    <%- include('../partials/cropperModal') %>
+</body>
+
+</html>

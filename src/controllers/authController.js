@@ -5,6 +5,7 @@ const otpService = require("../services/otpService");
 const emailService = require("../services/emailService");
 const otpGenerator = require("../utils/otpGenerator");
 const crypto = require("crypto");
+const { HTTP_STATUS, MESSAGES } = require("../utils/constants");
 
 exports.requestSignupOtp = async (req, res) => {
   try {
@@ -14,8 +15,9 @@ exports.requestSignupOtp = async (req, res) => {
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
-      return res.status(400).json({
-        message: "Email already registered"
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: MESSAGES.EMAIL_ALREADY_EXISTS
       });
     }
 
@@ -33,9 +35,13 @@ exports.requestSignupOtp = async (req, res) => {
     await emailService.sendOtpEmail(email, generatedOtp);
     console.log(`[DEV] Generated Signup OTP for ${email}: ${generatedOtp}`);
 
-    res.json({ message: "OTP sent to your email" });
+    res.status(HTTP_STATUS.OK).json({ success: true, message: MESSAGES.OTP_SENT_SUCCESS });
   } catch (error) {
-    res.status(500).json({ message: "Signup OTP request failed", error: error.message });
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ 
+        success: false, 
+        message: MESSAGES.SIGNUP_FAILED, 
+        error: error.message 
+    });
   }
 };
 
@@ -46,36 +52,53 @@ exports.signup = async (req, res) => {
     // Pattern Validators (moved from service to controller for easier session handling)
     const nameRegex = /^[A-Za-z0-9]{3,}$/;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[\W]).{6,}$/;
+    const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[\W]).{8,}$/;
+
+    const isAjax = req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'));
 
     if (!firstName || !email || !password || !confirmPassword) {
-      return res.status(400).render("user/signup", { error: "Required fields are missing.", ...req.body });
+      if (isAjax) return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.REQUIRED_FIELDS_MISSING });
+      return res.status(HTTP_STATUS.BAD_REQUEST).render("user/signup", { error: MESSAGES.REQUIRED_FIELDS_MISSING, ...req.body });
     }
 
     if (!nameRegex.test(firstName)) {
-      return res.status(400).render("user/signup", { error: "First name can only contain letters and numbers, minimum 3 chars.", ...req.body });
+      if (isAjax) return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.INVALID_NAME_FORMAT });
+      return res.status(HTTP_STATUS.BAD_REQUEST).render("user/signup", { error: MESSAGES.INVALID_NAME_FORMAT, ...req.body });
     }
 
     if (lastName && !nameRegex.test(lastName)) {
-      return res.status(400).render("user/signup", { error: "Last name can only contain letters and numbers, minimum 3 chars.", ...req.body });
+      if (isAjax) return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.INVALID_LAST_NAME_FORMAT });
+      return res.status(HTTP_STATUS.BAD_REQUEST).render("user/signup", { error: MESSAGES.INVALID_LAST_NAME_FORMAT, ...req.body });
     }
 
     if (!emailRegex.test(email)) {
-      return res.status(400).render("user/signup", { error: "Please enter a valid email address.", ...req.body });
+      if (isAjax) return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.INVALID_EMAIL_FORMAT });
+      return res.status(HTTP_STATUS.BAD_REQUEST).render("user/signup", { error: MESSAGES.INVALID_EMAIL_FORMAT, ...req.body });
     }
 
     if (!passRegex.test(password)) {
-      return res.status(400).render("user/signup", { error: "Password must contain uppercase, lowercase, number and symbol (min 6 chars).", ...req.body });
+      if (isAjax) return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.INVALID_PASSWORD_FORMAT });
+      return res.status(HTTP_STATUS.BAD_REQUEST).render("user/signup", { error: MESSAGES.INVALID_PASSWORD_FORMAT, ...req.body });
     }
 
     if (password !== confirmPassword) {
-      return res.status(400).render("user/signup", { error: "Passwords do not match.", ...req.body });
+      if (isAjax) return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.PASSWORDS_NOT_MATCH });
+      return res.status(HTTP_STATUS.BAD_REQUEST).render("user/signup", { error: MESSAGES.PASSWORDS_NOT_MATCH, ...req.body });
     }
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).render("user/signup", { error: "An account with this email already exists.", ...req.body });
+    const existingEmailUser = await User.findOne({ email });
+    if (existingEmailUser) {
+      if (isAjax) return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.EMAIL_ALREADY_EXISTS });
+      return res.status(HTTP_STATUS.BAD_REQUEST).render("user/signup", { error: MESSAGES.EMAIL_ALREADY_EXISTS, ...req.body });
     }
+
+    const firstNameRegex = new RegExp(`^${firstName}(\\s|$)`, 'i');
+    const existingNameUser = await User.findOne({ name: { $regex: firstNameRegex } });
+    if (existingNameUser) {
+      if (isAjax) return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.FIRST_NAME_TAKEN });
+      return res.status(HTTP_STATUS.BAD_REQUEST).render("user/signup", { error: MESSAGES.FIRST_NAME_TAKEN, ...req.body });
+    }
+
 
     // Store signup data in session
     req.session.signupData = { firstName, lastName, email, phone, referralCode, password };
@@ -85,35 +108,54 @@ exports.signup = async (req, res) => {
     await emailService.sendOtpEmail(email, generatedOtp);
     console.log(`[DEV] Generated Signup OTP for ${email}: ${generatedOtp}`);
 
+    if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+        return res.status(HTTP_STATUS.OK).json({ 
+            success: true, 
+            redirect: `/verify-otp?email=${encodeURIComponent(email)}&type=signup`,
+            message: MESSAGES.OTP_SENT_SUCCESS 
+        });
+    }
+
     return res.redirect(`/verify-otp?email=${encodeURIComponent(email)}&type=signup`);
   } catch (error) {
     console.error("Signup error", error);
-    res.status(500).render("user/signup", { error: "Signup failed due to server error." });
+    if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+        return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ 
+            success: false, 
+            message: MESSAGES.SIGNUP_FAILED 
+        });
+    }
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).render("user/signup", { error: MESSAGES.SIGNUP_FAILED });
   }
 };
 
 
 exports.verifyOtp = async (req, res) => {
   try {
-    const { email, otp, type } = req.body;
+    let { email, otp, type } = req.body;
+    
+    // Concatenate OTP if it comes as separate fields (standard form submission)
+    if (!otp && req.body.otp1 && req.body.otp2 && req.body.otp3 && req.body.otp4) {
+        otp = `${req.body.otp1}${req.body.otp2}${req.body.otp3}${req.body.otp4}`;
+    }
     const isAjax = req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'));
 
     // Verify OTP first via Service Layer
     const isValid = await otpService.verifyOTP(email, otp);
     if (!isValid) {
       if (isAjax) {
-        return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.INVALID_OTP });
       }
-      return res.status(400).render("user/otp-verify", { error: "Invalid or expired OTP", email, ...req.body });
+      return res.status(HTTP_STATUS.BAD_REQUEST).render("user/otp-verify", { error: MESSAGES.INVALID_OTP, email, ...req.body });
     }
 
     if (type === 'signup') {
         const signupData = req.session.signupData;
         if (!signupData || signupData.email !== email) {
             if (isAjax) {
-                return res.status(400).json({ success: false, message: "Signup session expired or invalid" });
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.SIGNUP_SESSION_EXPIRED });
             }
-            return res.status(400).render("user/otp-verify", { error: "Signup session expired or invalid", email, ...req.body });
+            return res.status(HTTP_STATUS.BAD_REQUEST).render("user/otp-verify", { error: MESSAGES.SIGNUP_SESSION_EXPIRED, email, ...req.body });
         }
 
         const name = `${signupData.firstName} ${signupData.lastName || ''}`.trim();
@@ -129,16 +171,16 @@ exports.verifyOtp = async (req, res) => {
         delete req.session.signupData;
 
         if (isAjax) {
-            return res.json({ success: true, redirect: "/login?signup_success=1" });
+            return res.status(HTTP_STATUS.OK).json({ success: true, redirect: "/login?signup_success=1" });
         }
         return res.redirect("/login?signup_success=1");
     } else if (type === 'email_change') {
         const pendingEmail = req.session.pendingEmail;
         if (!pendingEmail || pendingEmail.newEmail !== email) {
             if (isAjax) {
-                return res.status(400).json({ success: false, message: "Email change session expired or invalid" });
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.EMAIL_CHANGE_SESSION_EXPIRED });
             }
-            return res.status(400).render("user/otp-verify", { error: "Email change session expired or invalid", email, ...req.body });
+            return res.status(HTTP_STATUS.BAD_REQUEST).render("user/otp-verify", { error: MESSAGES.EMAIL_CHANGE_SESSION_EXPIRED, email, ...req.body });
         }
 
         const user = await User.findById(req.user.id);
@@ -147,10 +189,10 @@ exports.verifyOtp = async (req, res) => {
         const existingUser = await User.findOne({ email: pendingEmail.newEmail });
         if (existingUser && existingUser._id.toString() !== user._id.toString()) {
             if (isAjax) {
-                return res.status(400).json({ success: false, message: "This email has been taken by another account. Please try a different email." });
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.EMAIL_TAKEN });
             }
-            return res.status(400).render("user/otp-verify", { 
-                error: "This email has been taken by another account. Please try a different email.", 
+            return res.status(HTTP_STATUS.BAD_REQUEST).render("user/otp-verify", { 
+                error: MESSAGES.EMAIL_TAKEN, 
                 email, ...req.body 
             });
         }
@@ -160,37 +202,37 @@ exports.verifyOtp = async (req, res) => {
         delete req.session.pendingEmail;
 
         if (isAjax) {
-            return res.json({ success: true, redirect: "/account?email_success=1" });
+            return res.status(HTTP_STATUS.OK).json({ success: true, redirect: "/account?email_success=1" });
         }
         return res.redirect("/account?email_success=1");
     } else {
         if (isAjax) {
-            return res.status(400).json({ success: false, message: "Unknown OTP verification type" });
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.UNKNOWN_OTP_TYPE });
         }
-        res.status(400).render("user/otp-verify", { error: "Unknown OTP verification type", email, ...req.body });
+        res.status(HTTP_STATUS.BAD_REQUEST).render("user/otp-verify", { error: MESSAGES.UNKNOWN_OTP_TYPE, email, ...req.body });
     }
 
   } catch (error) {
     console.error("verifyOtp error", error);
     if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
-        return res.status(500).json({ success: false, message: "Verification failed due to server error." });
+        return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: MESSAGES.VERIFICATION_FAILED });
     }
-    res.status(500).render("user/otp-verify", { error: "Verification failed due to server error.", ...req.body });
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).render("user/otp-verify", { error: MESSAGES.VERIFICATION_FAILED, ...req.body });
   }
 };
 
 exports.resendOtp = async (req, res) => {
     try {
         const { email } = req.body;
-        if (!email) return res.status(400).json({ success: false, message: "Email required" });
+        if (!email) return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.EMAIL_REQUIRED });
         
         const newOtp = await otpService.generateAndStoreOTP(email);
         await emailService.sendOtpEmail(email, newOtp);
         
-        res.json({ success: true, message: "OTP resent successfully" });
+        res.status(HTTP_STATUS.OK).json({ success: true, message: MESSAGES.OTP_RESEND_SUCCESS });
     } catch (e) {
         console.error("Resend OTP Error", e);
-         res.status(500).json({ success: false, message: "Failed to resend OTP" });
+         res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: MESSAGES.OTP_RESEND_FAILED });
     }
 };
 
@@ -201,34 +243,66 @@ exports.login = async (req, res, next) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-        return res.status(400).render("user/login", { error: "Invalid email or password", email });
+        return res.status(HTTP_STATUS.BAD_REQUEST).render("user/login", { error: MESSAGES.INVALID_CREDENTIALS, email });
+    }
+
+    if (user.role === 'admin') {
+        if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+            return res.status(HTTP_STATUS.FORBIDDEN).json({ success: false, message: MESSAGES.ADMIN_VIA_USER_PORTAL });
+        }
+        return res.status(HTTP_STATUS.FORBIDDEN).render("user/login", { error: MESSAGES.ADMIN_VIA_USER_PORTAL, email });
     }
 
     if (!user.password) {
-        return res.status(400).render("user/login", { error: "This account uses Google login. Please continue with Google or set a password.", email });
+        if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.GOOGLE_LOGIN_REQUIRED });
+        }
+        return res.status(HTTP_STATUS.BAD_REQUEST).render("user/login", { error: MESSAGES.GOOGLE_LOGIN_REQUIRED, email });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-        return res.status(400).render("user/login", { error: "Invalid email or password", email });
+        if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.INVALID_CREDENTIALS });
+        }
+        return res.status(HTTP_STATUS.BAD_REQUEST).render("user/login", { error: MESSAGES.INVALID_CREDENTIALS, email });
     }
 
     if (!user.isActive) {
-        return res.status(400).render("user/login", { error: "Your account has been suspended. Please contact support.", email });
+        if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+            return res.status(HTTP_STATUS.FORBIDDEN).json({ success: false, message: MESSAGES.ACCOUNT_SUSPENDED });
+        }
+        return res.status(HTTP_STATUS.FORBIDDEN).render("user/login", { error: MESSAGES.ACCOUNT_SUSPENDED, email });
     }
 
     // Credentials valid, log in directly
     req.login(user, (err) => {
         if (err) {
             console.error("Login Error:", err);
-            return res.status(500).render("user/login", { error: "Internal server error during login", email });
+            if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+                return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ 
+                    success: false, 
+                    message: MESSAGES.INTERNAL_LOGIN_ERROR 
+                });
+            }
+            return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).render("user/login", { error: MESSAGES.INTERNAL_LOGIN_ERROR, email });
         }
-        req.session.save(() => res.redirect("/home"));
+        
+        req.session.save(() => {
+            if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+                return res.status(HTTP_STATUS.OK).json({ 
+                    success: true, 
+                    redirect: "/home",
+                    message: MESSAGES.LOGIN_SUCCESS 
+                });
+            }
+            res.redirect("/home");
+        });
     });
 
   } catch (error) {
     console.error("Login Error:", error);
-    res.status(500).render("user/login", { error: "Internal server error during login", email: req.body.email });
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).render("user/login", { error: MESSAGES.INTERNAL_LOGIN_ERROR, email: req.body.email });
   }
 };
 
@@ -238,11 +312,11 @@ exports.forgotPassword = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.json({ success: false, message: "No account found with that email." });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: MESSAGES.EMAIL_NOT_FOUND });
     }
 
     if (!user.isActive) {
-      return res.json({ success: false, message: "Account is suspended. Cannot reset password." });
+      return res.status(HTTP_STATUS.FORBIDDEN).json({ success: false, message: MESSAGES.ACCOUNT_SUSPENDED });
     }
 
     // Generate secure reset token
@@ -263,13 +337,13 @@ exports.forgotPassword = async (req, res) => {
     const emailSent = await emailService.sendPasswordResetEmail(user.email, resetUrl);
 
     if (emailSent) {
-      res.json({ success: true, message: "A password reset link has been sent to your email." });
+      res.status(HTTP_STATUS.OK).json({ success: true, message: MESSAGES.PASSWORD_RESET_SENT });
     } else {
-      res.json({ success: false, message: "Failed to send password reset link. Please try again later." });
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: MESSAGES.PASSWORD_RESET_LINK_FAILED });
     }
   } catch (error) {
     console.error("Forgot Password Error:", error);
-    res.json({ success: false, message: "An internal error occurred while processing your request." });
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: MESSAGES.INTERNAL_SERVER_ERROR });
   }
 };
 
@@ -278,7 +352,7 @@ exports.resetPassword = async (req, res) => {
     const { token, password } = req.body;
 
     if (!token) {
-        return res.json({ success: false, message: "Invalid or missing token." });
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.INVALID_TOKEN });
     }
 
     // Hash token from query back to compare with DB hashed token
@@ -290,7 +364,7 @@ exports.resetPassword = async (req, res) => {
     });
 
     if (!user) {
-      return res.json({ success: false, message: "Password reset token is invalid or has expired." });
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json({ success: false, message: MESSAGES.TOKEN_EXPIRED });
     }
 
     // Assign new password (pre-save hook hashes it automatically)
@@ -301,13 +375,13 @@ exports.resetPassword = async (req, res) => {
     try {
       await user.save();
     } catch (validationError) {
-      return res.json({ success: false, message: "Password does not meet complexity requirements." });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.PASSWORD_COMPLEXITY_ERROR });
     }
 
-    res.json({ success: true, message: "Your password has been successfully reset! You may now login." });
+    res.status(HTTP_STATUS.OK).json({ success: true, message: MESSAGES.PASSWORD_RESET_SUCCESS });
   } catch (error) {
     console.error("Reset Password Error:", error);
-    res.json({ success: false, message: "Failed to reset password." });
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: MESSAGES.PASSWORD_RESET_FAILED });
   }
 };
 

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Orders - KAVOX Admin</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/notifications.js"></script>
+</head>
+
+<body class="admin-layout">
+
+  <%- include('partials/sidebar', { activePage: 'orders' }) %>
+
+    <main class="main-content">
+      <header class="header">
+        <h1>ORDER MANAGEMENT</h1>
+      </header>
+
+      <div class="content-wrapper">
+        <!-- Filter Card -->
+        <div class="card"
+          style="margin-bottom: 32px; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 20px;">
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <!-- Top Row: Search & Status -->
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <div class="search-input-wrapper"
+                style="flex: 1; display: flex; align-items: center; border: 1px solid #ddd; border-radius: 4px; padding: 0 10px; background: #fff;">
+                <svg width="20" height="20" fill="none" stroke="#666" stroke-width="2" viewBox="0 0 24 24">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M21 21l-4.35-4.35" />
+                </svg>
+                <input type="text" id="adminOrderSearch" class="form-control"
+                  placeholder="Search by Order ID, Customer Name, or Email..."
+                  style="height: 42px; border:none; width: 100%; outline: none; box-shadow: none;">
+              </div>
+              <select id="adminStatusFilter" class="form-control filter-select" style="flex: 0 0 180px; height: 42px;">
+                <option value="All">All Statuses</option>
+                <option value="Processing">Processing</option>
+                <option value="Partially Shipped">Partially Shipped</option>
+                <option value="Shipped">Shipped</option>
+                <option value="Partially Delivered">Partially Delivered</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Cancelled">Cancelled</option>
+                <option value="Return Requested">Return Requested</option>
+                <option value="Returned">Returned</option>
+              </select>
+            </div>
+            <!-- Bottom Row: Extra Filters -->
+            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+              <select id="adminPaymentFilter" class="form-control filter-select" style="flex: 1; min-width: 150px;">
+                <option value="All">All Payments</option>
+                <option value="Pending">Pending</option>
+                <option value="Completed">Completed</option>
+                <option value="Failed">Failed</option>
+                <option value="Refunded">Refunded</option>
+              </select>
+              <select id="adminSortFilter" class="form-control filter-select" style="flex: 1; min-width: 150px;">
+                <option value="latest">Sort: Latest First</option>
+                <option value="oldest">Sort: Oldest First</option>
+                <option value="amountHigh">Amount: High to Low</option>
+                <option value="amountLow">Amount: Low to High</option>
+              </select>
+              <input type="date" id="adminStartDate" class="form-control" style="flex: 1; min-width: 130px;"
+                title="Start Date">
+              <input type="date" id="adminEndDate" class="form-control" style="flex: 1; min-width: 130px;"
+                title="End Date">
+              <button id="adminApplyFilters" class="btn-primary"
+                style="padding: 10px 20px; border-radius: 4px; height: 42px;">Apply</button>
+              <button id="adminClearFilters" class="btn-outline"
+                style="padding: 0 20px; border-radius: 4px; height: 42px; border: 1px solid #ddd; color: #333; background: #f9f9f9; cursor: pointer;">Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table Card -->
+        <div class="card" style="padding: 0;">
+          <div class="table-wrapper">
+            <table class="users-table">
+              <thead>
+                <tr>
+                  <th>ORDER ID</th>
+                  <th>CUSTOMER</th>
+                  <th>DATE</th>
+                  <th>AMOUNT</th>
+                  <th>PAYMENT</th>
+                  <th>STATUS</th>
+                  <th>ACTION</th>
+                </tr>
+              </thead>
+              <tbody id="adminOrdersTbody">
+                <!-- Filled by AJAX -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="pagination" id="adminOrdersPagination"></div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      (function () {
+        let search = '', status = 'All', payment = 'All', sort = 'latest';
+        let startDate = '', endDate = '', page = 1;
+        let searchTimer;
+
+        // ── Shimmer rows ──────────────────────────────────────────────────
+        function shimmerRows() {
+          return Array.from({ length: 6 }).map(() => `
+        <tr class="shimmer-card">
+          <td><div class="shimmer shimmer-line" style="width:90px;height:14px;"></div></td>
+          <td><div class="shimmer shimmer-line" style="width:110px;height:14px;"></div></td>
+          <td><div class="shimmer shimmer-line" style="width:70px;height:14px;"></div></td>
+          <td><div class="shimmer shimmer-line" style="width:50px;height:14px;"></div></td>
+          <td><div class="shimmer shimmer-line" style="width:40px;height:14px;"></div></td>
+          <td><div class="shimmer shimmer-badge" style="display:inline-block;"></div></td>
+          <td><div class="shimmer shimmer-line" style="width:28px;height:28px;border-radius:6px;"></div></td>
+        </tr>
+      `).join('');
+        }
+
+        // ── Status badge class map ────────────────────────────────────────
+        const statusClass = {
+          'Processing': 'status-processing',
+          'Partially Shipped': 'status-partially-shipped',
+          'Shipped': 'status-shipped',
+          'Partially Delivered': 'status-partially-delivered',
+          'Delivered': 'status-delivered',
+          'Cancelled': 'status-cancelled',
+          'Return Requested': 'status-return-requested',
+          'Returned': 'status-returned',
+        };
+
+        // ── Render rows ───────────────────────────────────────────────────
+        function renderRows(orders) {
+          if (!orders.length) {
+            return `<tr><td colspan="7" style="text-align:center;padding:40px;color:#666;">No orders found.</td></tr>`;
+          }
+          return orders.map(o => {
+            const cls = statusClass[o.orderStatus] || '';
+            const name = o.userId ? o.userId.name : 'Unknown';
+            const date = new Date(o.createdAt).toLocaleDateString();
+            const shortId = o.orderId.length > 12 ? o.orderId.substring(0, 12) + '...' : o.orderId;
+            return `
+          <tr>
+            <td><strong title="${o.orderId}">${shortId}</strong></td>
+            <td><div class="user-cell"><span class="user-name">${name}</span></div></td>
+            <td>${date}</td>
+            <td>₹${o.pricing.total}</td>
+            <td>${o.paymentMethod}</td>
+            <td><span class="badge-status ${cls}">${o.orderStatus}</span></td>
+            <td>
+              <div class="action-btns">
+                <a href="/admin/order/${o._id}" class="btn-view" title="View Details">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </a>
+              </div>
+            </td>
+          </tr>`;
+          }).join('');
+        }
+
+        // ── Render pagination ─────────────────────────────────────────────
+        function renderPagination(current, total) {
+          const el = document.getElementById('adminOrdersPagination');
+          if (total <= 1) { el.innerHTML = ''; return; }
+          let html = '';
+          if (current > 1) html += `<a data-page="${current - 1}">&laquo;</a>`;
+          for (let i = 1; i <= total; i++)
+            html += `<a data-page="${i}" class="${i === current ? 'active' : ''}">${i}</a>`;
+          if (current < total) html += `<a data-page="${current + 1}">&raquo;</a>`;
+          el.innerHTML = html;
+          el.querySelectorAll('a[data-page]').forEach(a =>
+            a.addEventListener('click', () => fetchOrders(parseInt(a.dataset.page)))
+          );
+        }
+
+        // ── Fetch + render ────────────────────────────────────────────────
+        async function fetchOrders(p = 1) {
+          page = p;
+          const tbody = document.getElementById('adminOrdersTbody');
+          tbody.innerHTML = shimmerRows();
+
+          try {
+            const params = new URLSearchParams({ search, status, paymentStatus: payment, sort, startDate, endDate, page });
+            const res = await fetch(`/admin/orders?${params}`, { headers: { 'Accept': 'application/json' } });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message);
+            tbody.innerHTML = renderRows(data.orders);
+            renderPagination(data.currentPage, data.totalPages);
+          } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:#dc3545;">Failed to load orders: ${err.message}</td></tr>`;
+          }
+        }
+
+        // ── Live search (debounced 350ms) ─────────────────────────────────
+        document.getElementById('adminOrderSearch').addEventListener('input', function () {
+          clearTimeout(searchTimer);
+          searchTimer = setTimeout(() => { search = this.value.trim(); fetchOrders(1); }, 350);
+        });
+
+        // ── Apply button ──────────────────────────────────────────────────
+        document.getElementById('adminApplyFilters').addEventListener('click', () => {
+          search = document.getElementById('adminOrderSearch').value.trim();
+          status = document.getElementById('adminStatusFilter').value;
+          payment = document.getElementById('adminPaymentFilter').value;
+          sort = document.getElementById('adminSortFilter').value;
+          startDate = document.getElementById('adminStartDate').value;
+          endDate = document.getElementById('adminEndDate').value;
+          fetchOrders(1);
+        });
+
+        // ── Dropdown auto-update ──────────────────────────────────────────
+        ['adminStatusFilter', 'adminPaymentFilter', 'adminSortFilter'].forEach(id => {
+          document.getElementById(id).addEventListener('change', () => {
+            status = document.getElementById('adminStatusFilter').value;
+            payment = document.getElementById('adminPaymentFilter').value;
+            sort = document.getElementById('adminSortFilter').value;
+            fetchOrders(1);
+          });
+        });
+
+        // ── Clear button ──────────────────────────────────────────────────
+        document.getElementById('adminClearFilters').addEventListener('click', () => {
+          search = ''; status = 'All'; payment = 'All'; sort = 'latest'; startDate = ''; endDate = '';
+          document.getElementById('adminOrderSearch').value = '';
+          document.getElementById('adminStatusFilter').value = 'All';
+          document.getElementById('adminPaymentFilter').value = 'All';
+          document.getElementById('adminSortFilter').value = 'latest';
+          document.getElementById('adminStartDate').value = '';
+          document.getElementById('adminEndDate').value = '';
+          fetchOrders(1);
+        });
+
+        // ── Initial load ──────────────────────────────────────────────────
+        fetchOrders(1);
+      })();
+    </script>
+
+</body>
+
+</html>

@@ -5,1109 +5,207 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KAVOX - Home</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #fff;
-      color: #333;
-    }
-
-    /* Header */
-    .header {
-      background-color: #1a1a1a;
-      padding: 12px 30px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .logo-container {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-    }
-
-    .logo-img {
-      height: 30px;
-      filter: invert(0);
-    }
-
-    .logo-sub {
-      font-size: 12px;
-      color: #4ade80;
-      letter-spacing: 6.5px;
-    }
-
-    .logo-sub-footer {
-      font-size: 14px;
-      color: #4ade80;
-      letter-spacing: 10px;
-    }
-
-    .search-box {
-      flex: 1;
-      max-width: 400px;
-      display: flex;
-      align-items: center;
-      background-color: #333;
-      border-radius: 4px;
-      padding: 8px 12px;
-      gap: 10px;
-    }
-
-    .search-box input {
-      flex: 1;
-      background: none;
-      border: none;
-      outline: none;
-      color: #fff;
-      font-size: 13px;
-    }
-
-    .search-box input::placeholder {
-      color: #888;
-    }
-
-    .search-box svg {
-      color: #888;
-      width: 18px;
-      height: 18px;
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 25px;
-    }
-
-    .nav-links a {
-      color: #fff;
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 500;
-      letter-spacing: 0.5px;
-    }
-
-    .nav-links a:hover {
-      color: #4ade80;
-    }
-
-    .header-icons {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-    }
-
-    .header-icons a {
-      color: #fff;
-      display: flex;
-      align-items: center;
-    }
-
-    .header-icons svg {
-      width: 22px;
-      height: 22px;
-    }
-
-    .sign-in-btn {
-      background-color: #e91e63;
-      color: #fff;
-      border: none;
-      padding: 8px 18px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      text-decoration: none;
-    }
-
-    .sign-in-btn:hover {
-      background-color: #c2185b;
-    }
-
-    .menu-toggle {
-      display: none;
-      background: none;
-      border: none;
-      color: #fff;
-      cursor: pointer;
-    }
-
-    .profile-mini {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background-color: #333;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      font-weight: 600;
-      text-decoration: none;
-      border: 1px solid #4ade80;
-    }
-
-    .profile-mini img {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    /* Hero Banner */
-    .hero {
-      position: relative;
-      height: 400px;
-      background: linear-gradient(135deg, #1a1a1a 0%, #333 100%);
-      display: flex;
-      align-items: center;
-      overflow: hidden;
-    }
-
-    .hero-content {
-      padding: 40px 60px;
-      z-index: 2;
-    }
-
-    .hero h1 {
-      font-size: 52px;
-      font-weight: 800;
-      color: #fff;
-      line-height: 1.1;
-      margin-bottom: 10px;
-    }
-
-    .hero p {
-      color: #ccc;
-      font-size: 14px;
-      letter-spacing: 2px;
-      margin-bottom: 25px;
-    }
-
-    .shop-now-btn {
-      display: inline-block;
-      background-color: #1a1a1a;
-      color: #fff;
-      padding: 12px 30px;
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 500;
-      border: 1px solid #fff;
-      transition: all 0.3s;
-    }
-
-    .shop-now-btn:hover {
-      background-color: #fff;
-      color: #1a1a1a;
-    }
-
-    .hero-image {
-      position: absolute;
-      right: 0;
-      top: 0;
-      height: 100%;
-      width: 60%;
-      object-fit: cover;
-      opacity: 0.8;
-    }
-
-    /* Products Section */
-    .section {
-      padding: 50px 30px;
-    }
-
-    .section-title {
-      text-align: center;
-      font-size: 28px;
-      font-weight: 600;
-      margin-bottom: 40px;
-      color: #1a1a1a;
-    }
-
-    .products-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 30px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .product-card {
-      background: #fff;
-      border: 1px solid #eee;
-      border-radius: 8px;
-      overflow: hidden;
-      transition: box-shadow 0.3s;
-    }
-
-    .product-card:hover {
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    .product-image {
-      position: relative;
-      height: 220px;
-      background: #f8f8f8;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .product-image img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-    }
-
-    .discount-badge {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background-color: #e91e63;
-      color: #fff;
-      padding: 4px 10px;
-      border-radius: 3px;
-      font-size: 11px;
-      font-weight: 600;
-    }
-
-    .wishlist-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: #ccc;
-      transition: color 0.3s;
-    }
-
-    .wishlist-btn:hover,
-    .wishlist-btn.active {
-      color: #e91e63;
-    }
-
-    .product-info {
-      padding: 15px;
-    }
-
-    .product-price {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 5px;
-    }
-
-    .current-price {
-      font-size: 18px;
-      font-weight: 700;
-      color: #1a1a1a;
-    }
-
-    .original-price {
-      font-size: 14px;
-      color: #999;
-      text-decoration: line-through;
-    }
-
-    .product-tax {
-      font-size: 10px;
-      color: #888;
-      margin-bottom: 5px;
-    }
-
-    .product-name {
-      font-size: 13px;
-      color: #555;
-      margin-bottom: 15px;
-    }
-
-    .product-actions {
-      display: flex;
-      gap: 10px;
-    }
-
-    .btn-cart,
-    .btn-buy {
-      flex: 1;
-      padding: 10px;
-      font-size: 11px;
-      font-weight: 600;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-
-    .btn-cart {
-      background: #fff;
-      border: 1px solid #1a1a1a;
-      color: #1a1a1a;
-    }
-
-    .btn-cart:hover {
-      background: #1a1a1a;
-      color: #fff;
-    }
-
-    .btn-buy {
-      background: #fff;
-      border: 1px solid #1a1a1a;
-      color: #1a1a1a;
-    }
-
-    .btn-buy:hover {
-      background: #1a1a1a;
-      color: #fff;
-    }
-
-    /* Services Section */
-    .services-section {
-      padding: 40px 30px;
-      border-top: 1px dashed #ccc;
-      border-bottom: 1px dashed #ccc;
-    }
-
-    .services-title {
-      text-align: center;
-      color: #888;
-      font-size: 14px;
-      margin-bottom: 30px;
-      letter-spacing: 2px;
-    }
-
-    .services-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 30px;
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-
-    .service-item {
-      text-align: center;
-    }
-
-    .service-icon {
-      width: 60px;
-      height: 60px;
-      margin: 0 auto 15px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .service-icon svg {
-      width: 50px;
-      height: 50px;
-      color: #1a1a1a;
-    }
-
-    .service-item h4 {
-      font-size: 12px;
-      font-weight: 600;
-      color: #1a1a1a;
-      margin-bottom: 8px;
-    }
-
-    .service-item p {
-      font-size: 11px;
-      color: #666;
-      line-height: 1.5;
-    }
-
-    /* Footer */
-    .footer {
-      background-color: #1a1a1a;
-      padding: 50px 30px 20px;
-      color: #fff;
-    }
-
-    .footer-content {
-      display: grid;
-      grid-template-columns: 1fr 2fr 1fr;
-      gap: 40px;
-      max-width: 1200px;
-      margin: 0 auto 30px;
-    }
-
-    .footer-logo .logo-img {
-      height: 40px;
-      filter: invert(0);
-      margin-bottom: 5px;
-    }
-
-    .footer-logo .logo-sub {
-      font-size: 10px;
-      color: #4ade80;
-      letter-spacing: 3px;
-    }
-
-    .footer-links {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-    }
-
-    .footer-links-column h4 {
-      font-size: 12px;
-      font-weight: 400;
-      margin-bottom: 15px;
-      color: #888;
-    }
-
-    .footer-links-column a {
-      display: block;
-      color: #ccc;
-      text-decoration: none;
-      font-size: 13px;
-      margin-bottom: 10px;
-    }
-
-    .footer-links-column a:hover {
-      color: #4ade80;
-    }
-
-    .footer-social h4 {
-      font-size: 14px;
-      margin-bottom: 15px;
-    }
-
-    .footer-social a {
-      display: block;
-      color: #ccc;
-      text-decoration: none;
-      font-size: 13px;
-      margin-bottom: 10px;
-    }
-
-    .footer-social a:hover {
-      color: #4ade80;
-    }
-
-    .footer-bottom {
-      text-align: center;
-      padding-top: 20px;
-      border-top: 1px solid #333;
-    }
-
-    .footer-bottom p {
-      font-size: 11px;
-      color: #666;
-    }
-
-    /* Mobile Menu */
-    .mobile-nav {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.95);
-      z-index: 200;
-      flex-direction: column;
-      padding: 60px 30px;
-    }
-
-    .mobile-nav.active {
-      display: flex;
-    }
-
-    .mobile-nav-close {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: none;
-      border: none;
-      color: #fff;
-      font-size: 30px;
-      cursor: pointer;
-    }
-
-    .mobile-nav a {
-      color: #fff;
-      text-decoration: none;
-      font-size: 18px;
-      padding: 15px 0;
-      border-bottom: 1px solid #333;
-    }
-
-    /* Responsive */
-    @media (max-width: 992px) {
-      .products-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .services-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .footer-content {
-        grid-template-columns: 1fr;
-        text-align: center;
-      }
-
-      .footer-links {
-        justify-content: center;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .header {
-        padding: 12px 15px;
-      }
-
-      .search-box {
-        display: none;
-      }
-
-      .nav-links {
-        display: none;
-      }
-
-      .menu-toggle {
-        display: block;
-      }
-
-      .hero {
-        height: 300px;
-      }
-
-      .hero-content {
-        padding: 30px;
-      }
-
-      .hero h1 {
-        font-size: 32px;
-      }
-
-      .hero-image {
-        opacity: 0.4;
-        width: 100%;
-      }
-
-      .section {
-        padding: 30px 15px;
-      }
-
-      .section-title {
-        font-size: 22px;
-        margin-bottom: 25px;
-      }
-
-      .products-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-      }
-
-      .product-image {
-        height: 150px;
-      }
-
-      .product-info {
-        padding: 10px;
-      }
-
-      .current-price {
-        font-size: 14px;
-      }
-
-      .original-price {
-        font-size: 12px;
-      }
-
-      .product-name {
-        font-size: 11px;
-      }
-
-      .product-actions {
-        flex-direction: column;
-        gap: 5px;
-      }
-
-      .services-section {
-        padding: 30px 15px;
-      }
-
-      .services-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
-      }
-
-      .footer {
-        padding: 30px 15px 15px;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .header-icons {
-        gap: 12px;
-      }
-
-      .header-icons svg {
-        width: 18px;
-        height: 18px;
-      }
-
-      .sign-in-btn {
-        padding: 6px 12px;
-        font-size: 11px;
-      }
-
-      .hero h1 {
-        font-size: 26px;
-      }
-
-      .hero p {
-        font-size: 12px;
-      }
-
-      .products-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-      }
-
-      .product-image {
-        height: 120px;
-      }
-
-      .btn-cart,
-      .btn-buy {
-        padding: 8px;
-        font-size: 10px;
-      }
-
-      .services-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .service-icon svg {
-        width: 35px;
-        height: 35px;
-      }
-
-      .service-item h4 {
-        font-size: 11px;
-      }
-
-      .service-item p {
-        font-size: 10px;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/shimmer.js"></script>
 </head>
 
-<body>
-  <!-- Header -->
-  <header class="header">
-    <div class="logo-container">
-      <img src="/images/logo.png" alt="KAVOX" class="logo-img">
-      <span class="logo-sub">SOLE LAB</span>
-    </div>
+<body class="user-layout">
+  <%- include('../partials/user-header') %>
 
-    <div class="search-box">
-      <input type="text" placeholder="Search for products, brands & more">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <circle cx="11" cy="11" r="8"></circle>
-        <path d="M21 21l-4.35-4.35"></path>
-      </svg>
-    </div>
 
-    <nav class="nav-links">
-      <a href="/">HOME</a>
-      <a href="/shop">SHOP</a>
-      <a href="/orders">ORDERS</a>
-    </nav>
+    <!-- Hero Banner -->
+    <section class="hero">
+      <div class="hero-content">
+        <h1>ELEVATE YOUR<br>FOOTWEAR GAME</h1>
+        <p>EXPERIENCE PREMIUM COMFORT & STYLE</p>
+        <a href="/shop" class="shop-now-btn">EXPLORE COLLECTION</a>
+      </div>
+      <img src="/images/banner.jpg" alt="Kavox" class="hero-image">
+    </section>
 
-    <div class="header-icons">
-      <a href="/cart" title="Cart">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-          <line x1="3" y1="6" x2="21" y2="6"></line>
-        </svg>
-      </a>
-
-      <a href="/wishlist" title="Wishlist">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path
-            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
-          </path>
-        </svg>
-      </a>
-
-      <% if (user) { %>
-        <a href="/account" title="Account">
-          <div class="profile-mini">
-            <% if (user.profileImage && user.profileImage !=="/images/default-user.png" ) { %>
-              <img src="<%= user.profileImage %>" alt="Profile">
-              <% } else { %>
-                <%= user.name ? user.name.charAt(0).toUpperCase() : 'U' %>
+    <!-- New Arrivals -->
+    <section class="section">
+      <h2 class="section-title" id="resultsTitle">NEW ARRIVALS</h2>
+      <div class="products-grid" id="productGrid">
+        <% if (typeof products !=='undefined' && products.length> 0) { %>
+          <% products.forEach(function(product) { %>
+            <%- include('partials/product-card', { product: product }) %>
+              <% }); %>
+                <% } else { %>
+                  <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #888;">
+                    <p>No products available right now. Check back later!</p>
+                  </div>
                   <% } %>
+      </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services-section">
+      <p class="services-title">OUR SERVICES</p>
+      <div class="services-grid">
+        <div class="service-item">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+              <line x1="2" y1="10" x2="22" y2="10"></line>
+            </svg>
           </div>
-        </a>
-
-        <a href="/api/auth/logout" class="sign-in-btn" style="background-color:#333;">Logout</a>
-
-        <% } else { %>
-
-          <a href="/login" class="sign-in-btn">Sign In</a>
-
-          <% } %>
-    </div>
-
-    <button class="menu-toggle" onclick="toggleMobileNav()">
-      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <line x1="3" y1="12" x2="21" y2="12"></line>
-        <line x1="3" y1="6" x2="21" y2="6"></line>
-        <line x1="3" y1="18" x2="21" y2="18"></line>
-      </svg>
-    </button>
-  </header>
-
-  <!-- Mobile Navigation -->
-  <div class="mobile-nav" id="mobileNav">
-    <button class="mobile-nav-close" onclick="toggleMobileNav()">&times;</button>
-    <a href="/">HOME</a>
-    <a href="/shop">SHOP</a>
-    <a href="/orders">ORDERS</a>
-    <a href="/cart">CART</a>
-    <a href="/wishlist">WISHLIST</a>
-    <a href="/account">MY ACCOUNT</a>
-    <a href="/login">SIGN IN</a>
-  </div>
-
-  <!-- Hero Banner -->
-  <section class="hero">
-    <div class="hero-content">
-      <h1>KAVOX<br>TRENDS</h1>
-      <p>LATEST FASHION TRENDS</p>
-      <a href="/shop" class="shop-now-btn">SHOP NOW</a>
-    </div>
-    <img src="/images/banner.jpg" alt="Kavox" class="hero-image">
-  </section>
-
-  <!-- New Arrivals -->
-  <section class="section">
-    <h2 class="section-title">NEW ARRIVALS</h2>
-    <div class="products-grid">
-      <% if (typeof products !=='undefined' && products.length> 0) { %>
-        <% products.forEach(function(product) { %>
-          <div class="product-card">
-            <div class="product-image">
-              <% if (product.discount) { %>
-                <span class="discount-badge">
-                  <%= product.discount %>% OFF
-                </span>
-                <% } %>
-                  <img src="<%= product.image %>" alt="<%= product.name %>">
-                  <button class="wishlist-btn" onclick="toggleWishlist(this)">
-                    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                      <path
-                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
-                      </path>
-                    </svg>
-                  </button>
-            </div>
-            <div class="product-info">
-              <div class="product-price">
-                <span class="current-price">₹<%= product.price %></span>
-                <span class="original-price">₹<%= product.originalPrice %></span>
-              </div>
-              <p class="product-tax">Inclusive of all taxes</p>
-              <p class="product-name">
-                <%= product.name %>
-              </p>
-              <div class="product-actions">
-                <button class="btn-cart" onclick="addToCart('<%= product._id %>')">ADD TO CART</button>
-                <button class="btn-buy" onclick="buyNow('<%= product._id %>')">BUY NOW</button>
-              </div>
-            </div>
+          <h4>5% OFF</h4>
+          <p>5% OFF on Pre-paid orders</p>
+        </div>
+        <div class="service-item">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 6v6l4 2"></path>
+              <text x="7" y="20" font-size="5" fill="currentColor">48h</text>
+            </svg>
           </div>
-          <% }); %>
-            <% } else { %>
-              <!-- Demo Products -->
-              <div class="product-card">
-                <div class="product-image">
-                  <span class="discount-badge">20% OFF</span>
-                  <img src="/images/products/shoe1.jpg" alt="Athleisure Shoes">
-                  <button class="wishlist-btn" onclick="toggleWishlist(this)">
-                    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                      <path
-                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
-                      </path>
-                    </svg>
-                  </button>
-                </div>
-                <div class="product-info">
-                  <div class="product-price">
-                    <span class="current-price">₹2799</span>
-                    <span class="original-price">₹3499</span>
-                  </div>
-                  <p class="product-tax">Inclusive of all taxes</p>
-                  <p class="product-name">Athleisure Shoes for Men</p>
-                  <div class="product-actions">
-                    <button class="btn-cart">ADD TO CART</button>
-                    <button class="btn-buy">BUY NOW</button>
-                  </div>
-                </div>
-              </div>
-              <div class="product-card">
-                <div class="product-image">
-                  <span class="discount-badge">20% OFF</span>
-                  <img src="/images/products/shoe2.jpg" alt="Men's Athleisure Shoes">
-                  <button class="wishlist-btn" onclick="toggleWishlist(this)">
-                    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                      <path
-                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
-                      </path>
-                    </svg>
-                  </button>
-                </div>
-                <div class="product-info">
-                  <div class="product-price">
-                    <span class="current-price">₹1199</span>
-                    <span class="original-price">₹1499</span>
-                  </div>
-                  <p class="product-tax">Inclusive of all taxes</p>
-                  <p class="product-name">Men's Athleisure Shoes</p>
-                  <div class="product-actions">
-                    <button class="btn-cart">ADD TO CART</button>
-                    <button class="btn-buy">BUY NOW</button>
-                  </div>
-                </div>
-              </div>
-              <div class="product-card">
-                <div class="product-image">
-                  <span class="discount-badge">15% OFF</span>
-                  <img src="/images/products/shoe3.jpg" alt="Lifestyle Men's Casual Shoes">
-                  <button class="wishlist-btn" onclick="toggleWishlist(this)">
-                    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                      <path
-                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
-                      </path>
-                    </svg>
-                  </button>
-                </div>
-                <div class="product-info">
-                  <div class="product-price">
-                    <span class="current-price">₹1499</span>
-                    <span class="original-price">₹1799</span>
-                  </div>
-                  <p class="product-tax">Inclusive of all taxes</p>
-                  <p class="product-name">Lifestyle Men's Casual Shoes</p>
-                  <div class="product-actions">
-                    <button class="btn-cart">ADD TO CART</button>
-                    <button class="btn-buy">BUY NOW</button>
-                  </div>
-                </div>
-              </div>
-              <div class="product-card">
-                <div class="product-image">
-                  <span class="discount-badge">20% OFF</span>
-                  <img src="/images/products/shoe4.jpg" alt="Lifestyle Casual Shoes">
-                  <button class="wishlist-btn" onclick="toggleWishlist(this)">
-                    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                      <path
-                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
-                      </path>
-                    </svg>
-                  </button>
-                </div>
-                <div class="product-info">
-                  <div class="product-price">
-                    <span class="current-price">₹2899</span>
-                    <span class="original-price">₹3499</span>
-                  </div>
-                  <p class="product-tax">Inclusive of all taxes</p>
-                  <p class="product-name">Lifestyle Casual Shoes for Men</p>
-                  <div class="product-actions">
-                    <button class="btn-cart">ADD TO CART</button>
-                    <button class="btn-buy">BUY NOW</button>
-                  </div>
-                </div>
-              </div>
-              <div class="product-card">
-                <div class="product-image">
-                  <span class="discount-badge">25% OFF</span>
-                  <img src="/images/products/shoe5.jpg" alt="White Casual Shoes">
-                  <button class="wishlist-btn" onclick="toggleWishlist(this)">
-                    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                      <path
-                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
-                      </path>
-                    </svg>
-                  </button>
-                </div>
-                <div class="product-info">
-                  <div class="product-price">
-                    <span class="current-price">₹2499</span>
-                    <span class="original-price">₹3399</span>
-                  </div>
-                  <p class="product-tax">Inclusive of all taxes</p>
-                  <p class="product-name">White Casual Shoes for Men</p>
-                  <div class="product-actions">
-                    <button class="btn-cart">ADD TO CART</button>
-                    <button class="btn-buy">BUY NOW</button>
-                  </div>
-                </div>
-              </div>
-              <div class="product-card">
-                <div class="product-image">
-                  <span class="discount-badge">15% OFF</span>
-                  <img src="/images/products/shoe6.jpg" alt="Men's Walking Slip-On Shoes">
-                  <button class="wishlist-btn" onclick="toggleWishlist(this)">
-                    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                      <path
-                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
-                      </path>
-                    </svg>
-                  </button>
-                </div>
-                <div class="product-info">
-                  <div class="product-price">
-                    <span class="current-price">₹1999</span>
-                    <span class="original-price">₹2499</span>
-                  </div>
-                  <p class="product-tax">Inclusive of all taxes</p>
-                  <p class="product-name">Men's Walking Slip-On Shoes</p>
-                  <div class="product-actions">
-                    <button class="btn-cart">ADD TO CART</button>
-                    <button class="btn-buy">BUY NOW</button>
-                  </div>
-                </div>
-              </div>
-              <% } %>
-    </div>
-  </section>
-
-  <!-- Services Section -->
-  <section class="services-section">
-    <p class="services-title">--------------------------OUR SERVICE--------------------------</p>
-    <div class="services-grid">
-      <div class="service-item">
-        <div class="service-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <rect x="2" y="5" width="20" height="14" rx="2"></rect>
-            <line x1="2" y1="10" x2="22" y2="10"></line>
-          </svg>
+          <h4>SHIPPING WITHIN 48 HOURS</h4>
+          <p>Your order will be shipped within 48 hours from the time since order is placed</p>
         </div>
-        <h4>5% OFF</h4>
-        <p>5% OFF on Pre-paid orders</p>
-      </div>
-      <div class="service-item">
-        <div class="service-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M12 6v6l4 2"></path>
-            <text x="7" y="20" font-size="5" fill="currentColor">48h</text>
-          </svg>
+        <div class="service-item">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+              <path d="M2 17l10 5 10-5"></path>
+              <path d="M2 12l10 5 10-5"></path>
+            </svg>
+          </div>
+          <h4>QUALITY CRAFTED</h4>
+          <p>Crafted with quality and care in India, from raw materials to the final product.</p>
         </div>
-        <h4>SHIPPING WITHIN 48 HOURS</h4>
-        <p>Your order will be shipped within 48 hours from the time since order is placed</p>
-      </div>
-      <div class="service-item">
-        <div class="service-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-            <path d="M2 17l10 5 10-5"></path>
-            <path d="M2 12l10 5 10-5"></path>
-          </svg>
-        </div>
-        <h4>QUALITY CRAFTED</h4>
-        <p>Crafted with quality and care in India, from raw materials to the final product.</p>
-      </div>
-      <div class="service-item">
-        <div class="service-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path
-              d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
-            </path>
-            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-            <line x1="12" y1="22.08" x2="12" y2="12"></line>
-          </svg>
-        </div>
-        <h4>DURABLE FOOTWEAR</h4>
-        <p>Durable, stylish footwear built for everyday comfort.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-content">
-      <div class="footer-logo">
-        <img src="/images/logo.png" alt="KAVOX" class="logo-img">
-        <p class="logo-sub-footer">SOLE LAB</p>
-      </div>
-
-      <div class="footer-links">
-        <div class="footer-links-column">
-          <a href="/cancellation">Cancellation & Returns</a>
-          <a href="/orders">Orders</a>
-          <a href="/">Home</a>
-          <a href="/shop">Shop</a>
-          <a href="/account">My Account</a>
-        </div>
-        <div class="footer-links-column">
-          <h4>Payments</h4>
-          <a href="/shipping">Shipping</a>
-          <a href="/terms">Terms of Use</a>
-          <a href="/security">Security</a>
-          <a href="/privacy">Privacy</a>
+        <div class="service-item">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path
+                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+              </path>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+              <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
+          </div>
+          <h4>DURABLE FOOTWEAR</h4>
+          <p>Durable, stylish footwear built for everyday comfort.</p>
         </div>
       </div>
+    </section>
 
-      <div class="footer-social">
-        <h4>Find us on social</h4>
-        <a href="mailto:kavox@gmail.com">Email: kavox@gmail.com</a>
-        <a href="#">Instagram</a>
-        <a href="#">Facebook</a>
-        <a href="#">Twitter</a>
-      </div>
-    </div>
+    <%- include('../partials/user-footer') %>
 
-    <div class="footer-bottom">
-      <p>&copy; 2026 Nonstop Fashion & Lifestyle</p>
-      <p>All Rights Reserved</p>
-    </div>
-  </footer>
+      <script>
+        function toggleMobileNav() {
+          document.getElementById('mobileNav').classList.toggle('active');
+        }
 
-  <script>
-    function toggleMobileNav() {
-      document.getElementById('mobileNav').classList.toggle('active');
-    }
+        function buyNow(productId) {
+          // Buy now logic
+          window.location.href = '/product/' + productId;
+        }
 
-    function toggleWishlist(btn) {
-      btn.classList.toggle('active');
-      if (btn.classList.contains('active')) {
-        btn.querySelector('svg').setAttribute('fill', '#e91e63');
-      } else {
-        btn.querySelector('svg').setAttribute('fill', 'none');
-      }
-    }
+        // Modern Search Implementation
+        const searchInput = document.getElementById('globalSearchInput');
+        const productGrid = document.getElementById('productGrid');
+        const resultsTitle = document.getElementById('resultsTitle');
 
-    function addToCart(productId) {
-      // Add to cart logic
-      alert('Added to cart!');
-    }
+        let searchTimeout = null;
 
-    function buyNow(productId) {
-      // Buy now logic
-      window.location.href = '/checkout?product=' + productId;
-    }
-  </script>
+        if (searchInput) {
+          searchInput.addEventListener('input', function (e) {
+            const searchTerm = e.target.value.trim();
+
+            clearTimeout(searchTimeout);
+
+            // Apply shimmer overlay instead of skeletons
+            productGrid.classList.add('is-loading-container');
+
+            searchTimeout = setTimeout(() => {
+              performSearch(searchTerm);
+            }, 500); // 500ms debounce
+          });
+        }
+
+        function showSkeletons() {
+          // Removed in favor of global shimmer overlay
+        }
+
+        async function performSearch(query) {
+          try {
+            // Guarantee a minimum shimmer duration of 600ms for a premium feel
+            const [response] = await Promise.all([
+              fetch(`/?search=${encodeURIComponent(query)}`, {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+              }),
+              new Promise(resolve => setTimeout(resolve, 600))
+            ]);
+
+            const data = await response.json();
+
+            productGrid.classList.remove('is-loading-container');
+
+            if (data.success) {
+              renderProducts(data.products, query);
+            }
+          } catch (err) {
+            console.error('Search error:', err);
+          }
+        }
+
+        function renderProducts(products, query) {
+          resultsTitle.textContent = query ? `SEARCH RESULTS FOR "${query.toUpperCase()}"` : 'NEW ARRIVALS';
+
+          if (products.length === 0) {
+            productGrid.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #666;">
+                    <h3>No products found for "${query}"</h3>
+                    <p>Try checking your spelling or use more general terms</p>
+                </div>
+            `;
+            return;
+          }
+
+          productGrid.innerHTML = products.map(product => {
+            const discount = product.productOffer || 0;
+            const finalPrice = Math.round(product.price * (1 - discount / 100));
+            const imgSrc = product.images && product.images.length > 0
+              ? (product.images.find(img => img.isPrimary)?.url || product.images[0].url)
+              : product.image;
+
+            return `
+            <div class="product-card">
+                <div class="product-image-wrapper">
+                    ${discount > 0 ? `<div class="badge-offer">-${discount}% OFF</div>` : ''}
+                    <a href="/product/${product._id}">
+                        <img src="${imgSrc}" alt="${product.name}" loading="lazy">
+                    </a>
+                    
+                    <div class="product-quick-actions">
+                        <button class="wishlist-btn ${product.isInWishlist ? 'active' : ''}" 
+                                title="Add to Wishlist" 
+                                onclick="toggleWishlist('${product._id}', this)">
+                            <svg viewBox="0 0 24 24" ${product.isInWishlist ? 'fill="#e91e63"' : 'fill="none"'} stroke="currentColor" stroke-width="2">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="product-card-info">
+                    <span class="product-brand">${product.brand || 'KAVOX'}</span>
+                    <a href="/product/${product._id}" class="product-name" title="${product.name}">${product.name}</a>
+                    <div class="product-pricing">
+                        <span class="final-price">₹${finalPrice}</span>
+                        ${discount > 0 ? `<span class="base-price">₹${product.price}</span>` : ''}
+                    </div>
+                    <div class="product-card-actions">
+                        <button class="btn-action" onclick="openAddToCartModal('${product._id}')">Add to Cart</button>
+                        <button class="btn-action" onclick="window.location.href='/product/${product._id}'">View Details</button>
+                    </div>
+                </div>
+            </div>
+            `;
+          }).join('');
+        }
+      </script>
 </body>
 
 </html>
