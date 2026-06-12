@@ -40,6 +40,11 @@ const productSchema = new mongoose.Schema(
     note: {
       type: String,
     },
+    brand: {
+      type: String,
+      trim: true,
+      default: "KAVOX"
+    },
 
     showOnHome: {
       type: Boolean,

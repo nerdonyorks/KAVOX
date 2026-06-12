@@ -1,12 +1,278 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - KAVOX Admin</title>
   <link rel="stylesheet" href="/css/style.css">
-  <script src="/js/shimmer.js"></script>
+  <script src="/js/notifications.js"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Premium Dashboard Custom Styling */
+    .dashboard-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .dashboard-filter-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px 24px;
+      border: 1px solid var(--border-color, #e2e8f0);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+      margin-bottom: 24px;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .filter-group label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .filter-control {
+      height: 38px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #1e293b;
+      font-size: 13px;
+      font-weight: 500;
+      outline: none;
+      transition: all 0.2s;
+      min-width: 150px;
+    }
+
+    .filter-control:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+
+    .custom-date-container {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    @media (max-width: 1024px) {
+      .analytics-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .analytics-chart-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 24px;
+      border: 1px solid var(--border-color, #e2e8f0);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      min-height: 400px;
+      position: relative;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 12px;
+    }
+
+    .chart-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1e293b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .chart-canvas-container {
+      position: relative;
+      width: 100%;
+      height: 300px;
+    }
+
+    /* Top Selling Rankings Styling */
+    .rankings-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 24px;
+      border: 1px solid var(--border-color, #e2e8f0);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .rankings-tabs {
+      display: flex;
+      border-bottom: 2px solid #f1f5f9;
+      margin-bottom: 20px;
+      gap: 8px;
+    }
+
+    .rankings-tab {
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+    }
+
+    .rankings-tab.active {
+      color: #6366f1;
+      border-bottom-color: #6366f1;
+    }
+
+    .ranking-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 340px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .ranking-item {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid #f1f5f9;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .ranking-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .rank-badge {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #cbd5e1;
+      color: #475569;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+
+    .rank-badge.rank-1 { background: #fef08a; color: #854d0e; }
+    .rank-badge.rank-2 { background: #e2e8f0; color: #475569; }
+    .rank-badge.rank-3 { background: #ffedd5; color: #9a3412; }
+
+    .ranking-image {
+      width: 44px;
+      height: 44px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      margin-right: 12px;
+      background: #ffffff;
+      flex-shrink: 0;
+    }
+
+    .ranking-info {
+      flex-grow: 1;
+      min-width: 0;
+    }
+
+    .ranking-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ranking-meta {
+      font-size: 11px;
+      color: #64748b;
+      display: flex;
+      gap: 12px;
+    }
+
+    .ranking-revenue {
+      font-weight: 700;
+      color: #059669;
+      font-size: 13px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(1px);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .loading-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3.5px solid #e2e8f0;
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
+
 <body class="admin-layout">
 
   <%- include('partials/sidebar', { activePage: 'dashboard' }) %>
@@ -14,67 +280,156 @@
   <!-- Main Content -->
   <main class="main-content">
     <header class="header">
-        <h1>ADMIN DASHBOARD</h1>
+      <h1>ADMIN DASHBOARD</h1>
     </header>
 
-    <div class="content-wrapper">
-      <div class="header-actions" style="margin-bottom: 24px; display: flex; justify-content: flex-end;">
-          <button class="btn-secondary" style="margin-right: 12px;">Download Report</button>
-          <button class="btn-primary" onclick="window.location.href='/admin/products'">+ Add Products</button>
+    <div class="content-wrapper" style="position: relative;">
+
+      <!-- Full Dashboard Spinner Overlay -->
+      <div id="dashboardSpinner" class="loading-overlay">
+        <div class="spinner"></div>
       </div>
 
-      <!-- Stats Grid -->
-      <div class="stats-grid">
-        <!-- Revenue Card -->
-        <div class="card stat-card">
-          <div class="stat-info">
-            <div class="stat-value">₹<%= typeof totalRevenue !== 'undefined' ? totalRevenue.toLocaleString() : '0' %></div>
-            <div class="stat-label">Total Revenue (Delivered)</div>
+      <!-- Filters Row -->
+      <div class="dashboard-filter-card">
+        <div class="filter-group">
+          <label for="timeFilter">Dashboard Interval</label>
+          <select id="timeFilter" class="filter-control" onchange="handleFilterChange()">
+            <option value="daily">Daily View (Today)</option>
+            <option value="weekly">Weekly View (Last 7 Days)</option>
+            <option value="monthly" selected>Monthly View (Current Month)</option>
+            <option value="yearly">Yearly View (Current Year)</option>
+            <option value="custom">Custom Date Range</option>
+          </select>
+        </div>
+
+        <div id="customDateRange" class="custom-date-container" style="display: none;">
+          <div class="filter-group">
+            <label for="startDate">Start Date</label>
+            <input type="date" id="startDate" class="filter-control" onchange="validateDatesAndRefresh()">
           </div>
-          <div class="stat-icon-box">
-             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          <div class="filter-group">
+            <label for="endDate">End Date</label>
+            <input type="date" id="endDate" class="filter-control" onchange="validateDatesAndRefresh()">
           </div>
         </div>
 
-        <!-- Orders Card -->
-        <div class="card stat-card">
-          <div class="stat-info">
-            <div class="stat-value"><%= typeof totalOrders !== 'undefined' ? totalOrders : '0' %></div>
-            <div class="stat-label">Total Orders</div>
-          </div>
-          <div class="stat-icon-box">
-             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-          </div>
-        </div>
-
-        <!-- Products Card -->
-        <div class="card stat-card">
-          <div class="stat-info">
-            <div class="stat-value"><%= typeof totalProducts !== 'undefined' ? totalProducts.toLocaleString() : '0' %></div>
-            <div class="stat-label">Total Products</div>
-          </div>
-          <div class="stat-icon-box">
-             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="M3.27 6.96L12 12.01l8.73-5.05"/><path d="M12 22.08V12"/></svg>
-          </div>
-        </div>
-
-        <!-- Customers Card -->
-        <div class="card stat-card">
-          <div class="stat-info">
-            <div class="stat-value"><%= typeof totalCustomers !== 'undefined' ? totalCustomers : '0' %></div>
-            <div class="stat-label">Total Customers</div>
-          </div>
-          <div class="stat-icon-box">
-             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          </div>
+        <div style="margin-left: auto; display: flex; gap: 8px;">
+          <button class="btn-secondary" onclick="window.location.href='/admin/report'">View Sales Report</button>
+          <button class="btn-primary" onclick="window.location.href='/admin/ledger'">Open Ledger Book</button>
         </div>
       </div>
 
-      <!-- Low Stock Alerts Section -->
+      <!-- Stats Metric Cards (Double row: 6 cards total) -->
+      <div class="stats-grid" style="margin-bottom: 24px;">
+        <!-- Card 1: Total Revenue (Gross) -->
+        <div class="card stat-card">
+          <div class="stat-info">
+            <div id="statGrossRevenue" class="stat-value">₹<%= typeof totalRevenue !== 'undefined' ? totalRevenue.toLocaleString() : '0' %></div>
+            <div class="stat-label">Total Gross Revenue</div>
+            <div class="stat-detail-subtext">Before discount calculations</div>
+          </div>
+          <div class="stat-icon-box" style="color: #3b82f6;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          </div>
+        </div>
+
+        <!-- Card 2: Total Orders -->
+        <div class="card stat-card">
+          <div class="stat-info">
+            <div id="statTotalOrders" class="stat-value"><%= typeof totalOrders !== 'undefined' ? totalOrders : '0' %></div>
+            <div class="stat-label">Delivered Orders</div>
+            <div class="stat-detail-subtext">Delivered count in window</div>
+          </div>
+          <div class="stat-icon-box" style="color: #6366f1;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          </div>
+        </div>
+
+        <!-- Card 3: Total Customers -->
+        <div class="card stat-card">
+          <div class="stat-info">
+            <div id="statTotalCustomers" class="stat-value"><%= typeof totalCustomers !== 'undefined' ? totalCustomers : '0' %></div>
+            <div class="stat-label">Registered Customers</div>
+            <div class="stat-detail-subtext">Total user profiles</div>
+          </div>
+          <div class="stat-icon-box" style="color: #8b5cf6;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+        </div>
+
+        <!-- Card 4: Total Products Sold -->
+        <div class="card stat-card">
+          <div class="stat-info">
+            <div id="statProductsSold" class="stat-value">0</div>
+            <div class="stat-label">Total Units Sold</div>
+            <div class="stat-detail-subtext">Product quantities moved</div>
+          </div>
+          <div class="stat-icon-box" style="color: #ec4899;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="M3.27 6.96L12 12.01l8.73-5.05"/><path d="M12 22.08V12"/></svg>
+          </div>
+        </div>
+
+        <!-- Card 5: Discounts Given -->
+        <div class="card stat-card">
+          <div class="stat-info">
+            <div id="statDiscounts" class="stat-value">₹0</div>
+            <div class="stat-label">Total Discounts Given</div>
+            <div id="statDiscountsSplit" class="stat-detail-subtext">Offers: ₹0 | Coupons: ₹0</div>
+          </div>
+          <div class="stat-icon-box" style="color: #f59e0b;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+          </div>
+        </div>
+
+        <!-- Card 6: Net Revenue (Green-Border Highlight) -->
+        <div class="card stat-card" style="border-left: 4px solid #10b981;">
+          <div class="stat-info">
+            <div id="statNetRevenue" class="stat-value" style="color: #10b981;">₹0</div>
+            <div class="stat-label" style="font-weight: 700;">Net Revenue Yield</div>
+            <div class="stat-detail-subtext">Revenue after all discounts</div>
+          </div>
+          <div class="stat-icon-box" style="color: #10b981; background: rgba(16, 185, 129, 0.1);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Trends & Top Seller Rankings Section -->
+      <div class="analytics-grid">
+        <!-- Sales Chart -->
+        <div class="analytics-chart-card">
+          <div class="chart-header">
+            <div class="chart-title">Revenue & Orders Performance Trend</div>
+          </div>
+          <div class="chart-canvas-container">
+            <canvas id="performanceChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Best Sellers Panel -->
+        <div class="rankings-card">
+          <div class="chart-header">
+            <div class="chart-title">Best Selling Rankings</div>
+          </div>
+          <div class="rankings-tabs">
+            <div id="tabProducts" class="rankings-tab active" onclick="switchRankingTab('products')">Products</div>
+            <div id="tabCategories" class="rankings-tab" onclick="switchRankingTab('categories')">Categories</div>
+            <div id="tabBrands" class="rankings-tab" onclick="switchRankingTab('brands')">Brands</div>
+          </div>
+          
+          <div id="rankingListContainer" class="ranking-list">
+            <!-- Populated dynamically via Javascript -->
+            <div style="text-align: center; padding: 40px; color: #94a3b8; font-size: 13px;">Loading best sellers...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Low Stock Alerts Section (Pre-existing style preserved) -->
       <% if (typeof lowStockItems !== 'undefined' && lowStockItems.length > 0) { %>
       <div class="card" style="margin-bottom: 24px; border: 1px solid #fee2e2;">
         <div class="card-header" style="border-bottom: 1px solid #fee2e2; padding-bottom: 12px;">
-          <h2 style="color: #ef4444; display: flex; align-items: center; gap: 8px;">
+          <h2 style="color: #ef4444; display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; margin: 0; text-transform: uppercase;">
             <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
             Low Stock Alerts
           </h2>
@@ -113,11 +468,11 @@
       </div>
       <% } %>
 
-      <!-- Recent Orders Section -->
+      <!-- Recent Orders Section (Pre-existing style preserved) -->
       <div class="card">
-        <div class="card-header">
-          <h2>Recent Orders</h2>
-          <a href="/admin/orders" class="btn-secondary" style="font-size: 11px; padding: 10px 18px; text-decoration: none;">View All</a>
+        <div class="card-header" style="border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 15px;">
+          <h2 style="font-size: 15px; font-weight: 700; margin: 0; text-transform: uppercase;">Recent Orders</h2>
+          <a href="/admin/orders" class="btn-secondary" style="font-size: 11px; padding: 8px 14px; text-decoration: none;">View All</a>
         </div>
 
         <div style="width: 100%; overflow-x: auto;">
@@ -135,11 +490,11 @@
             <% if (typeof orders !== 'undefined' && orders.length > 0) { %>
               <% orders.forEach(function(order) { %>
                 <tr>
-                  <td><span style="font-family: monospace; color: var(--secondary);">#<%= order.id %></span></td>
+                  <td><span style="font-family: monospace; color: var(--secondary); font-weight: 700;">#<%= order.id %></span></td>
                   <td style="font-weight: 600;"><%= order.customer %></td>
                   <td style="color: var(--text-dim);"><%= order.date %></td>
                   <td style="font-weight: 700;">₹<%= order.total.toLocaleString() %></td>
-                  <td><span class="badge badge-<%= order.status.toLowerCase().replace(' ', '-') %>" style="padding: 4px 8px;"><%= order.status %></span></td>
+                  <td><span class="status-badge status-<%= order.status.toLowerCase() === 'delivered' ? 'active' : (order.status.toLowerCase() === 'cancelled' ? 'inactive' : 'pending') %>" style="padding: 4px 8px;"><%= order.status %></span></td>
                 </tr>
               <% }); %>
             <% } else { %>
@@ -153,5 +508,271 @@
       </div>
     </div>
   </main>
+
+  <script>
+    let activeFilter = 'monthly';
+    let filterStart = '';
+    let filterEnd = '';
+    let activeRankingTab = 'products';
+
+    // Chart.js object store
+    let performanceChartInstance = null;
+
+    document.addEventListener("DOMContentLoaded", function () {
+      // Set date picker bounds
+      const todayStr = new Date().toISOString().split('T')[0];
+      document.getElementById('startDate').max = todayStr;
+      document.getElementById('endDate').max = todayStr;
+
+      // Fetch dashboard metrics
+      refreshDashboard();
+    });
+
+    function handleFilterChange() {
+      const type = document.getElementById('timeFilter').value;
+      activeFilter = type;
+
+      if (type === 'custom') {
+        document.getElementById('customDateRange').style.display = 'flex';
+      } else {
+        document.getElementById('customDateRange').style.display = 'none';
+        refreshDashboard();
+      }
+    }
+
+    function validateDatesAndRefresh() {
+      const start = document.getElementById('startDate').value;
+      const end = document.getElementById('endDate').value;
+
+      if (!start || !end) return;
+
+      const startDateObj = new Date(start);
+      const endDateObj = new Date(end);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+
+      if (startDateObj > today || endDateObj > today) {
+        KavoxNotify.toast("Future dates are not allowed.", "error");
+        return;
+      }
+
+      if (endDateObj < startDateObj) {
+        KavoxNotify.toast("End date cannot be earlier than start date.", "error");
+        return;
+      }
+
+      filterStart = start;
+      filterEnd = end;
+      refreshDashboard();
+    }
+
+    function showSpinner() {
+      document.getElementById('dashboardSpinner').classList.add('active');
+    }
+
+    function hideSpinner() {
+      document.getElementById('dashboardSpinner').classList.remove('active');
+    }
+
+    async function refreshDashboard() {
+      showSpinner();
+      try {
+        let queryParams = `?filter=${activeFilter}`;
+        if (activeFilter === 'custom') {
+          queryParams += `&startDate=${filterStart}&endDate=${filterEnd}`;
+        }
+
+        // Fetch KPI Metrics, Chart data, and Active rank list in parallel
+        const [summaryRes, chartRes] = await Promise.all([
+          fetch(`/admin/dashboard/summary${queryParams}`).then(r => r.json()),
+          fetch(`/admin/dashboard/sales${queryParams}`).then(r => r.json())
+        ]);
+
+        if (summaryRes.success && chartRes.success) {
+          updateSummaryMetrics(summaryRes.summary);
+          renderPerformanceChart(chartRes.data);
+          loadRankingData(); // Load active ranking tab
+        } else {
+          KavoxNotify.toast(summaryRes.message || chartRes.message || "Failed to load dashboard data.", "error");
+        }
+      } catch (error) {
+        console.error("Dashboard reload error:", error);
+        KavoxNotify.toast("Network error occurred reloading dashboard.", "error");
+      } finally {
+        hideSpinner();
+      }
+    }
+
+    function updateSummaryMetrics(s) {
+      document.getElementById('statGrossRevenue').innerText = `₹${s.totalRevenue.toLocaleString()}`;
+      document.getElementById('statTotalOrders').innerText = s.totalOrders;
+      document.getElementById('statTotalCustomers').innerText = s.registeredCustomers;
+      document.getElementById('statProductsSold').innerText = s.totalProductsSold;
+      document.getElementById('statDiscounts').innerText = `₹${s.totalDiscountsGiven.toLocaleString()}`;
+      document.getElementById('statDiscountsSplit').innerText = `Offers: ₹${s.offersDiscount.toLocaleString()} | Coupons: ₹${s.couponsDiscount.toLocaleString()}`;
+      document.getElementById('statNetRevenue').innerText = `₹${s.netRevenue.toLocaleString()}`;
+    }
+
+    function switchRankingTab(tabName) {
+      document.querySelectorAll('.rankings-tab').forEach(el => el.classList.remove('active'));
+      document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).classList.add('active');
+      activeRankingTab = tabName;
+      loadRankingData();
+    }
+
+    async function loadRankingData() {
+      const container = document.getElementById('rankingListContainer');
+      container.innerHTML = `<div style="text-align: center; padding: 40px;"><div class="spinner" style="margin: 0 auto; width: 24px; height: 24px; border-width: 2.5px;"></div></div>`;
+
+      try {
+        let queryParams = `?filter=${activeFilter}`;
+        if (activeFilter === 'custom') {
+          queryParams += `&startDate=${filterStart}&endDate=${filterEnd}`;
+        }
+
+        const res = await fetch(`/admin/dashboard/top-${activeRankingTab}${queryParams}`).then(r => r.json());
+        container.innerHTML = '';
+
+        if (!res.success || !res.data || res.data.length === 0) {
+          container.innerHTML = `<div style="text-align: center; padding: 40px; color: #94a3b8; font-size: 13px;">No items found.</div>`;
+          return;
+        }
+
+        res.data.forEach((item, index) => {
+          const rank = index + 1;
+          let rankClass = `rank-${rank}`;
+          if (rank > 3) rankClass = '';
+
+          if (activeRankingTab === 'products') {
+            container.innerHTML += `
+              <div class="ranking-item">
+                <div class="rank-badge ${rankClass}">${rank}</div>
+                <img src="${item.image}" class="ranking-image">
+                <div class="ranking-info">
+                  <div class="ranking-name" title="${item.productName}">${item.productName}</div>
+                  <div class="ranking-meta">
+                    <span>Sold: <strong>${item.totalQuantitySold} Units</strong></span>
+                    <span>Brand: <strong>${item.brand}</strong></span>
+                  </div>
+                </div>
+                <div class="ranking-revenue">₹${item.revenueGenerated.toLocaleString()}</div>
+              </div>
+            `;
+          } else if (activeRankingTab === 'categories') {
+            container.innerHTML += `
+              <div class="ranking-item">
+                <div class="rank-badge ${rankClass}">${rank}</div>
+                <div class="ranking-info">
+                  <div class="ranking-name">${item.categoryName}</div>
+                  <div class="ranking-meta">
+                    <span>Sold: <strong>${item.totalQuantitySold} Units</strong></span>
+                  </div>
+                </div>
+                <div class="ranking-revenue">₹${item.revenueGenerated.toLocaleString()}</div>
+              </div>
+            `;
+          } else if (activeRankingTab === 'brands') {
+            container.innerHTML += `
+              <div class="ranking-item">
+                <div class="rank-badge ${rankClass}">${rank}</div>
+                <div class="ranking-info">
+                  <div class="ranking-name">${item.brandName}</div>
+                  <div class="ranking-meta">
+                    <span>Sold: <strong>${item.totalQuantitySold} Units</strong></span>
+                  </div>
+                </div>
+                <div class="ranking-revenue">₹${item.revenueGenerated.toLocaleString()}</div>
+              </div>
+            `;
+          }
+        });
+      } catch (error) {
+        console.error("Rankings load error:", error);
+        container.innerHTML = `<div style="text-align: center; padding: 40px; color: #ef4444; font-size: 13px;">Failed to load rankings.</div>`;
+      }
+    }
+
+    function renderPerformanceChart(chartData) {
+      if (performanceChartInstance) {
+        performanceChartInstance.destroy();
+      }
+
+      const ctx = document.getElementById('performanceChart').getContext('2d');
+      const labels = chartData.labels.length > 0 ? chartData.labels : ['No Data'];
+      const sales = chartData.salesData.length > 0 ? chartData.salesData : [0];
+      const orders = chartData.ordersData.length > 0 ? chartData.ordersData : [0];
+
+      performanceChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Net Revenue (₹)',
+              data: sales,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.08)',
+              borderWidth: 2.5,
+              tension: 0.35,
+              fill: true,
+              yAxisID: 'ySales'
+            },
+            {
+              label: 'Orders Count',
+              data: orders,
+              borderColor: '#6366f1',
+              backgroundColor: 'rgba(99, 102, 241, 0.2)',
+              borderWidth: 2.5,
+              tension: 0.1,
+              type: 'bar',
+              barPercentage: 0.45,
+              borderRadius: 4,
+              yAxisID: 'yOrders'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: { font: { size: 11 } }
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  if (context.datasetIndex === 0) {
+                    return ` Revenue: ₹${context.raw.toLocaleString()}`;
+                  }
+                  return ` Orders: ${context.raw} Placed`;
+                }
+              }
+            }
+          },
+          scales: {
+            ySales: {
+              type: 'linear',
+              position: 'left',
+              grid: { color: '#f1f5f9' },
+              ticks: { font: { size: 9 } }
+            },
+            yOrders: {
+              type: 'linear',
+              position: 'right',
+              grid: { display: false },
+              ticks: { font: { size: 9 }, stepSize: 1 }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { font: { size: 9 } }
+            }
+          }
+        }
+      });
+    }
+  </script>
 </body>
+
 </html>

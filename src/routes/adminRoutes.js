@@ -5,6 +5,7 @@ const categoryController = require("../controllers/categoryController");
 const productController = require("../controllers/productController");
 const adminOrderController = require("../controllers/adminOrderController");
 const couponController = require("../controllers/couponController");
+const ledgerController = require("../controllers/ledgerController");
 const { isAdmin, setNoCache, isLoggedOut } = require("../middleware/authMiddleware");
 const upload = require("../middleware/upload");
 
@@ -53,5 +54,18 @@ router.get("/admin/coupons", isAdmin, setNoCache, couponController.listCoupons);
 router.post("/api/admin/coupon", isAdmin, couponController.createCoupon);
 router.put("/api/admin/coupon/:id", isAdmin, couponController.updateCoupon);
 router.delete("/api/admin/coupon/:id", isAdmin, couponController.deleteCoupon);
+
+// Dashboard Analytics APIs
+router.get("/admin/dashboard/summary", isAdmin, setNoCache, adminController.getDashboardSummaryAPI);
+router.get("/admin/dashboard/sales", isAdmin, setNoCache, adminController.getSalesAnalyticsAPI);
+router.get("/admin/dashboard/top-products", isAdmin, setNoCache, adminController.getTopProductsAPI);
+router.get("/admin/dashboard/top-categories", isAdmin, setNoCache, adminController.getTopCategoriesAPI);
+router.get("/admin/dashboard/top-brands", isAdmin, setNoCache, adminController.getTopBrandsAPI);
+
+// Ledger Book Views & APIs
+router.get("/admin/ledger", isAdmin, setNoCache, ledgerController.renderLedger);
+router.get("/admin/ledger/data", isAdmin, setNoCache, ledgerController.getLedgerDataAPI);
+router.get("/admin/ledger/download/pdf", isAdmin, setNoCache, ledgerController.downloadLedgerPdf);
+router.get("/admin/ledger/download/excel", isAdmin, setNoCache, ledgerController.downloadLedgerExcel);
 
 module.exports = router;

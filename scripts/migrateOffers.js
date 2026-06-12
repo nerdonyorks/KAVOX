@@ -5,17 +5,17 @@
  * into dedicated, structured ProductOffer and CategoryOffer collections.
  *
  * Usage:
- *   node src/scripts/migrateOffers.js
+ *   node scripts/migrateOffers.js
  */
 
 const mongoose = require("mongoose");
 const path = require("path");
-require("dotenv").config({ path: path.join(__dirname, "../../.env") });
+require("dotenv").config({ path: path.join(__dirname, "../.env") });
 
-const Product = require("../models/productModel");
-const Category = require("../models/categoryModel");
-const ProductOffer = require("../models/productOfferModel");
-const CategoryOffer = require("../models/categoryOfferModel");
+const Product = require("../src/models/productModel");
+const Category = require("../src/models/categoryModel");
+const ProductOffer = require("../src/models/productOfferModel");
+const CategoryOffer = require("../src/models/categoryOfferModel");
 
 async function migrate() {
   const uri = process.env.MONGO_URI || process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/kavox";
@@ -29,7 +29,6 @@ async function migrate() {
 
   // 1. Migrate Product Offers
   console.log("\n--- Migrating Product Offers ---");
-  // Query raw database documents to retrieve fields even if they're not in the Mongoose schema later
   const productsWithOffers = await Product.find({ productOffer: { $gt: 0 } }).lean();
   console.log(`Found ${productsWithOffers.length} products with legacy offers.`);
 

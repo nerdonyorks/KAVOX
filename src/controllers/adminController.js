@@ -2,6 +2,29 @@ const User = require("../models/userModel");
 const Order = require("../models/orderModel");
 const Product = require("../models/productModel");
 const { HTTP_STATUS, MESSAGES } = require("../utils/constants");
+const dashboardService = require("../services/dashboardService");
+
+// Helper to validate date inputs
+function validateDates(filter, startDate, endDate) {
+  if (filter === "custom") {
+    if (!startDate || !endDate) {
+      return { isValid: false, message: "Both Start Date and End Date are required." };
+    }
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const today = new Date();
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return { isValid: false, message: "Invalid date format." };
+    }
+    if (end < start) {
+      return { isValid: false, message: "End date cannot be earlier than start date." };
+    }
+    if (start > today || end > today) {
+      return { isValid: false, message: "Future dates are not allowed." };
+    }
+  }
+  return { isValid: true };
+}
 
 exports.renderLogin = (req, res) => {
     let error = req.query.error;
@@ -64,15 +87,11 @@ exports.loginAdmin = async (req, res) => {
 
 exports.renderDashboard = async (req, res) => {
     try {
-        // Calculate Total Revenue
-        const revenueAggregation = await Order.aggregate([
-            { $match: { orderStatus: 'Delivered' } },
-            { $group: { _id: null, total: { $sum: "$pricing.total" } } }
-        ]);
-        const totalRevenue = revenueAggregation.length > 0 ? revenueAggregation[0].total : 0;
-
-        const totalOrders = await Order.countDocuments();
-        const totalCustomers = await User.countDocuments({ role: 'user' });
+        // Fetch monthly KPI statistics for initial page load
+        const initialSummary = await dashboardService.getDashboardSummary("monthly");
+        const totalRevenue = initialSummary.totalRevenue;
+        const totalOrders = initialSummary.totalOrders;
+        const totalCustomers = initialSummary.registeredCustomers;
         const totalProducts = await Product.countDocuments(); // Active + Inactive
 
         // Low Stock Products — only active, non-deleted products with active variants under 10 stock
@@ -84,11 +103,9 @@ exports.renderDashboard = async (req, res) => {
 
         const lowStockItems = [];
         lowStockProducts.forEach(product => {
-            // Skip if category is deleted or inactive
             if (!product.category || product.category.isDeleted || !product.category.isActive) return;
 
             product.variants.forEach(variant => {
-                // Only include active variants that are low stock
                 if (variant.isActive && variant.quantity < 10) {
                     lowStockItems.push({
                         id: product._id,
@@ -101,7 +118,6 @@ exports.renderDashboard = async (req, res) => {
                 }
             });
         });
-
 
         // Recent Orders — exclude cancelled orders
         const recentOrdersData = await Order.find({ orderStatus: { $ne: 'Cancelled' } })
@@ -118,6 +134,8 @@ exports.renderDashboard = async (req, res) => {
         }));
 
         res.render("admin/dashboard", {
+            title: "Admin Dashboard - KAVOX",
+            activePage: "dashboard",
             totalRevenue,
             totalOrders,
             totalCustomers,
@@ -128,9 +146,101 @@ exports.renderDashboard = async (req, res) => {
     } catch (error) {
         console.error("Dashboard Error:", error);
         res.render("admin/dashboard", {
+            title: "Admin Dashboard - KAVOX",
+            activePage: "dashboard",
             totalRevenue: 0, totalOrders: 0, totalCustomers: 0, totalProducts: 0, lowStockItems: [], orders: []
         });
     }
+};
+
+/**
+ * GET /admin/dashboard/summary
+ */
+exports.getDashboardSummaryAPI = async (req, res) => {
+  try {
+    const { filter = "monthly", startDate, endDate } = req.query;
+    const validation = validateDates(filter, startDate, endDate);
+    if (!validation.isValid) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: validation.message });
+    }
+    const summary = await dashboardService.getDashboardSummary(filter, startDate, endDate);
+    res.status(HTTP_STATUS.OK).json({ success: true, summary });
+  } catch (error) {
+    console.error("Summary API Error:", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: "Failed to load summary." });
+  }
+};
+
+/**
+ * GET /admin/dashboard/sales
+ */
+exports.getSalesAnalyticsAPI = async (req, res) => {
+  try {
+    const { filter = "monthly", startDate, endDate } = req.query;
+    const validation = validateDates(filter, startDate, endDate);
+    if (!validation.isValid) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: validation.message });
+    }
+    const data = await dashboardService.getSalesAnalytics(filter, startDate, endDate);
+    res.status(HTTP_STATUS.OK).json({ success: true, data });
+  } catch (error) {
+    console.error("Sales Analytics API Error:", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: "Failed to load sales analytics." });
+  }
+};
+
+/**
+ * GET /admin/dashboard/top-products
+ */
+exports.getTopProductsAPI = async (req, res) => {
+  try {
+    const { filter = "monthly", startDate, endDate } = req.query;
+    const validation = validateDates(filter, startDate, endDate);
+    if (!validation.isValid) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: validation.message });
+    }
+    const data = await dashboardService.getTopProducts(10, filter, startDate, endDate);
+    res.status(HTTP_STATUS.OK).json({ success: true, data });
+  } catch (error) {
+    console.error("Top Products API Error:", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: "Failed to load top products." });
+  }
+};
+
+/**
+ * GET /admin/dashboard/top-categories
+ */
+exports.getTopCategoriesAPI = async (req, res) => {
+  try {
+    const { filter = "monthly", startDate, endDate } = req.query;
+    const validation = validateDates(filter, startDate, endDate);
+    if (!validation.isValid) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: validation.message });
+    }
+    const data = await dashboardService.getTopCategories(10, filter, startDate, endDate);
+    res.status(HTTP_STATUS.OK).json({ success: true, data });
+  } catch (error) {
+    console.error("Top Categories API Error:", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: "Failed to load top categories." });
+  }
+};
+
+/**
+ * GET /admin/dashboard/top-brands
+ */
+exports.getTopBrandsAPI = async (req, res) => {
+  try {
+    const { filter = "monthly", startDate, endDate } = req.query;
+    const validation = validateDates(filter, startDate, endDate);
+    if (!validation.isValid) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: validation.message });
+    }
+    const data = await dashboardService.getTopBrands(10, filter, startDate, endDate);
+    res.status(HTTP_STATUS.OK).json({ success: true, data });
+  } catch (error) {
+    console.error("Top Brands API Error:", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: "Failed to load top brands." });
+  }
 };
 
 exports.renderUserManagement = async (req, res) => {
