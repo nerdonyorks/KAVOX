@@ -2,13 +2,7 @@ const ProductOffer = require("../models/productOfferModel");
 const CategoryOffer = require("../models/categoryOfferModel");
 
 class OfferService {
-  /**
-   * Dynamically populates active product and category offers onto product objects.
-   * Modifies the objects in place (attaching productOffer and categoryOffer/category.offer).
-   * Ensures no database N+1 query overhead by batching lookups.
-   * @param {Object|Array} productsInput - Single product or array of products
-   * @returns {Promise<Object|Array>} Populated product(s)
-   */
+
   async populateProductOffers(productsInput) {
     if (!productsInput) return productsInput;
     const isArray = Array.isArray(productsInput);
@@ -57,10 +51,10 @@ class OfferService {
       // If it's a Mongoose document, we convert to Object to allow adding arbitrary properties
       const target = typeof p.toObject === 'function' ? p : p;
       target.productOffer = prodOfferMap[p._id.toString()] || 0;
-      
+
       const catId = p.category && (p.category._id ? p.category._id.toString() : p.category.toString());
       target.categoryOffer = catId ? (catOfferMap[catId] || 0) : 0;
-      
+
       if (p.category && typeof p.category === 'object') {
         p.category.offer = target.categoryOffer;
       }
@@ -69,24 +63,20 @@ class OfferService {
     return productsInput;
   }
 
-  /**
-   * Centralized offer price calculator. Returns original price, best discount, and final calculated price.
-   * @param {Object} product - Populated product object
-   * @returns {Object} Pricing summary containing originalPrice, discountPercentage, finalPrice, and offerType
-   */
+
   getDiscountedPrice(product) {
     if (!product) {
       return { originalPrice: 0, discountPercentage: 0, finalPrice: 0, offerType: "NONE" };
     }
 
     const pOffer = product.productOffer || 0;
-    const cOffer = (product.category && typeof product.category === 'object') 
-      ? (product.category.offer || 0) 
+    const cOffer = (product.category && typeof product.category === 'object')
+      ? (product.category.offer || 0)
       : (product.categoryOffer || 0);
 
     const discount = Math.max(pOffer, cOffer);
-    const finalPrice = discount > 0 
-      ? Math.round(product.price * (1 - discount / 100)) 
+    const finalPrice = discount > 0
+      ? Math.round(product.price * (1 - discount / 100))
       : product.price;
 
     return {

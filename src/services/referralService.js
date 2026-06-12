@@ -3,12 +3,7 @@ const Referral = require("../models/referralModel");
 const walletService = require("./walletService");
 
 class ReferralService {
-  /**
-   * Generates a unique referral code based on the user's name.
-   * Format: NAMESUB-RANDOMCHARS
-   * @param {String} name - User's full name
-   * @returns {Promise<String>} Unique referral code
-   */
+
   async generateUniqueReferralCode(name) {
     const cleanName = name.replace(/[^A-Za-z0-9]/g, "").substring(0, 5).toUpperCase();
     let code = "";
@@ -25,11 +20,7 @@ class ReferralService {
     return code;
   }
 
-  /**
-   * Processes a referral claim: validates codes, creates log, and pays out wallet rewards.
-   * @param {Object} newUser - Newly registered User mongoose document
-   * @param {String} referrerCode - Referrer code entered/submitted
-   */
+
   async processReferral(newUser, referrerCode) {
     if (!referrerCode) return;
 

@@ -14,14 +14,7 @@ exports.getAvailableCoupons = async () => {
         .lean();
 };
 
-/**
- * Validates a coupon code against a cart total and user context.
- * 
- * @param {string} code - The coupon code to validate
- * @param {number} cartTotal - The cart total after product/category discounts
- * @param {string} userId - The ID of the user applying the coupon
- * @returns {Promise<object>} Validation status, error/success message, and details
- */
+
 exports.validateCoupon = async (code, cartTotal, userId) => {
     if (!code) {
         return { isValid: false, message: "Coupon code is required." };
@@ -46,9 +39,9 @@ exports.validateCoupon = async (code, cartTotal, userId) => {
     }
 
     if (cartTotal < coupon.minPurchaseAmount) {
-        return { 
-            isValid: false, 
-            message: `Minimum purchase of ₹${coupon.minPurchaseAmount} is required to use this coupon.` 
+        return {
+            isValid: false,
+            message: `Minimum purchase of ₹${coupon.minPurchaseAmount} is required to use this coupon.`
         };
     }
 

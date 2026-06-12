@@ -12,6 +12,7 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const walletRoutes = require("./routes/walletRoutes");
 const offerRoutes = require("./routes/offerRoutes");
 const referralRoutes = require("./routes/referralRoutes");
+const reportRoutes = require("./routes/reportRoutes");
 const User = require("./models/userModel");
 const { setNoCache } = require("./middleware/authMiddleware");
 
@@ -161,6 +162,7 @@ app.use("/", paymentRoutes);
 app.use("/", walletRoutes);
 app.use("/", offerRoutes);
 app.use("/", referralRoutes);
+app.use("/", reportRoutes);
 
 
 // ---------- 404 ----------
