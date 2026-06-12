@@ -128,7 +128,12 @@
                         <div class="order-card-totals">
                             <span class="total-label">Total Amount</span>
                             <div class="total-amount">₹${order.pricing.total}</div>
-                            <div class="payment-method">Paid via ${order.paymentMethod}</div>
+                            <div class="payment-method">
+                                Payment: <strong>${order.paymentMethod}</strong> 
+                                <span style="color: ${order.paymentStatus === 'Completed' ? '#22c55e' : (order.paymentStatus === 'Failed' ? '#ef4444' : '#f57c00')}; font-weight: 700;">
+                                    (${order.paymentStatus})
+                                </span>
+                            </div>
                             <a href="/order/${order._id}" class="btn-outline-primary">VIEW DETAILS</a>
                         </div>
                     </div>

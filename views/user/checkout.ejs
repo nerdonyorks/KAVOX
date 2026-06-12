@@ -5,6 +5,73 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title %></title>
   <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/notifications.js"></script>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    .available-coupons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .available-coupon-card {
+      width: 100%;
+      text-align: left;
+      background: #fff;
+      border: 1px dashed #d1d5db;
+      border-radius: 6px;
+      padding: 12px;
+      cursor: pointer;
+      transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+    }
+
+    .available-coupon-card:hover {
+      border-color: #e91e63;
+      background: #fff7fb;
+      transform: translateY(-1px);
+    }
+
+    .available-coupon-card.disabled {
+      opacity: 0.62;
+      cursor: not-allowed;
+      background: #f8fafc;
+    }
+
+    .available-coupon-card.disabled:hover {
+      border-color: #d1d5db;
+      transform: none;
+    }
+
+    .available-coupon-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .available-coupon-code {
+      font-family: monospace;
+      font-size: 13px;
+      font-weight: 800;
+      color: #111827;
+      letter-spacing: 0.8px;
+    }
+
+    .available-coupon-save {
+      font-size: 11px;
+      font-weight: 800;
+      color: #e91e63;
+      white-space: nowrap;
+    }
+
+    .available-coupon-meta {
+      font-size: 11px;
+      color: #64748b;
+      line-height: 1.5;
+    }
+  </style>
 </head>
 <body class="user-layout">
   <%- include('../partials/user-header') %>
@@ -51,17 +118,29 @@
             </div>
           <% } %>
         </div>
+        
+        <% if (locals.wallet && wallet.balance > 0) { %>
+          <div class="wallet-application-box" style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 16px; margin-bottom: 24px; margin-top: 16px;">
+            <label style="display: flex; align-items: center; gap: 10px; font-weight: 700; cursor: pointer; color: #1e293b;">
+              <input type="checkbox" id="useWalletCheckbox" data-balance="<%= wallet.balance %>" style="width: 18px; height: 18px; accent-color: #e91e63;">
+              <span>Apply Wallet Balance (Available: ₹<%= wallet.balance %>)</span>
+            </label>
+            <div id="walletAppliedInfo" style="display: none; margin-top: 8px; font-size: 13px; color: #059669; font-weight: 600;">
+              Applied ₹<span id="walletAppliedAmount">0</span> from your wallet.
+            </div>
+          </div>
+        <% } %>
 
         <!-- Payment Methods -->
-        <div class="payment-methods-wrapper">
+        <div class="payment-methods-wrapper" id="paymentMethodsWrapper">
           <div class="payment-badge">PAYMENT METHODS</div>
           
           <div class="payment-options">
-            <!-- Razorpay (Disabled for now as per requirements) -->
-            <label class="payment-option disabled" title="Currently unavailable">
-              <input type="radio" name="paymentMethod" value="RAZORPAY" disabled>
+            <!-- Razorpay -->
+            <label class="payment-option">
+              <input type="radio" name="paymentMethod" value="RAZORPAY">
               <div class="payment-option-content">
-                <span>Razorpay</span>
+                <span>Pay Online (Razorpay)</span>
                 <span class="payment-icon"><i>💳</i></span>
               </div>
             </label>
@@ -89,13 +168,54 @@
       <div class="checkout-right">
         
         <!-- Coupons Section -->
-        <div class="checkout-summary-box">
+        <div class="checkout-summary-box" id="couponSection">
           <h3 class="summary-box-title">COUPONS</h3>
           <p class="coupon-subtext">Apply Coupons and save extra</p>
-          <div class="coupon-input-group">
-            <input type="text" id="couponCode" placeholder="WELCOME20">
+          
+          <div class="coupon-input-group" id="couponInputGroup" style="<%= appliedCouponCode ? 'display: none;' : '' %>">
+            <input type="text" id="couponCode" placeholder="WELCOME20" oninput="this.value = this.value.toUpperCase().replace(/\s/g, '')">
             <button type="button" class="btn-apply-coupon">APPLY</button>
           </div>
+
+          <div class="available-coupons" id="availableCouponsList" style="<%= appliedCouponCode ? 'display: none;' : '' %>">
+            <% if (typeof availableCoupons !== 'undefined' && availableCoupons.length > 0) { %>
+              <% availableCoupons.forEach(coupon => {
+                const isEligible = summary.cartTotal >= coupon.minPurchaseAmount;
+                const expiryLabel = new Date(coupon.expiryDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+              %>
+                <button type="button"
+                  class="available-coupon-card <%= isEligible ? '' : 'disabled' %>"
+                  data-code="<%= coupon.code %>"
+                  data-eligible="<%= isEligible %>">
+                  <div class="available-coupon-top">
+                    <span class="available-coupon-code"><%= coupon.code %></span>
+                    <span class="available-coupon-save">SAVE <%= coupon.discountType === 'fixed' ? '₹' + coupon.discountValue : coupon.discountValue + '%' %></span>
+                  </div>
+                  <div class="available-coupon-meta">
+                    Min order ₹<%= coupon.minPurchaseAmount %>
+                    <% if (coupon.discountType === 'percentage' && coupon.maxDiscount) { %> · Max ₹<%= coupon.maxDiscount %><% } %>
+                    · Valid till <%= expiryLabel %>
+                  </div>
+                  <% if (!isEligible) { %>
+                    <div class="available-coupon-meta" style="color: #dc2626; font-weight: 700; margin-top: 4px;">
+                      Add ₹<%= coupon.minPurchaseAmount - summary.cartTotal %> more to use this coupon
+                    </div>
+                  <% } %>
+                </button>
+              <% }) %>
+            <% } else { %>
+              <p class="coupon-subtext" style="margin-top: 14px;">No active coupons available right now.</p>
+            <% } %>
+          </div>
+
+          <div class="applied-coupon-wrapper" id="appliedCouponWrapper" style="<%= appliedCouponCode ? 'display: flex;' : 'display: none;' %>; align-items: center; justify-content: space-between; background: #f0fdf4; border: 1px dashed #22c55e; padding: 12px; border-radius: 6px; margin-top: 10px;">
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <span style="font-size: 11px; font-weight: 700; color: #15803d; letter-spacing: 0.5px;">APPLIED COUPON</span>
+              <strong id="appliedCodeDisplay" style="font-family: monospace; font-size: 14px; color: #166534;"><%= appliedCouponCode %></strong>
+            </div>
+            <button type="button" class="btn-remove-coupon" style="background: none; border: none; color: #b91c1c; font-size: 12px; font-weight: 700; cursor: pointer; text-decoration: underline;">REMOVE</button>
+          </div>
+          <p class="coupon-subtext" id="singleCouponAlert" style="display: none; color: #dc2626; font-size: 12px; margin-top: 8px; font-weight: 600;">Only one coupon is allowed per order.</p>
         </div>
 
         <!-- Order Details Section -->
@@ -137,16 +257,20 @@
               <span>₹<%= summary.totalActualPrice %></span>
             </div>
             <div class="summary-row">
-              <span>Discount</span>
+              <span>Offer Discount</span>
               <span class="discount-text">-₹<%= summary.totalProductDiscount + summary.totalCategoryDiscount %></span>
             </div>
-            <div class="summary-row">
-              <span>Shipping Charges</span>
-              <span class="free-text">Free</span>
+            <div class="summary-row" id="couponDiscountRow" style="<%= couponDiscount > 0 ? '' : 'display: none;' %>">
+              <span>Coupon Discount</span>
+              <span class="discount-text" id="couponDiscountValue">-₹<%= couponDiscount %></span>
+            </div>
+             <div class="summary-row" id="walletDeductionRow" style="display: none;">
+              <span>Wallet Applied</span>
+              <span class="discount-text" id="walletDeductionValue">-₹0</span>
             </div>
             <div class="summary-row total-row">
               <span>Total</span>
-              <span>₹<%= summary.cartTotal %></span>
+              <span id="finalTotalValue">₹<%= summary.cartTotal - couponDiscount %></span>
             </div>
           </div>
 

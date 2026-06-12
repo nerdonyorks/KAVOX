@@ -99,6 +99,14 @@ exports.signup = async (req, res) => {
       return res.status(HTTP_STATUS.BAD_REQUEST).render("user/signup", { error: MESSAGES.FIRST_NAME_TAKEN, ...req.body });
     }
 
+    if (referralCode) {
+      const referrer = await User.findOne({ referralCode: referralCode.trim() });
+      if (!referrer) {
+        if (isAjax) return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Invalid referral code." });
+        return res.status(HTTP_STATUS.BAD_REQUEST).render("user/signup", { error: "Invalid referral code.", ...req.body });
+      }
+    }
+
 
     // Store signup data in session
     req.session.signupData = { firstName, lastName, email, phone, referralCode, password };
@@ -159,15 +167,26 @@ exports.verifyOtp = async (req, res) => {
         }
 
         const name = `${signupData.firstName} ${signupData.lastName || ''}`.trim();
+        
+        // Generate the new user's unique referral code
+        const referralService = require("../services/referralService");
+        const ownReferralCode = await referralService.generateUniqueReferralCode(name);
+
         const user = new User({
             name,
             email: signupData.email,
             password: signupData.password,
             phone: signupData.phone,
-            referralCode: signupData.referralCode
+            referralCode: ownReferralCode
         });
 
         await user.save();
+
+        // Process referral logic (credits referrer & referred, creates log)
+        if (signupData.referralCode) {
+            await referralService.processReferral(user, signupData.referralCode);
+        }
+
         delete req.session.signupData;
 
         if (isAjax) {

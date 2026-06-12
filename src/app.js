@@ -8,6 +8,10 @@ const errorHandler = require("./middleware/errorHandler");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
+const walletRoutes = require("./routes/walletRoutes");
+const offerRoutes = require("./routes/offerRoutes");
+const referralRoutes = require("./routes/referralRoutes");
 const User = require("./models/userModel");
 const { setNoCache } = require("./middleware/authMiddleware");
 
@@ -144,10 +148,19 @@ app.use((req, res, next) => {
 });
 
 
+// ---------- REGISTER REDIRECT ----------
+app.get("/register", (req, res) => {
+  res.redirect(`/signup${req.url.includes("?") ? req.url.substring(req.url.indexOf("?")) : ""}`);
+});
+
 // ---------- ROUTES ----------
 app.use("/", authRoutes);
 app.use("/", userRoutes);
 app.use("/", adminRoutes);
+app.use("/", paymentRoutes);
+app.use("/", walletRoutes);
+app.use("/", offerRoutes);
+app.use("/", referralRoutes);
 
 
 // ---------- 404 ----------

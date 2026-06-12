@@ -103,6 +103,24 @@
       and are getting it ready to be shipped. We will send you a confirmation email with tracking details once it ships.
     </p>
 
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 0 auto 30px; text-align: left; max-width: 450px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+      <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Payment Summary</h3>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;">
+        <span style="color: #64748b;">Order ID:</span>
+        <span style="font-weight: 600; color: #334155;"><%= orderId %></span>
+      </div>
+      <% if (locals.paymentId && paymentId !== 'N/A') { %>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;">
+          <span style="color: #64748b;">Payment ID:</span>
+          <span style="font-weight: 600; color: #334155; font-family: monospace;"><%= paymentId %></span>
+        </div>
+      <% } %>
+      <div style="display: flex; justify-content: space-between; font-size: 14px; margin-top: 12px; border-top: 1px dashed #e2e8f0; padding-top: 12px;">
+        <span style="color: #64748b; font-weight: 600;">Amount Paid:</span>
+        <span style="font-weight: 800; color: #e91e63; font-size: 16px;">₹<%= locals.amountPaid || 0 %></span>
+      </div>
+    </div>
+
     <div class="success-actions">
       <!-- Pointing to account/orders for now, as order-details view is standard there -->
       <a href="/orders" class="btn-secondary">View Order Details</a>

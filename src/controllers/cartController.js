@@ -2,6 +2,7 @@ const Cart = require("../models/cartModel");
 const Product = require("../models/productModel");
 const Wishlist = require("../models/wishlist");
 const { HTTP_STATUS, MESSAGES } = require("../utils/constants");
+const offerService = require("../services/offerService");
 
 // Helper to calculate cart totals
 const calculateTotals = (items) => {
@@ -22,21 +23,17 @@ const getDetailedTotals = (items) => {
         const basePriceTotal = basePrice * qty;
         totalActualPrice += basePriceTotal;
 
-        const pOffer = product.productOffer || 0;
-        const cOffer = (product.category && product.category.offer) ? product.category.offer : 0;
-
-        // Always apply whichever offer is greater
-        const bestOffer = Math.max(pOffer, cOffer);
-        const finalItemPrice = bestOffer > 0
-            ? Math.round(basePrice * (1 - bestOffer / 100))
-            : basePrice;
+        const pricing = offerService.getDiscountedPrice(product);
+        const finalItemPrice = pricing.finalPrice;
+        const bestOffer = pricing.discountPercentage;
+        const offerType = pricing.offerType;
 
         const savedOnItem = (basePrice - finalItemPrice) * qty;
 
         // Attribute saving to the winning offer type
-        if (pOffer >= cOffer && pOffer > 0) {
+        if (offerType === 'PRODUCT') {
             totalProductDiscount += savedOnItem;
-        } else if (cOffer > pOffer && cOffer > 0) {
+        } else if (offerType === 'CATEGORY') {
             totalCategoryDiscount += savedOnItem;
         }
 
@@ -71,6 +68,12 @@ exports.getCart = async (req, res) => {
         let hasChanges = false;
         let validationErrors = [];
 
+        // Populate active offers first
+        if (cart.items.length > 0) {
+            const products = cart.items.map(item => item.productId).filter(Boolean);
+            await offerService.populateProductOffers(products);
+        }
+
         cart.items = cart.items.filter(item => {
             const product = item.productId;
             if (!product || product.isDeleted || !product.isActive || !product.category || !product.category.isActive || product.category.isDeleted) {
@@ -101,10 +104,8 @@ exports.getCart = async (req, res) => {
             }
 
             // RECALCULATE PRICE (Dynamic Sync)
-            const pOffer = product.productOffer || 0;
-            const cOffer = (product.category && product.category.offer) ? product.category.offer : 0;
-            const currentDiscount = Math.max(pOffer, cOffer);
-            const currentFinalPrice = Math.round(product.price * (1 - currentDiscount / 100));
+            const pricing = offerService.getDiscountedPrice(product);
+            const currentFinalPrice = pricing.finalPrice;
 
             // If price stored in cart is different from current offer-aware price, update it
             if (item.price !== currentFinalPrice) {
@@ -151,6 +152,9 @@ exports.addToCart = async (req, res) => {
             return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: "Product no longer available." });
         }
 
+        // Populate active offers
+        await offerService.populateProductOffers(product);
+
         // 2. Find Variant (Prefer variantId if passed)
         let variant;
         if (variantId) {
@@ -184,10 +188,8 @@ exports.addToCart = async (req, res) => {
                 item.color === variant.color
         );
 
-        const pOffer = product.productOffer || 0;
-        const cOffer = (product.category && product.category.offer) ? product.category.offer : 0;
-        const discount = Math.max(pOffer, cOffer);
-        const finalPrice = Math.round(product.price * (1 - discount / 100));
+        const pricing = offerService.getDiscountedPrice(product);
+        const finalPrice = pricing.finalPrice;
 
         if (existingItemIndex > -1) {
             const newQty = cart.items[existingItemIndex].quantity + parseInt(quantity);
@@ -252,6 +254,10 @@ exports.updateQuantity = async (req, res) => {
         if (!product || product.isDeleted || !product.isActive || !product.category || !product.category.isActive || product.category.isDeleted) {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Product is no longer available." });
         }
+
+        // Populate active offers
+        await offerService.populateProductOffers(product);
+
         const variant = product.variants.find(v => v.size === item.size && v.color === item.color);
         if (!variant || !variant.isActive) {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Selected variant is no longer available." });
@@ -267,10 +273,8 @@ exports.updateQuantity = async (req, res) => {
         }
 
         // Recalculate price in case offers changed
-        const pOffer = product.productOffer || 0;
-        const cOffer = (product.category && product.category.offer) ? product.category.offer : 0;
-        const currentDiscount = Math.max(pOffer, cOffer);
-        const currentFinalPrice = Math.round(product.price * (1 - currentDiscount / 100));
+        const pricing = offerService.getDiscountedPrice(product);
+        const currentFinalPrice = pricing.finalPrice;
 
         item.price = currentFinalPrice;
         item.quantity = newQty;
@@ -302,13 +306,20 @@ exports.removeFromCart = async (req, res) => {
         const { itemId } = req.params;
         const userId = req.user._id;
 
-        const cart = await Cart.findOne({ userId });
+        const cart = await Cart.findOne({ userId }).populate({
+            path: "items.productId",
+            populate: { path: "category" }
+        });
         if (!cart) return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: "Cart not found." });
 
         cart.items = cart.items.filter(item => item._id.toString() !== itemId);
         cart.cartTotal = calculateTotals(cart.items);
         await cart.save();
 
+        if (cart.items.length > 0) {
+            const products = cart.items.map(item => item.productId).filter(Boolean);
+            await offerService.populateProductOffers(products);
+        }
         const summary = getDetailedTotals(cart.items);
 
         res.json({

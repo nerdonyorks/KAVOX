@@ -40,12 +40,7 @@ const productSchema = new mongoose.Schema(
     note: {
       type: String,
     },
-    productOffer: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 100,
-    },
+
     showOnHome: {
       type: Boolean,
       default: false,

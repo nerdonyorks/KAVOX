@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/notifications.js"></script>
+</head>
+
+<body class="admin-layout">
+
+  <%- include('partials/sidebar', { activePage: 'wallets' }) %>
+
+  <main class="main-content">
+    <header class="header">
+      <h1>WALLET MANAGEMENT</h1>
+    </header>
+
+    <div class="content-wrapper">
+      
+      <!-- Search Panel -->
+      <div class="card" style="margin-bottom: 32px; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 20px;">
+        <form action="/admin/wallets" method="GET" style="display: flex; gap: 12px; align-items: center;">
+          <div class="search-input-wrapper" style="flex: 1; display: flex; align-items: center; border: 1px solid #ddd; border-radius: 4px; padding: 0 10px; background: #fff;">
+            <svg width="20" height="20" fill="none" stroke="#666" stroke-width="2" viewBox="0 0 24 24" style="margin-right: 5px;">
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+            <input type="text" name="search" class="form-control" placeholder="Search by customer name or email..." value="<%= searchQuery %>" style="height: 42px; border:none; width: 100%; outline: none; box-shadow: none;">
+          </div>
+          <button type="submit" class="btn-primary" style="padding: 10px 25px; border-radius: 4px; height: 42px; font-weight: 700; cursor: pointer;">Search</button>
+          <% if (searchQuery) { %>
+            <a href="/admin/wallets" class="btn-outline" style="padding: 10px 20px; border-radius: 4px; height: 42px; line-height: 22px; border: 1px solid #ddd; color: #333; background: #f9f9f9; text-decoration: none; text-align: center; font-weight: 600;">Clear</a>
+          <% } %>
+        </form>
+      </div>
+
+      <!-- Wallets Table Card -->
+      <div class="card" style="padding: 0; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden;">
+        <div class="table-wrapper">
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Total Credits</th>
+                <th>Total Debits</th>
+                <th>Current Balance</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (wallets && wallets.length > 0) { %>
+                <% wallets.forEach(wallet => { %>
+                  <tr>
+                    <td style="font-weight: 700; color: #1e293b;">
+                      <%= wallet.userId ? wallet.userId.name : 'Unknown User' %>
+                    </td>
+                    <td><%= wallet.userId ? wallet.userId.email : 'N/A' %></td>
+                    <td><%= wallet.userId ? wallet.userId.phone : 'N/A' %></td>
+                    <td style="color: #059669; font-weight: 600;">₹<%= Number(wallet.totalCredits || 0).toFixed(2) %></td>
+                    <td style="color: #dc2626; font-weight: 600;">₹<%= Number(wallet.totalDebits || 0).toFixed(2) %></td>
+                    <td style="font-weight: 800; font-size: 15px; color: #1e293b;">₹<%= Number(wallet.balance).toFixed(2) %></td>
+                    <td>
+                      <% if (wallet.userId) { %>
+                        <a href="/admin/wallet/<%= wallet.userId._id %>" class="btn-primary" style="padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; text-decoration: none; display: inline-block; font-weight: bold;">View Details</a>
+                      <% } else { %>
+                        <span style="color: #94a3b8;">—</span>
+                      <% } %>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="7" style="text-align: center; padding: 40px; color: #64748b;">
+                    No wallets found.
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <% if (totalPages > 1) { %>
+          <div class="pagination" style="display: flex; justify-content: center; gap: 8px; padding: 20px; border-top: 1px solid #f1f5f9;">
+            <% for (let i = 1; i <= totalPages; i++) { %>
+              <a href="/admin/wallets?page=<%= i %>&search=<%= searchQuery %>" 
+                 style="padding: 8px 16px; border: 1px solid <%= i === currentPage ? 'var(--primary-color)' : '#e2e8f0' %>; 
+                        background: <%= i === currentPage ? 'var(--primary-color)' : '#fff' %>; 
+                        color: <%= i === currentPage ? '#fff' : '#0f172a' %>; 
+                        text-decoration: none; border-radius: 6px; font-weight: 700;">
+                <%= i %>
+              </a>
+            <% } %>
+          </div>
+        <% } %>
+      </div>
+
+    </div>
+  </main>
+
+</body>
+
+</html>

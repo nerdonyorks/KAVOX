@@ -59,7 +59,7 @@ exports.getAllCategoriesAPI = async (req, res) => {
 
 exports.createCategory = async (req, res) => {
   try {
-    const { name, offer } = req.body;
+    const { name } = req.body;
     if (!name) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
@@ -78,7 +78,6 @@ exports.createCategory = async (req, res) => {
         // Restore instead of duplicate
         existing.isDeleted = false;
         existing.deletedAt = null;
-        existing.offer = Math.min(100, Math.max(0, parseFloat(offer) || 0));
         existing.isActive = true;
         await existing.save();
 
@@ -96,8 +95,7 @@ exports.createCategory = async (req, res) => {
     }
 
     const category = new Category({
-      name: normalizedName,
-      offer: Math.min(100, Math.max(0, parseFloat(offer) || 0))
+      name: normalizedName
     });
     await category.save();
 
@@ -119,7 +117,7 @@ exports.createCategory = async (req, res) => {
 
 exports.updateCategory = async (req, res) => {
   try {
-    const { name, isActive, offer } = req.body;
+    const { name, isActive } = req.body;
     const categoryId = req.params.id;
 
     const category = await Category.findById(categoryId);
@@ -149,9 +147,7 @@ exports.updateCategory = async (req, res) => {
       category.isActive = isActive === "true" || isActive === true;
     }
 
-    if (typeof offer !== "undefined") {
-      category.offer = Math.min(100, Math.max(0, parseFloat(offer) || 0));
-    }
+
 
     if (req.file) {
       // Delete old image from Cloudinary

@@ -4,6 +4,7 @@ const adminController = require("../controllers/adminController");
 const categoryController = require("../controllers/categoryController");
 const productController = require("../controllers/productController");
 const adminOrderController = require("../controllers/adminOrderController");
+const couponController = require("../controllers/couponController");
 const { isAdmin, setNoCache, isLoggedOut } = require("../middleware/authMiddleware");
 const upload = require("../middleware/upload");
 
@@ -46,5 +47,11 @@ router.get("/admin/order/:id", isAdmin, setNoCache, adminOrderController.getAdmi
 router.patch("/api/admin/order/:id/status", isAdmin, adminOrderController.updateOrderStatus);
 router.patch("/api/admin/order/:orderId/item/:itemId/status", isAdmin, adminOrderController.updateItemStatus);
 router.post("/api/admin/order/:id/return", isAdmin, adminOrderController.handleReturnRequest);
+
+// Coupon Management
+router.get("/admin/coupons", isAdmin, setNoCache, couponController.listCoupons);
+router.post("/api/admin/coupon", isAdmin, couponController.createCoupon);
+router.put("/api/admin/coupon/:id", isAdmin, couponController.updateCoupon);
+router.delete("/api/admin/coupon/:id", isAdmin, couponController.deleteCoupon);
 
 module.exports = router;

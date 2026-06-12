@@ -57,6 +57,9 @@ exports.listProducts = async (req, res) => {
       .skip(skip)
       .limit(parseInt(limit));
 
+    const offerService = require("../services/offerService");
+    await offerService.populateProductOffers(data);
+
     res.status(HTTP_STATUS.OK).json({
       success: true,
       data,
@@ -76,7 +79,7 @@ exports.listProducts = async (req, res) => {
 //Create new product
 exports.createProduct = async (req, res) => {
   try {
-    let { name, description, price, category, productOffer, showOnHome, isActive, variants } = req.body;
+    let { name, description, price, category, showOnHome, isActive, variants } = req.body;
 
     // Validate name (alphanumeric and spaces only)
     const nameRegex = /^[a-zA-Z0-9\s]+$/;
@@ -131,7 +134,6 @@ exports.createProduct = async (req, res) => {
           existingProduct.price = price;
           existingProduct.category = category;
           existingProduct.images = processedVariants[0].images;
-          existingProduct.productOffer = Math.min(100, Math.max(0, parseFloat(productOffer) || 0));
           existingProduct.showOnHome = showOnHome === "true" || showOnHome === true;
           existingProduct.isActive = isActive === "true" || isActive === true || isActive === undefined;
           existingProduct.variants = processedVariants;
@@ -234,7 +236,6 @@ exports.createProduct = async (req, res) => {
       price,
       category,
       images: productImages,
-      productOffer: Math.min(100, Math.max(0, parseFloat(productOffer) || 0)),
       showOnHome: showOnHome === 'true' || showOnHome === true,
       isActive: isActive === 'true' || isActive === true || isActive === undefined,
       variants: processedVariants,
@@ -267,7 +268,7 @@ exports.updateProduct = async (req, res) => {
       });
     }
 
-    let { name, description, price, category, images, isActive, productOffer, showOnHome, variants } = req.body;
+    let { name, description, price, category, images, isActive, showOnHome, variants } = req.body;
 
     if (name) {
       const nameRegex = /^[a-zA-Z0-9\s]+$/;
@@ -294,7 +295,6 @@ exports.updateProduct = async (req, res) => {
     if (description) product.description = description;
     if (price) product.price = price;
     if (category) product.category = category;
-    if (typeof productOffer !== "undefined") product.productOffer = Math.min(100, Math.max(0, parseFloat(productOffer) || 0));
     if (typeof showOnHome !== "undefined") product.showOnHome = showOnHome === "true" || showOnHome === true;
     if (typeof isActive !== "undefined") product.isActive = isActive === "true" || isActive === true;
     const files = req.files || [];
@@ -482,6 +482,9 @@ exports.userListProducts = async (req, res) => {
       .limit(parseInt(limit))
       .lean();
 
+    const offerService = require("../services/offerService");
+    await offerService.populateProductOffers(products);
+
     // Get user's wishlist product IDs if logged in
     let wishlistProductIds = [];
     const currentUser = req.user || req.session.user;
@@ -557,6 +560,9 @@ exports.userGetProductDetails = async (req, res) => {
 
     const isBlocked = !product.isActive || !product.category.isActive || product.category.isDeleted;
 
+    const offerService = require("../services/offerService");
+    await offerService.populateProductOffers(product);
+
     // Fetch related products from the same category
     let relatedProducts = await Product.find({
       category: product.category._id,
@@ -572,6 +578,10 @@ exports.userGetProductDetails = async (req, res) => {
         isDeleted: false,
         isActive: true
       }).populate("category").limit(3).lean();
+    }
+
+    if (relatedProducts && relatedProducts.length > 0) {
+      await offerService.populateProductOffers(relatedProducts);
     }
 
     // Check if product is in wishlist if user is logged in
@@ -656,10 +666,9 @@ exports.userGetProductVariants = async (req, res) => {
     const activeVariants = product.variants.filter(v => v.isActive);
 
     // Calculate final price (respecting offers)
-    const pOffer = product.productOffer || 0;
-    const cOffer = product.category.offer || 0;
-    const discount = Math.max(pOffer, cOffer);
-    const finalPrice = Math.round(product.price * (1 - discount / 100));
+    const offerService = require("../services/offerService");
+    await offerService.populateProductOffers(product);
+    const { finalPrice } = offerService.getDiscountedPrice(product);
 
     res.status(HTTP_STATUS.OK).json({
       success: true,

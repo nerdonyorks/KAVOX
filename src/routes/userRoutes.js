@@ -6,6 +6,7 @@ const cartController = require("../controllers/cartController");
 const wishlistController = require("../controllers/wishlistController");
 const orderController = require("../controllers/orderController");
 const orderManagementController = require("../controllers/orderManagementController");
+const couponController = require("../controllers/couponController");
 const { isLoggedIn, isLoggedOut } = require("../middleware/authMiddleware");
 const upload = require("../middleware/upload");
 
@@ -39,9 +40,27 @@ router.post("/api/wishlist/toggle", isLoggedIn, wishlistController.toggleWishlis
 // Checkout & Order Routes
 router.get("/checkout", isLoggedIn, orderController.getCheckout);
 router.post("/api/checkout/place-order", isLoggedIn, orderController.placeOrder);
-router.get("/order-success", isLoggedIn, (req, res) => {
-    const orderId = req.query.id;
-    res.render("user/order-success", { title: "Order Success", orderId });
+router.post("/api/checkout/apply-coupon", isLoggedIn, couponController.applyCoupon);
+router.post("/api/checkout/remove-coupon", isLoggedIn, couponController.removeCoupon);
+router.get("/coupons", isLoggedIn, couponController.renderUserCoupons);
+router.get("/order-success", isLoggedIn, async (req, res) => {
+    try {
+        const orderId = req.query.id;
+        const Order = require("../models/orderModel");
+        const order = await Order.findOne({ orderId, userId: req.user._id });
+        if (!order) {
+            return res.redirect("/");
+        }
+        res.render("user/order-success", { 
+            title: "Order Success - KAVOX", 
+            orderId: order.orderId,
+            paymentId: order.razorpayPaymentId || 'N/A',
+            amountPaid: order.pricing.total
+        });
+    } catch (error) {
+        console.error("Order success page error:", error);
+        res.redirect("/");
+    }
 });
 
 // Order Management Routes

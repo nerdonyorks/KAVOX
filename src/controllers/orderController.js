@@ -2,7 +2,9 @@ const Cart = require("../models/cartModel");
 const Order = require("../models/orderModel");
 const Product = require("../models/productModel");
 const User = require("../models/userModel");
+const couponService = require("../services/couponService");
 const { HTTP_STATUS, MESSAGES } = require("../utils/constants");
+const offerService = require("../services/offerService");
 
 const getDetailedTotals = (items) => {
     let totalActualPrice = 0;
@@ -17,21 +19,17 @@ const getDetailedTotals = (items) => {
         const basePriceTotal = basePrice * qty;
         totalActualPrice += basePriceTotal;
 
-        const pOffer = product.productOffer || 0;
-        const cOffer = (product.category && product.category.offer) ? product.category.offer : 0;
-
-        // Always apply whichever offer is greater
-        const bestOffer = Math.max(pOffer, cOffer);
-        const finalItemPrice = bestOffer > 0
-            ? Math.round(basePrice * (1 - bestOffer / 100))
-            : basePrice;
+        const pricing = offerService.getDiscountedPrice(product);
+        const finalItemPrice = pricing.finalPrice;
+        const bestOffer = pricing.discountPercentage;
+        const offerType = pricing.offerType;
 
         const savedOnItem = (basePrice - finalItemPrice) * qty;
 
         // Attribute saving to the winning offer type
-        if (pOffer >= cOffer && pOffer > 0) {
+        if (offerType === 'PRODUCT') {
             totalProductDiscount += savedOnItem;
-        } else if (cOffer > pOffer && cOffer > 0) {
+        } else if (offerType === 'CATEGORY') {
             totalCategoryDiscount += savedOnItem;
         }
 
@@ -45,6 +43,8 @@ const getDetailedTotals = (items) => {
         cartTotal
     };
 };
+
+exports.getDetailedTotals = getDetailedTotals;
 
 const generateOrderId = () => {
     return 'ODR-' + Math.floor(100000000 + Math.random() * 900000000).toString();
@@ -62,6 +62,12 @@ exports.getCheckout = async (req, res) => {
 
         if (!cart || cart.items.length === 0) {
             return res.redirect("/cart");
+        }
+
+        // Populate active offers first
+        if (cart.items.length > 0) {
+            const products = cart.items.map(item => item.productId).filter(Boolean);
+            await offerService.populateProductOffers(products);
         }
 
         // Validate items are still active and in stock
@@ -90,11 +96,33 @@ exports.getCheckout = async (req, res) => {
         const user = await User.findById(userId);
         const addresses = user.addresses || [];
 
+        // Check if coupon is applied in session and is still valid
+        let couponDiscount = 0;
+        let appliedCouponCode = "";
+        if (req.session.couponCode) {
+            const validation = await couponService.validateCoupon(req.session.couponCode, summary.cartTotal, userId);
+            if (validation.isValid) {
+                couponDiscount = validation.discountAmount;
+                appliedCouponCode = validation.coupon.code;
+            } else {
+                delete req.session.couponCode;
+            }
+        }
+
+        const availableCoupons = await couponService.getAvailableCoupons();
+
+        const walletService = require("../services/walletService");
+        const wallet = await walletService.getWallet(userId);
+
         res.render("user/checkout", {
             title: "Checkout - KAVOX",
             cart,
             summary,
-            addresses
+            addresses,
+            appliedCouponCode,
+            couponDiscount,
+            availableCoupons,
+            wallet
         });
     } catch (error) {
         console.error("Get Checkout Error:", error);
@@ -107,14 +135,15 @@ exports.getCheckout = async (req, res) => {
 exports.placeOrder = async (req, res) => {
     try {
         const userId = req.user._id;
-        const { addressId, paymentMethod } = req.body;
+        const { addressId, paymentMethod, useWallet } = req.body;
 
         if (!addressId || !paymentMethod) {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Address and Payment Method are required." });
         }
 
-        if (paymentMethod !== 'COD') {
-            return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Only Cash on Delivery is supported currently." });
+        const validMethods = ['COD', 'WALLET'];
+        if (!validMethods.includes(paymentMethod)) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Invalid payment method for synchronous checkout." });
         }
 
         const user = await User.findById(userId);
@@ -132,7 +161,13 @@ exports.placeOrder = async (req, res) => {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Cart is empty." });
         }
 
-        // Verify stock one last time and deduct
+        // Populate active offers first
+        if (cart.items.length > 0) {
+            const products = cart.items.map(item => item.productId).filter(Boolean);
+            await offerService.populateProductOffers(products);
+        }
+
+        // Verify stock one last time
         for (let item of cart.items) {
             const product = item.productId;
             if (!product || product.isDeleted || !product.isActive || !product.category || !product.category.isActive || product.category.isDeleted) {
@@ -148,25 +183,72 @@ exports.placeOrder = async (req, res) => {
             if (variant.quantity < item.quantity) {
                 return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: `Insufficient stock for ${product.name} (${item.size}/${item.color}). Only ${variant.quantity} available.` });
             }
-
-            // Deduct stock
-            variant.quantity -= item.quantity;
-            await product.save();
         }
 
         const summary = getDetailedTotals(cart.items);
 
-        // Create Order items array — recalculate final price with best offer
+        let couponDiscount = 0;
+        let appliedCouponCode = "";
+        if (req.session.couponCode) {
+            const validation = await couponService.validateCoupon(req.session.couponCode, summary.cartTotal, userId);
+            if (validation.isValid) {
+                couponDiscount = validation.discountAmount;
+                appliedCouponCode = validation.coupon.code;
+            } else {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: validation.message });
+            }
+        }
+
+        const expectedTotal = summary.cartTotal - couponDiscount;
+
+        // Wallet calculations
+        let walletAmountUsed = 0;
+        let remainingAmountPaid = expectedTotal;
+        let finalPaymentStatus = 'Pending';
+
+        const walletService = require("../services/walletService");
+        
+        if (useWallet) {
+            const wallet = await walletService.getWallet(userId);
+            if (wallet.balance > 0) {
+                if (paymentMethod === 'WALLET') {
+                    if (wallet.balance < expectedTotal) {
+                        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Insufficient wallet balance for full payment." });
+                    }
+                    walletAmountUsed = expectedTotal;
+                    remainingAmountPaid = 0;
+                    finalPaymentStatus = 'Completed';
+                } else if (paymentMethod === 'COD') {
+                    walletAmountUsed = Math.min(wallet.balance, expectedTotal);
+                    remainingAmountPaid = expectedTotal - walletAmountUsed;
+                    if (remainingAmountPaid === 0) {
+                        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Wallet fully covers this order. Please select Wallet payment method." });
+                    }
+                }
+            } else {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Wallet balance is zero." });
+            }
+        } else {
+            if (paymentMethod === 'WALLET') {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "You must enable wallet usage to pay via wallet." });
+            }
+        }
+
+        // Deduct stock
+        for (let item of cart.items) {
+            const product = item.productId;
+            const variant = product.variants.find(v => v.size === item.size && v.color === item.color);
+            variant.quantity -= item.quantity;
+            await product.save();
+        }
+
+        // Create Order items array
         const orderItems = cart.items.map(item => {
             const product = item.productId;
             const variant = product.variants.find(v => v.size === item.size && v.color === item.color);
 
-            const pOffer = product.productOffer || 0;
-            const cOffer = (product.category && product.category.offer) ? product.category.offer : 0;
-            const bestOffer = Math.max(pOffer, cOffer);
-            const finalPrice = bestOffer > 0
-                ? Math.round(product.price * (1 - bestOffer / 100))
-                : product.price;
+            const pricing = offerService.getDiscountedPrice(product);
+            const finalPrice = pricing.finalPrice;
 
             return {
                 productId: product._id,
@@ -180,9 +262,27 @@ exports.placeOrder = async (req, res) => {
             };
         });
 
+        const newOrderId = 'ODR-' + Math.floor(100000000 + Math.random() * 900000000).toString();
+
+        // Perform Wallet deduction if applicable
+        if (walletAmountUsed > 0) {
+            try {
+                await walletService.debitWallet(userId, walletAmountUsed, 'WALLET_PAYMENT', newOrderId);
+            } catch (walletError) {
+                // Restore stock in case wallet debit fails
+                for (let item of cart.items) {
+                    const product = item.productId;
+                    const variant = product.variants.find(v => v.size === item.size && v.color === item.color);
+                    variant.quantity += item.quantity;
+                    await product.save();
+                }
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: walletError.message || "Failed to process wallet payment." });
+            }
+        }
+
         const newOrder = new Order({
             userId,
-            orderId: generateOrderId(),
+            orderId: newOrderId,
             shippingAddress: {
                 firstName: address.firstName,
                 lastName: address.lastName,
@@ -194,17 +294,24 @@ exports.placeOrder = async (req, res) => {
             },
             items: orderItems,
             pricing: {
-                subtotal: summary.totalActualPrice, // the total base price
-                discount: summary.totalProductDiscount + summary.totalCategoryDiscount,
+                subtotal: summary.totalActualPrice,
+                discount: summary.totalProductDiscount + summary.totalCategoryDiscount + couponDiscount,
                 shipping: 0,
-                total: summary.cartTotal
+                total: expectedTotal
             },
-            paymentMethod: 'COD',
-            paymentStatus: 'Pending',
-            orderStatus: 'Processing'
+            couponCode: appliedCouponCode || undefined,
+            couponDiscount: couponDiscount,
+            paymentMethod: paymentMethod,
+            paymentStatus: finalPaymentStatus,
+            orderStatus: 'Processing',
+            walletAmountUsed: walletAmountUsed,
+            remainingAmountPaid: remainingAmountPaid
         });
 
         await newOrder.save();
+
+        // Clear coupon code from session
+        delete req.session.couponCode;
 
         // Clear Cart
         cart.items = [];

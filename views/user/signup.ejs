@@ -269,7 +269,7 @@
             <div class="form-group">
               <label class="form-label">Referral Code</label>
               <input type="text" name="referralCode" id="referralCode" class="form-input" placeholder="Optional"
-                value="<%= locals.referralCode || '' %>">
+                value="<%= locals.referralCode || '' %>" <%= locals.referralCode ? 'readonly' : '' %>>
               <div class="error-msg" id="referralCodeError"></div>
             </div>
 

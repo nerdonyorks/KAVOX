@@ -89,6 +89,9 @@ exports.renderHome = async (req, res) => {
       .limit(12)
       .lean();
 
+    const offerService = require("../services/offerService");
+    await offerService.populateProductOffers(products);
+
     // Get user's wishlist product IDs if logged in
     let wishlistProductIds = [];
     if (req.user) {
@@ -114,7 +117,10 @@ exports.renderHome = async (req, res) => {
   }
 };
 
-exports.renderSignup = (req, res) => res.render("user/signup");
+exports.renderSignup = (req, res) => {
+  const referralCode = req.query.ref || req.query.referralCode || "";
+  res.render("user/signup", { referralCode });
+};
 
 exports.renderLogin = (req, res) => {
   const { error } = req.query;

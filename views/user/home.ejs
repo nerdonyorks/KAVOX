@@ -165,7 +165,9 @@
           }
 
           productGrid.innerHTML = products.map(product => {
-            const discount = product.productOffer || 0;
+            const pOffer = product.productOffer || 0;
+            const cOffer = (product.category && typeof product.category === 'object' && product.category.offer) ? product.category.offer : (product.categoryOffer || 0);
+            const discount = Math.max(pOffer, cOffer);
             const finalPrice = Math.round(product.price * (1 - discount / 100));
             const imgSrc = product.images && product.images.length > 0
               ? (product.images.find(img => img.isPrimary)?.url || product.images[0].url)

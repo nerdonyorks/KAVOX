@@ -239,7 +239,9 @@ exports.downloadInvoice = async (req, res) => {
             return res.status(HTTP_STATUS.NOT_FOUND).send("Order not found.");
         }
 
-        if (order.orderStatus !== 'Delivered') {
+        const invoiceAllowedStatuses = ['Delivered', 'Return Requested', 'Return Approved', 'Return Rejected', 'Returned'];
+        const hasDeliveredItem = order.items.some(i => invoiceAllowedStatuses.includes(i.itemStatus));
+        if (!invoiceAllowedStatuses.includes(order.orderStatus) && !hasDeliveredItem) {
             return res.status(HTTP_STATUS.BAD_REQUEST).send("Invoice is only available for delivered orders.");
         }
 
@@ -261,6 +263,9 @@ exports.downloadInvoice = async (req, res) => {
         const BORDER = '#eeeeee';
         const WHITE = '#ffffff';
         const GRAY = '#888888';
+        const AMBER = '#f59e0b';
+        const RED = '#ef4444';
+        const PURPLE = '#8b5cf6';
 
         // ── Header bar ───────────────────────────────────────────────
         doc.rect(0, 0, PAGE_W, 90).fill(BLACK);
@@ -323,8 +328,19 @@ exports.downloadInvoice = async (req, res) => {
 
         // Table header — black bar with white labels
         doc.rect(MARGIN, y, CWIDTH, 28).fill(BLACK);
+        // Check if any item has a return-related status
+        const hasReturnItems = order.items.some(i => ['Return Requested', 'Return Approved', 'Return Rejected', 'Returned'].includes(i.itemStatus));
+
         doc.fillColor(WHITE).font('Helvetica-Bold').fontSize(9);
-        const C = {
+        const C = hasReturnItems ? {
+            item: MARGIN + 12,
+            size: MARGIN + 170,
+            color: MARGIN + 225,
+            qty: MARGIN + 278,
+            price: MARGIN + 310,
+            total: MARGIN + 365,
+            status: MARGIN + 420,
+        } : {
             item: MARGIN + 12,
             size: MARGIN + 220,
             color: MARGIN + 288,
@@ -338,8 +354,33 @@ exports.downloadInvoice = async (req, res) => {
         doc.text('QTY', C.qty, y + 10);
         doc.text('PRICE', C.price, y + 10);
         doc.text('TOTAL', C.total, y + 10);
+        if (hasReturnItems) {
+            doc.text('STATUS', C.status, y + 10);
+        }
 
         y += 28;
+
+        // Helper to get status display color
+        const getStatusColor = (status) => {
+            switch (status) {
+                case 'Return Approved': return GREEN;
+                case 'Return Rejected': return RED;
+                case 'Return Requested': return AMBER;
+                case 'Returned': return PURPLE;
+                default: return GRAY;
+            }
+        };
+
+        const getStatusLabel = (status) => {
+            switch (status) {
+                case 'Return Approved': return 'APPROVED';
+                case 'Return Rejected': return 'REJECTED';
+                case 'Return Requested': return 'REQUESTED';
+                case 'Returned': return 'RETURNED';
+                case 'Delivered': return 'DELIVERED';
+                default: return status.toUpperCase();
+            }
+        };
 
         order.items
             .filter(i => i.itemStatus !== 'Cancelled')
@@ -348,7 +389,7 @@ exports.downloadInvoice = async (req, res) => {
                 const rowBg = idx % 2 === 0 ? WHITE : LIGHT_BG;
                 doc.rect(MARGIN, y, CWIDTH, rowH).fill(rowBg).stroke(BORDER);
                 doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(9)
-                    .text(item.productName.substring(0, 26), C.item, y + 11, { width: 200 });
+                    .text(item.productName.substring(0, hasReturnItems ? 20 : 26), C.item, y + 11, { width: hasReturnItems ? 150 : 200 });
                 doc.fillColor(GRAY).font('Helvetica').fontSize(9)
                     .text(item.size, C.size, y + 11)
                     .text(item.color, C.color, y + 11)
@@ -356,8 +397,36 @@ exports.downloadInvoice = async (req, res) => {
                     .text(`Rs.${item.price}`, C.price, y + 11);
                 doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(9)
                     .text(`Rs.${item.totalPrice}`, C.total, y + 11);
+
+                // Show return status column if any item has return status
+                if (hasReturnItems) {
+                    const statusColor = getStatusColor(item.itemStatus);
+                    doc.fillColor(statusColor).font('Helvetica-Bold').fontSize(8)
+                        .text(getStatusLabel(item.itemStatus), C.status, y + 11);
+                }
+
                 y += rowH;
             });
+
+        // ── Return Notice (if applicable) ──────────────────────────────
+        if (hasReturnItems) {
+            y += 10;
+            const returnApproved = order.items.filter(i => i.itemStatus === 'Return Approved' || i.itemStatus === 'Returned');
+            const returnRejected = order.items.filter(i => i.itemStatus === 'Return Rejected');
+            const returnRequested = order.items.filter(i => i.itemStatus === 'Return Requested');
+
+            doc.rect(MARGIN, y, CWIDTH, 28).fill('#fefce8').stroke('#fde68a');
+            let noticeText = 'RETURN STATUS: ';
+            const parts = [];
+            if (returnApproved.length > 0) parts.push(`${returnApproved.length} item(s) approved`);
+            if (returnRejected.length > 0) parts.push(`${returnRejected.length} item(s) rejected`);
+            if (returnRequested.length > 0) parts.push(`${returnRequested.length} item(s) pending`);
+            noticeText += parts.join(' | ');
+
+            doc.fillColor('#92400e').font('Helvetica-Bold').fontSize(8)
+                .text(noticeText, MARGIN + 12, y + 10, { width: CWIDTH - 24 });
+            y += 28;
+        }
 
         // ── Totals ─────────────────────────────────────────────────────
         y += 15;
