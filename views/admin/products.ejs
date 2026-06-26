@@ -644,6 +644,7 @@
         const vCards = document.querySelectorAll('.variant-card-modern');
         const variants = [];
         const formData = new FormData();
+        const seenVariants = new Set();
 
         vCards.forEach(card => {
           const vId = card.id;
@@ -673,7 +674,18 @@
           }
 
           if (vData.size && vData.color && validImgCount === 3) {
-            variants.push(vData);
+            const key = `${vData.size.toUpperCase()}_${vData.color.toUpperCase()}`;
+            if (seenVariants.has(key)) {
+              const errorDiv = document.getElementById(`error_${vId}`);
+              if (errorDiv) {
+                errorDiv.textContent = `This variant (Size: ${vData.size}, Color: ${vData.color}) already exists.`;
+                errorDiv.style.display = 'block';
+              }
+              isValid = false;
+            } else {
+              seenVariants.add(key);
+              variants.push(vData);
+            }
           } else {
             let errorMsg = "";
             if (!vData.size) errorMsg = `Please select a size for this variant.`;

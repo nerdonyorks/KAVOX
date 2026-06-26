@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title %></title>
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/style.css?v=<%= Date.now() %>">
   <script src="/js/notifications.js"></script>
   <style>
     .offer-actions {
@@ -67,6 +67,63 @@
         grid-template-columns: 1fr;
       }
     }
+
+    .offers-table {
+      table-layout: fixed;
+      width: 100%;
+    }
+
+    .offers-table th:nth-child(1),
+    .offers-table td:nth-child(1) {
+      width: 18% !important; /* Offer Name */
+      font-family: inherit !important;
+      color: inherit !important;
+      white-space: normal !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
+    }
+
+    .offers-table th:nth-child(2),
+    .offers-table td:nth-child(2) {
+      width: 25% !important; /* Product Name */
+    }
+
+    .offers-table th:nth-child(3),
+    .offers-table td:nth-child(3) {
+      width: 11% !important; /* Base Price */
+    }
+
+    .offers-table th:nth-child(4),
+    .offers-table td:nth-child(4) {
+      width: 11% !important; /* Discount */
+    }
+
+    .offers-table th:nth-child(5),
+    .offers-table td:nth-child(5) {
+      width: 11% !important; /* Start Date */
+    }
+
+    .offers-table th:nth-child(6),
+    .offers-table td:nth-child(6) {
+      width: 12% !important; /* End Date */
+    }
+
+    .offers-table th:nth-child(7),
+    .offers-table td:nth-child(7) {
+      width: 10% !important; /* Status */
+      text-align: center !important;
+    }
+
+    .offers-table th:nth-child(8),
+    .offers-table td:nth-child(8) {
+      width: 105px !important; /* Action */
+      text-align: center !important;
+    }
+
+    .offers-table td {
+      white-space: normal !important;
+      word-wrap: break-word !important;
+    }
   </style>
 </head>
 
@@ -100,7 +157,7 @@
       </div>
 
       <div class="table-wrapper">
-        <table class="users-table">
+        <table class="users-table offers-table">
           <thead>
             <tr>
               <th>OFFER NAME</th>

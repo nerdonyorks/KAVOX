@@ -6,7 +6,7 @@ const { HTTP_STATUS } = require("../utils/constants");
 const { getCalculatedOrderStatus, updateOrderPricingAndRefund } = require("../utils/orderHelpers");
 
 exports.getUserOrders = async (req, res) => {
-  
+
     const isAjax = req.accepts('json') && !req.accepts('html');
 
     if (!isAjax) {
@@ -39,6 +39,7 @@ exports.getUserOrders = async (req, res) => {
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
+            .populate('items.productId', 'images variants')
             .lean();
 
         res.json({ success: true, orders, currentPage: page, totalPages });
@@ -162,11 +163,16 @@ exports.cancelOrderItem = async (req, res) => {
         }
 
         // Update pricing and refund
-        await updateOrderPricingAndRefund(order, item, false);
+        const { couponRemovedMessage } = await updateOrderPricingAndRefund(order, item, false);
 
         await order.save();
 
-        res.status(HTTP_STATUS.OK).json({ success: true, message: "Item cancelled successfully." });
+        let responseMessage = "Item cancelled successfully.";
+        if (couponRemovedMessage) {
+            responseMessage += ` ${couponRemovedMessage}`;
+        }
+
+        res.status(HTTP_STATUS.OK).json({ success: true, message: responseMessage });
     } catch (error) {
         console.error("Cancel Order Item Error:", error);
         res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: "Failed to cancel item." });

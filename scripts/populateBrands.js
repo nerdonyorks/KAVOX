@@ -1,12 +1,4 @@
-/**
- * Brand Population Migration Script
- * ─────────────────────────────────
- * Populates the brand field of all existing products by parsing the first word
- * of their name (e.g. "Nike" from "Nike P 6000 Gold").
- *
- * Usage:
- *   node scripts/populateBrands.js
- */
+
 
 const mongoose = require("mongoose");
 const path = require("path");
@@ -27,10 +19,10 @@ async function populateBrands() {
   for (const product of products) {
     // Determine the brand: extract first word from name
     const firstWord = product.name.trim().split(" ")[0];
-    
+
     // Capitalize first word (e.g., "shoes" -> "Shoes", "nike" -> "Nike")
     let brandVal = firstWord.charAt(0).toUpperCase() + firstWord.slice(1).toLowerCase();
-    
+
     // If it's a generic descriptor like "shoes" or "boot", let's fallback to "KAVOX" or keep it capitalized
     if (["Shoes", "Boot", "Boots", "Slipper", "Slippers", "Product"].includes(brandVal)) {
       brandVal = "KAVOX";

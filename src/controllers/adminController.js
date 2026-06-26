@@ -93,6 +93,11 @@ exports.renderDashboard = async (req, res) => {
         const totalOrders = initialSummary.totalOrders;
         const totalCustomers = initialSummary.registeredCustomers;
         const totalProducts = await Product.countDocuments(); // Active + Inactive
+        const totalReviews = initialSummary.totalReviews || 0;
+        const averageProductRating = initialSummary.averageProductRating || 0;
+
+        const topRatedProducts = await dashboardService.getTopRatedProducts(5);
+        const lowestRatedProducts = await dashboardService.getLowestRatedProducts(5);
 
         // Low Stock Products — only active, non-deleted products with active variants under 10 stock
         const lowStockProducts = await Product.find({
@@ -141,14 +146,19 @@ exports.renderDashboard = async (req, res) => {
             totalCustomers,
             totalProducts,
             lowStockItems,
-            orders: recentOrders
+            orders: recentOrders,
+            totalReviews,
+            averageProductRating,
+            topRatedProducts,
+            lowestRatedProducts
         });
     } catch (error) {
         console.error("Dashboard Error:", error);
         res.render("admin/dashboard", {
             title: "Admin Dashboard - KAVOX",
             activePage: "dashboard",
-            totalRevenue: 0, totalOrders: 0, totalCustomers: 0, totalProducts: 0, lowStockItems: [], orders: []
+            totalRevenue: 0, totalOrders: 0, totalCustomers: 0, totalProducts: 0, lowStockItems: [], orders: [],
+            totalReviews: 0, averageProductRating: 0, topRatedProducts: [], lowestRatedProducts: []
         });
     }
 };
@@ -240,6 +250,42 @@ exports.getTopBrandsAPI = async (req, res) => {
   } catch (error) {
     console.error("Top Brands API Error:", error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: "Failed to load top brands." });
+  }
+};
+
+/**
+ * GET /admin/dashboard/top-toprated
+ */
+exports.getTopRatedProductsAPI = async (req, res) => {
+  try {
+    const { filter = "monthly", startDate, endDate } = req.query;
+    const validation = validateDates(filter, startDate, endDate);
+    if (!validation.isValid) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: validation.message });
+    }
+    const data = await dashboardService.getTopRatedProducts(10, filter, startDate, endDate);
+    res.status(HTTP_STATUS.OK).json({ success: true, data });
+  } catch (error) {
+    console.error("Top Rated Products API Error:", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: "Failed to load top rated products." });
+  }
+};
+
+/**
+ * GET /admin/dashboard/top-lowestrated
+ */
+exports.getLowestRatedProductsAPI = async (req, res) => {
+  try {
+    const { filter = "monthly", startDate, endDate } = req.query;
+    const validation = validateDates(filter, startDate, endDate);
+    if (!validation.isValid) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: validation.message });
+    }
+    const data = await dashboardService.getLowestRatedProducts(10, filter, startDate, endDate);
+    res.status(HTTP_STATUS.OK).json({ success: true, data });
+  } catch (error) {
+    console.error("Lowest Rated Products API Error:", error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: "Failed to load lowest rated products." });
   }
 };
 

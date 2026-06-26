@@ -1,10 +1,3 @@
-/**
- * Ledger Book Service
- * ───────────────────
- * Aggregates all financial transactions (Sales, Wallet Payments, Offer Deductions,
- * Coupon Deductions, and Wallet Refunds), chronologically ordering and balancing them.
- */
-
 const Order = require("../models/orderModel");
 const WalletTransaction = require("../models/walletTransaction.js");
 const { getDateRange } = require("./reportService");

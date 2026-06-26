@@ -1,13 +1,3 @@
-/**
- * Database Migration Script
- * ──────────────────────────
- * Migrates legacy inline offer fields (productOffer on Product, offer on Category)
- * into dedicated, structured ProductOffer and CategoryOffer collections.
- *
- * Usage:
- *   node scripts/migrateOffers.js
- */
-
 const mongoose = require("mongoose");
 const path = require("path");
 require("dotenv").config({ path: path.join(__dirname, "../.env") });
@@ -36,7 +26,7 @@ async function migrate() {
     const existingOffer = await ProductOffer.findOne({ productId: product._id });
     if (!existingOffer) {
       const newOffer = new ProductOffer({
-        name: `Migrated Offer for ${product.name}`,
+        name: product.name,
         productId: product._id,
         discountPercentage: product.productOffer,
         startDate: currentDate,
@@ -59,7 +49,7 @@ async function migrate() {
     const existingOffer = await CategoryOffer.findOne({ categoryId: category._id });
     if (!existingOffer) {
       const newOffer = new CategoryOffer({
-        name: `Migrated Offer for ${category.name}`,
+        name: category.name,
         categoryId: category._id,
         discountPercentage: category.offer,
         startDate: currentDate,

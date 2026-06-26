@@ -71,6 +71,67 @@
       color: #64748b;
       line-height: 1.5;
     }
+
+    /* Custom Radio styling for Payment Options */
+    .user-layout .payment-option {
+      position: relative;
+      display: flex;
+      align-items: center;
+      border: 1px solid #cbd5e1;
+      padding: 16px 20px 16px 48px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      background: #fff;
+    }
+
+    .user-layout .payment-option:hover:not(.disabled) {
+      border-color: #e91e63;
+      background: #fff7fb;
+    }
+
+    .user-layout .payment-option.active {
+      border-color: #e91e63 !important;
+      background: #fff7fb !important;
+      box-shadow: 0 0 0 1px #e91e63;
+    }
+
+    .user-layout .payment-option::before {
+      content: "";
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      border: 2px solid #cbd5e1;
+      border-radius: 50%;
+      background: #fff;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .user-layout .payment-option.active::before {
+      border-color: #e91e63;
+      background: #e91e63;
+      box-shadow: inset 0 0 0 3px #fff;
+    }
+
+    /* Coupon card applied states */
+    .available-coupon-card.applied {
+      display: none !important;
+    }
+
+    .applied-badge {
+      background: #22c55e;
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 800;
+      margin-left: 8px;
+      vertical-align: middle;
+      display: inline-block;
+    }
   </style>
 </head>
 <body class="user-layout">
@@ -119,15 +180,18 @@
           <% } %>
         </div>
         
-        <% if (locals.wallet && wallet.balance > 0) { %>
+        <% if (locals.wallet) { %>
           <div class="wallet-application-box" style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 16px; margin-bottom: 24px; margin-top: 16px;">
-            <label style="display: flex; align-items: center; gap: 10px; font-weight: 700; cursor: pointer; color: #1e293b;">
-              <input type="checkbox" id="useWalletCheckbox" data-balance="<%= wallet.balance %>" style="width: 18px; height: 18px; accent-color: #e91e63;">
-              <span>Apply Wallet Balance (Available: ₹<%= wallet.balance %>)</span>
+            <div style="font-weight: 700; font-size: 14px; color: #0f172a; margin-bottom: 8px;">Wallet Balance</div>
+            <div style="font-size: 13px; color: #475569; margin-bottom: 12px;">Available Balance: <strong>₹<%= wallet.balance %></strong></div>
+            <label style="display: flex; align-items: center; gap: 10px; font-weight: 600; cursor: <%= wallet.balance > 0 ? 'pointer' : 'not-allowed' %>; color: #1e293b; opacity: <%= wallet.balance <= 0 ? '0.5' : '1' %>;">
+              <input type="checkbox" id="useWalletCheckbox" data-balance="<%= wallet.balance %>" <%= wallet.balance <= 0 ? 'disabled' : '' %> style="width: 18px; height: 18px; accent-color: #e91e63;">
+              <span>Apply Wallet Balance</span>
             </label>
             <div id="walletAppliedInfo" style="display: none; margin-top: 8px; font-size: 13px; color: #059669; font-weight: 600;">
               Applied ₹<span id="walletAppliedAmount">0</span> from your wallet.
             </div>
+            <div id="walletStatusMessage" style="display: none; margin-top: 8px; font-size: 13px; font-weight: 600;"></div>
           </div>
         <% } %>
 
@@ -177,18 +241,22 @@
             <button type="button" class="btn-apply-coupon">APPLY</button>
           </div>
 
-          <div class="available-coupons" id="availableCouponsList" style="<%= appliedCouponCode ? 'display: none;' : '' %>">
+          <div class="available-coupons" id="availableCouponsList">
             <% if (typeof availableCoupons !== 'undefined' && availableCoupons.length > 0) { %>
               <% availableCoupons.forEach(coupon => {
                 const isEligible = summary.cartTotal >= coupon.minPurchaseAmount;
+                const isApplied = appliedCouponCode && appliedCouponCode === coupon.code;
                 const expiryLabel = new Date(coupon.expiryDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
               %>
                 <button type="button"
-                  class="available-coupon-card <%= isEligible ? '' : 'disabled' %>"
+                  class="available-coupon-card <%= isEligible ? '' : 'disabled' %> <%= isApplied ? 'applied' : '' %>"
                   data-code="<%= coupon.code %>"
                   data-eligible="<%= isEligible %>">
                   <div class="available-coupon-top">
-                    <span class="available-coupon-code"><%= coupon.code %></span>
+                    <span class="available-coupon-code">
+                      <%= coupon.code %>
+                      <span class="applied-badge" style="<%= isApplied ? '' : 'display: none;' %>">APPLIED</span>
+                    </span>
                     <span class="available-coupon-save">SAVE <%= coupon.discountType === 'fixed' ? '₹' + coupon.discountValue : coupon.discountValue + '%' %></span>
                   </div>
                   <div class="available-coupon-meta">
@@ -222,28 +290,54 @@
         <div class="checkout-summary-box">
           <h3 class="summary-box-title">ORDER DETAILS</h3>
           
+          <% if (locals.hasUnavailable) { %>
+            <div class="validation-banner" id="checkoutValidationBanner" style="background: #fff8f8; border-left: 4px solid #ff4444; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px;">
+              <% checkoutValidationErrors.forEach(err => { %>
+                <div class="error-item" style="color: #d32f2f; font-size: 13px; margin-bottom: 5px; font-weight: 600;"><i class="fa-solid fa-triangle-exclamation"></i> <%= err %></div>
+              <% }) %>
+            </div>
+          <% } else { %>
+            <div class="validation-banner" id="checkoutValidationBanner" style="background: #fff8f8; border-left: 4px solid #ff4444; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: none;">
+            </div>
+          <% } %>
+
           <div class="checkout-items-list">
             <% cart.items.forEach(item => { 
                 let imgSrc = '/images/placeholder.jpg';
                 if (item.productId && item.productId.images && item.productId.images.length > 0) {
                     imgSrc = item.productId.images.find(img => img.isPrimary)?.url || item.productId.images[0].url;
                 }
-                const basePrice = item.productId.price;
+                const isUnlisted = item.isUnlisted;
+                const isUnavailable = item.isUnavailable;
+                const productName = item.productId ? item.productId.name : 'Unknown Product';
+                const basePrice = item.productId ? item.productId.price : item.price;
             %>
-              <div class="checkout-item">
-                <div class="checkout-item-img">
-                  <img src="<%= imgSrc %>" alt="<%= item.productId.name %>">
+              <div class="checkout-item <%= isUnavailable ? 'unavailable-checkout-item' : '' %>" id="checkout-item-<%= item._id %>" style="<%= isUnavailable ? 'background-color: #f8fafc; border-color: #e2e8f0; padding: 12px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 10px;' : '' %>">
+                <div class="checkout-item-img" style="<%= isUnavailable ? 'opacity: 0.6;' : '' %>">
+                  <img src="<%= imgSrc %>" alt="<%= productName %>">
                 </div>
-                <div class="checkout-item-details">
-                  <div class="checkout-item-name"><%= item.productId.name %></div>
+                <div class="checkout-item-details" style="<%= isUnavailable ? 'opacity: 0.8;' : '' %>">
+                  <div class="checkout-item-name">
+                    <%= productName %>
+                    <% if (isUnavailable) { %>
+                      <span class="badge text-danger" style="display: block; font-size: 11px; font-weight: 800; margin-top: 4px; color: #b91c1c; background-color: #fee2e2; padding: 2px 6px; border-radius: 4px; width: fit-content;">
+                        <%= isUnlisted ? 'PRODUCT NO LONGER AVAILABLE' : 'UNAVAILABLE (OUT OF STOCK / VARIANT ISSUE)' %>
+                      </span>
+                    <% } %>
+                  </div>
                   <div class="checkout-item-meta">Size: <%= item.size %></div>
                   <div class="checkout-item-meta">Quantity: <%= item.quantity %></div>
                   <div class="checkout-item-price">
-                    <% if (item.price < basePrice) { %>
-                      <span class="strike-price">₹<%= basePrice %></span>
+                    <% if (!isUnavailable) { %>
+                      <% if (item.price < basePrice) { %>
+                        <span class="strike-price">₹<%= basePrice %></span>
+                      <% } %>
+                      <span class="final-price">₹<%= item.price %></span>
                     <% } %>
-                    <span class="final-price">₹<%= item.price %></span>
                   </div>
+                  <% if (isUnavailable) { %>
+                    <button type="button" class="btn-checkout-remove-item" onclick="removeCheckoutItem('<%= item._id %>')" style="margin-top: 8px; padding: 4px 10px; font-size: 11px; color: #b91c1c; background: #fee2e2; border: 1.5px solid #fecaca; border-radius: 4px; font-weight: 700; cursor: pointer; display: inline-block; transition: background-color 0.2s;">Remove Item</button>
+                  <% } %>
                 </div>
               </div>
             <% }) %>
@@ -254,11 +348,11 @@
           <div class="summary-calculations">
             <div class="summary-row">
               <span>Subtotal</span>
-              <span>₹<%= summary.totalActualPrice %></span>
+              <span id="checkoutSubtotal">₹<%= summary.totalActualPrice %></span>
             </div>
             <div class="summary-row">
               <span>Offer Discount</span>
-              <span class="discount-text">-₹<%= summary.totalProductDiscount + summary.totalCategoryDiscount %></span>
+              <span class="discount-text" id="checkoutOfferDiscount">-₹<%= summary.totalProductDiscount + summary.totalCategoryDiscount %></span>
             </div>
             <div class="summary-row" id="couponDiscountRow" style="<%= couponDiscount > 0 ? '' : 'display: none;' %>">
               <span>Coupon Discount</span>
@@ -269,12 +363,12 @@
               <span class="discount-text" id="walletDeductionValue">-₹0</span>
             </div>
             <div class="summary-row total-row">
-              <span>Total</span>
+              <span id="totalLabel">Total</span>
               <span id="finalTotalValue">₹<%= summary.cartTotal - couponDiscount %></span>
             </div>
           </div>
 
-          <button type="button" class="btn-proceed-payment" id="btnPlaceOrder">PROCEED TO PAYMENT</button>
+          <button type="button" class="btn-proceed-payment" id="btnPlaceOrder" <%= locals.hasUnavailable ? 'disabled' : '' %> style="<%= locals.hasUnavailable ? 'background-color: #cbd5e1; cursor: not-allowed;' : '' %>">PROCEED TO PAYMENT</button>
         </div>
 
       </div>
@@ -297,5 +391,16 @@
 
   <%- include('../partials/user-footer') %>
   <script src="/js/checkout.js"></script>
+  <% if (locals.couponRemovedMessage) { %>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        if (typeof KavoxNotify !== 'undefined' && KavoxNotify.toast) {
+          KavoxNotify.toast("<%= couponRemovedMessage %>", "warning");
+        } else {
+          console.warn("<%= couponRemovedMessage %>");
+        }
+      });
+    </script>
+  <% } %>
 </body>
 </html>

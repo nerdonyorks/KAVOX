@@ -1,10 +1,3 @@
-/**
- * Sales Report Service
- * ────────────────────
- * Handles data aggregation, analytics trend calculations, and proportional
- * offer discount split calculations using Mongoose databases.
- */
-
 const Order = require("../models/orderModel");
 const ProductOffer = require("../models/productOfferModel");
 const CategoryOffer = require("../models/categoryOfferModel");
@@ -64,7 +57,7 @@ async function getSalesReportData(filter, startDate, endDate) {
   const { start, end } = getDateRange(filter, startDate, endDate);
 
   const query = {
-    orderStatus: "Delivered",
+    orderStatus: { $in: ["Delivered", "Partially Delivered"] },
     createdAt: { $gte: start, $lte: end }
   };
 
@@ -99,13 +92,32 @@ async function getSalesReportData(filter, startDate, endDate) {
   let totalCategoryOfferDiscounts = 0;
   let totalNetRevenue = 0;
 
-  const processedOrders = orders.map(order => {
-    totalGrossSales += order.pricing.subtotal;
-    totalDiscounts += order.pricing.discount;
-    totalCouponDiscounts += order.couponDiscount || 0;
-    totalNetRevenue += order.pricing.total;
+  const processedOrders = [];
 
-    const offerDiscount = order.pricing.discount - (order.couponDiscount || 0);
+  for (const order of orders) {
+    // Filter out cancelled, returned, and return approved items
+    const activeItems = order.items.filter(item => 
+      item.itemStatus !== "Cancelled" && 
+      item.itemStatus !== "Returned" && 
+      item.itemStatus !== "Return Approved"
+    );
+
+    // Skip order if it contains no active/remaining items
+    if (activeItems.length === 0) {
+      continue;
+    }
+
+    const subtotal = order.pricing.subtotal;
+    const discount = order.pricing.discount;
+    const couponDiscount = order.couponDiscount || 0;
+    const total = order.pricing.total;
+
+    totalGrossSales += subtotal;
+    totalDiscounts += discount;
+    totalCouponDiscounts += couponDiscount;
+    totalNetRevenue += total;
+
+    const offerDiscount = Math.max(0, discount - couponDiscount);
     totalOfferDiscounts += offerDiscount;
 
     let prodOfferDiscount = 0;
@@ -115,11 +127,11 @@ async function getSalesReportData(filter, startDate, endDate) {
       let rawProdSum = 0;
       let rawCatSum = 0;
 
-      order.items.forEach(item => {
+      activeItems.forEach(item => {
         const date = order.createdAt;
 
         // Check product offers
-        const pOffers = productOffers.filter(o => 
+        const pOffers = productOffers.filter(o =>
           o.productId.toString() === item.productId?._id?.toString() &&
           o.isActive &&
           o.startDate <= date && o.endDate >= date
@@ -129,7 +141,7 @@ async function getSalesReportData(filter, startDate, endDate) {
         // Check category offers
         let cPct = 0;
         if (item.productId && item.productId.category) {
-          const cOffers = categoryOffers.filter(o => 
+          const cOffers = categoryOffers.filter(o =>
             o.categoryId.toString() === item.productId.category.toString() &&
             o.isActive &&
             o.startDate <= date && o.endDate >= date
@@ -162,20 +174,20 @@ async function getSalesReportData(filter, startDate, endDate) {
     totalProductOfferDiscounts += prodOfferDiscount;
     totalCategoryOfferDiscounts += catOfferDiscount;
 
-    return {
+    processedOrders.push({
       orderId: order.orderId,
       date: order.createdAt,
       customer: order.userId ? order.userId.name : (order.shippingAddress ? `${order.shippingAddress.firstName} ${order.shippingAddress.lastName || ''}`.trim() : "Guest"),
       paymentMethod: order.paymentMethod,
-      grossAmount: order.pricing.subtotal,
+      grossAmount: subtotal,
       offerDiscount: offerDiscount,
       prodOfferDiscount,
       catOfferDiscount,
-      couponDiscount: order.couponDiscount || 0,
-      finalAmount: order.pricing.total,
+      couponDiscount: couponDiscount,
+      finalAmount: total,
       status: order.orderStatus
-    };
-  });
+    });
+  }
 
   return {
     summary: {

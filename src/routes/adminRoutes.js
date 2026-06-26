@@ -6,6 +6,8 @@ const productController = require("../controllers/productController");
 const adminOrderController = require("../controllers/adminOrderController");
 const couponController = require("../controllers/couponController");
 const ledgerController = require("../controllers/ledgerController");
+const bannerController = require("../controllers/bannerController");
+const reviewController = require("../controllers/reviewController");
 const { isAdmin, setNoCache, isLoggedOut } = require("../middleware/authMiddleware");
 const upload = require("../middleware/upload");
 
@@ -61,11 +63,25 @@ router.get("/admin/dashboard/sales", isAdmin, setNoCache, adminController.getSal
 router.get("/admin/dashboard/top-products", isAdmin, setNoCache, adminController.getTopProductsAPI);
 router.get("/admin/dashboard/top-categories", isAdmin, setNoCache, adminController.getTopCategoriesAPI);
 router.get("/admin/dashboard/top-brands", isAdmin, setNoCache, adminController.getTopBrandsAPI);
+router.get("/admin/dashboard/top-toprated", isAdmin, setNoCache, adminController.getTopRatedProductsAPI);
+router.get("/admin/dashboard/top-lowestrated", isAdmin, setNoCache, adminController.getLowestRatedProductsAPI);
 
 // Ledger Book Views & APIs
 router.get("/admin/ledger", isAdmin, setNoCache, ledgerController.renderLedger);
 router.get("/admin/ledger/data", isAdmin, setNoCache, ledgerController.getLedgerDataAPI);
 router.get("/admin/ledger/download/pdf", isAdmin, setNoCache, ledgerController.downloadLedgerPdf);
 router.get("/admin/ledger/download/excel", isAdmin, setNoCache, ledgerController.downloadLedgerExcel);
+
+// Banner Management Views & APIs
+router.get("/admin/banners", isAdmin, setNoCache, bannerController.renderBannersList);
+router.post("/api/admin/banners", isAdmin, upload.single("image"), bannerController.createBanner);
+router.put("/api/admin/banners/:id", isAdmin, upload.single("image"), bannerController.updateBanner);
+router.delete("/api/admin/banners/:id", isAdmin, bannerController.deleteBanner);
+router.patch("/api/admin/banners/:id/toggle", isAdmin, bannerController.toggleBannerStatus);
+
+// Admin Review Management
+router.get("/admin/reviews", isAdmin, setNoCache, reviewController.renderAdminReviews);
+router.patch("/api/admin/reviews/:id/status", isAdmin, reviewController.updateReviewStatus);
+router.delete("/api/admin/reviews/:id", isAdmin, reviewController.deleteReviewAdmin);
 
 module.exports = router;

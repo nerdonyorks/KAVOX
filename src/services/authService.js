@@ -15,7 +15,7 @@ exports.startSignup = async (userData) => {
     // Pattern Validators
     const nameRegex = /^[A-Za-z0-9]{3,}$/;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const refRegex = /^[A-Za-z0-9]*$/;
+    const refRegex = /^[A-Za-z0-9-]*$/;
     const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[\W]).{6,}$/;
 
     // Initial validations

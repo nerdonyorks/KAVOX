@@ -262,6 +262,9 @@ exports.login = async (req, res, next) => {
     const user = await User.findOne({ email });
 
     if (!user) {
+        if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: MESSAGES.INVALID_CREDENTIALS });
+        }
         return res.status(HTTP_STATUS.BAD_REQUEST).render("user/login", { error: MESSAGES.INVALID_CREDENTIALS, email });
     }
 

@@ -7,6 +7,7 @@ const wishlistController = require("../controllers/wishlistController");
 const orderController = require("../controllers/orderController");
 const orderManagementController = require("../controllers/orderManagementController");
 const couponController = require("../controllers/couponController");
+const reviewController = require("../controllers/reviewController");
 const { isLoggedIn, isLoggedOut } = require("../middleware/authMiddleware");
 const upload = require("../middleware/upload");
 
@@ -39,6 +40,7 @@ router.post("/api/wishlist/toggle", isLoggedIn, wishlistController.toggleWishlis
 
 // Checkout & Order Routes
 router.get("/checkout", isLoggedIn, orderController.getCheckout);
+router.get("/api/checkout/summary", isLoggedIn, orderController.getCheckoutSummary);
 router.post("/api/checkout/place-order", isLoggedIn, orderController.placeOrder);
 router.post("/api/checkout/apply-coupon", isLoggedIn, couponController.applyCoupon);
 router.post("/api/checkout/remove-coupon", isLoggedIn, couponController.removeCoupon);
@@ -92,5 +94,11 @@ router.delete("/api/users/addresses/:id", isLoggedIn, userController.deleteAddre
 router.patch("/api/users/addresses/:id/default", isLoggedIn, userController.setDefaultAddress);
 
 router.get("/api/products/:id/variants", productController.userGetProductVariants);
+
+// Product Review Routes
+router.post("/api/reviews", isLoggedIn, upload.array("images", 5), reviewController.createOrUpdateReview);
+router.put("/api/reviews/:id", isLoggedIn, upload.array("images", 5), reviewController.createOrUpdateReview);
+router.delete("/api/reviews/:id", isLoggedIn, reviewController.deleteReview);
+router.get("/api/reviews/product/:productId", reviewController.getProductReviews);
 
 module.exports = router;

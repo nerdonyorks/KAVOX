@@ -1,13 +1,7 @@
-/**
- * Dashboard Service
- * ─────────────────
- * Handles backend aggregations for admin dashboard analytics: key performance
- * indicators, sales trends, and top product/category/brand lists.
- */
-
 const Order = require("../models/orderModel");
 const User = require("../models/userModel");
 const Product = require("../models/productModel");
+const Review = require("../models/reviewModel");
 const { getDateRange } = require("./reportService");
 
 /**
@@ -53,6 +47,13 @@ async function getDashboardSummary(filter, startDate, endDate) {
   // Customers count is typically system-wide
   const registeredCustomers = await User.countDocuments({ role: "user" });
 
+  const totalReviews = await Review.countDocuments({ isDeleted: false });
+  const avgRatingAggregation = await Product.aggregate([
+    { $match: { isDeleted: false, totalReviews: { $gt: 0 } } },
+    { $group: { _id: null, avgRating: { $avg: "$averageRating" } } }
+  ]);
+  const averageProductRating = avgRatingAggregation[0] ? Math.round(avgRatingAggregation[0].avgRating * 10) / 10 : 0;
+
   return {
     totalRevenue: stats.grossRevenue, // Gross Sales
     totalOrders: stats.totalOrders,
@@ -61,7 +62,9 @@ async function getDashboardSummary(filter, startDate, endDate) {
     totalDiscountsGiven: stats.totalDiscounts,
     netRevenue: stats.netRevenue,
     offersDiscount: stats.totalDiscounts - stats.totalCoupons,
-    couponsDiscount: stats.totalCoupons
+    couponsDiscount: stats.totalCoupons,
+    totalReviews,
+    averageProductRating
   };
 }
 
@@ -295,10 +298,62 @@ async function getTopBrands(limit = 10, filter = "monthly", startDate = null, en
   }));
 }
 
+/**
+ * Get Top Rated Products
+ */
+async function getTopRatedProducts(limit = 5, filter = "monthly", startDate = null, endDate = null) {
+  const products = await Product.find({ isDeleted: false, totalReviews: { $gt: 0 } })
+    .sort({ averageRating: -1, totalReviews: -1 })
+    .limit(limit)
+    .lean();
+
+  return products.map(p => {
+    let imgUrl = "/images/placeholder.png";
+    if (p.images && p.images.length > 0) {
+      imgUrl = p.images[0].url || p.images[0];
+    }
+    return {
+      productId: p._id,
+      productName: p.name,
+      averageRating: p.averageRating,
+      totalReviews: p.totalReviews,
+      image: imgUrl,
+      brand: p.brand || "KAVOX"
+    };
+  });
+}
+
+/**
+ * Get Lowest Rated Products
+ */
+async function getLowestRatedProducts(limit = 5, filter = "monthly", startDate = null, endDate = null) {
+  const products = await Product.find({ isDeleted: false, totalReviews: { $gt: 0 } })
+    .sort({ averageRating: 1, totalReviews: -1 })
+    .limit(limit)
+    .lean();
+
+  return products.map(p => {
+    let imgUrl = "/images/placeholder.png";
+    if (p.images && p.images.length > 0) {
+      imgUrl = p.images[0].url || p.images[0];
+    }
+    return {
+      productId: p._id,
+      productName: p.name,
+      averageRating: p.averageRating,
+      totalReviews: p.totalReviews,
+      image: imgUrl,
+      brand: p.brand || "KAVOX"
+    };
+  });
+}
+
 module.exports = {
   getDashboardSummary,
   getSalesAnalytics,
   getTopProducts,
   getTopCategories,
-  getTopBrands
+  getTopBrands,
+  getTopRatedProducts,
+  getLowestRatedProducts
 };

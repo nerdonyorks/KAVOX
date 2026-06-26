@@ -393,6 +393,30 @@
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
           </div>
         </div>
+
+        <!-- Card 7: Total Reviews -->
+        <div class="card stat-card">
+          <div class="stat-info">
+            <div id="statTotalReviews" class="stat-value"><%= typeof totalReviews !== 'undefined' ? totalReviews : '0' %></div>
+            <div class="stat-label">Total Reviews</div>
+            <div class="stat-detail-subtext">Product reviews submitted</div>
+          </div>
+          <div class="stat-icon-box" style="color: #10b981; background: rgba(16, 185, 129, 0.05);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+        </div>
+
+        <!-- Card 8: Average Rating -->
+        <div class="card stat-card">
+          <div class="stat-info">
+            <div id="statAverageRating" class="stat-value"><%= typeof averageProductRating !== 'undefined' ? averageProductRating.toFixed(1) : '0.0' %> <span style="font-size: 14px; color: #888; font-weight: 500;">★</span></div>
+            <div class="stat-label">Average Rating</div>
+            <div class="stat-detail-subtext">Rating average across store</div>
+          </div>
+          <div class="stat-icon-box" style="color: #fbbf24; background: rgba(251, 191, 36, 0.05);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+        </div>
       </div>
 
       <!-- Interactive Trends & Top Seller Rankings Section -->
@@ -412,10 +436,12 @@
           <div class="chart-header">
             <div class="chart-title">Best Selling Rankings</div>
           </div>
-          <div class="rankings-tabs">
+          <div class="rankings-tabs" style="display: flex; flex-wrap: wrap; gap: 8px;">
             <div id="tabProducts" class="rankings-tab active" onclick="switchRankingTab('products')">Products</div>
             <div id="tabCategories" class="rankings-tab" onclick="switchRankingTab('categories')">Categories</div>
             <div id="tabBrands" class="rankings-tab" onclick="switchRankingTab('brands')">Brands</div>
+            <div id="tabTopRated" class="rankings-tab" onclick="switchRankingTab('toprated')">Top Rated</div>
+            <div id="tabLowestRated" class="rankings-tab" onclick="switchRankingTab('lowestrated')">Lowest Rated</div>
           </div>
           
           <div id="rankingListContainer" class="ranking-list">
@@ -615,7 +641,16 @@
 
     function switchRankingTab(tabName) {
       document.querySelectorAll('.rankings-tab').forEach(el => el.classList.remove('active'));
-      document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).classList.add('active');
+      
+      let tabId = 'tabProducts';
+      if (tabName === 'products') tabId = 'tabProducts';
+      else if (tabName === 'categories') tabId = 'tabCategories';
+      else if (tabName === 'brands') tabId = 'tabBrands';
+      else if (tabName === 'toprated') tabId = 'tabTopRated';
+      else if (tabName === 'lowestrated') tabId = 'tabLowestRated';
+
+      const tabEl = document.getElementById(tabId);
+      if (tabEl) tabEl.classList.add('active');
       activeRankingTab = tabName;
       loadRankingData();
     }
@@ -682,6 +717,23 @@
                   </div>
                 </div>
                 <div class="ranking-revenue">₹${item.revenueGenerated.toLocaleString()}</div>
+              </div>
+            `;
+          } else if (activeRankingTab === 'toprated' || activeRankingTab === 'lowestrated') {
+            const avg = typeof item.averageRating === 'number' ? item.averageRating.toFixed(1) : '0.0';
+            const count = item.totalReviews || 0;
+            container.innerHTML += `
+              <div class="ranking-item">
+                <div class="rank-badge ${rankClass}">${rank}</div>
+                <img src="${item.image}" class="ranking-image">
+                <div class="ranking-info">
+                  <div class="ranking-name" title="${item.productName}">${item.productName}</div>
+                  <div class="ranking-meta">
+                    <span>Rating: <strong>${avg} ★</strong></span>
+                    <span>Reviews: <strong>${count}</strong></span>
+                  </div>
+                </div>
+                <div class="ranking-revenue" style="color: #fbbf24; font-size: 15px; font-weight: bold;">${avg} ★</div>
               </div>
             `;
           }

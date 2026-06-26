@@ -1,9 +1,24 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Toggle active class on payment option labels on change
+    // Toggle active class on payment option labels on change and click
+    const paymentOptions = document.querySelectorAll('.payment-option');
+    paymentOptions.forEach(option => {
+        option.addEventListener('click', (e) => {
+            if (option.classList.contains('disabled')) return;
+            
+            const radio = option.querySelector('input[name="paymentMethod"]');
+            if (radio) {
+                radio.checked = true;
+            }
+            
+            paymentOptions.forEach(opt => opt.classList.remove('active'));
+            option.classList.add('active');
+        });
+    });
+
     const paymentRadios = document.querySelectorAll('input[name="paymentMethod"]');
     paymentRadios.forEach(radio => {
         radio.addEventListener('change', () => {
-            document.querySelectorAll('.payment-option').forEach(label => {
+            paymentOptions.forEach(label => {
                 label.classList.remove('active');
             });
             const parentLabel = radio.closest('.payment-option');
@@ -35,23 +50,38 @@ document.addEventListener('DOMContentLoaded', () => {
         let isWalletChecked = useWalletCheckbox && useWalletCheckbox.checked;
         let finalPayableTotal = baseCartTotal;
         let appliedWalletAmount = 0;
+        const totalLabel = document.getElementById('totalLabel');
+        const walletStatusMessage = document.getElementById('walletStatusMessage');
 
         if (isWalletChecked) {
             if (walletBalance >= baseCartTotal) {
                 appliedWalletAmount = baseCartTotal;
                 finalPayableTotal = 0;
+                if (walletStatusMessage) {
+                    walletStatusMessage.style.display = 'block';
+                    walletStatusMessage.style.color = '#059669'; // Green
+                    walletStatusMessage.textContent = 'Wallet balance fully covers this order. No additional payment method required.';
+                }
             } else {
                 appliedWalletAmount = walletBalance;
                 finalPayableTotal = baseCartTotal - walletBalance;
+                if (walletStatusMessage) {
+                    walletStatusMessage.style.display = 'block';
+                    walletStatusMessage.style.color = '#d97706'; // Orange
+                    walletStatusMessage.textContent = `Wallet balance applied. Please pay the remaining ₹${finalPayableTotal} using COD or Online Payment.`;
+                }
             }
 
             if (walletAppliedInfo) walletAppliedInfo.style.display = 'block';
             if (walletAppliedAmountSpan) walletAppliedAmountSpan.textContent = appliedWalletAmount;
             if (walletDeductionRow) walletDeductionRow.style.display = 'flex';
             if (walletDeductionValue) walletDeductionValue.textContent = `-₹${appliedWalletAmount}`;
+            if (totalLabel) totalLabel.textContent = 'Remaining Amount';
         } else {
             if (walletAppliedInfo) walletAppliedInfo.style.display = 'none';
             if (walletDeductionRow) walletDeductionRow.style.display = 'none';
+            if (walletStatusMessage) walletStatusMessage.style.display = 'none';
+            if (totalLabel) totalLabel.textContent = 'Total';
         }
 
         if (finalTotalValue) finalTotalValue.textContent = `₹${finalPayableTotal}`;
@@ -251,10 +281,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const appliedCodeDisplay = document.getElementById('appliedCodeDisplay');
     const singleCouponAlert = document.getElementById('singleCouponAlert');
     const availableCouponsList = document.getElementById('availableCouponsList');
-    
-    const couponDiscountRow = document.getElementById('couponDiscountRow');
-    const couponDiscountValue = document.getElementById('couponDiscountValue');
-    const finalTotalValue = document.getElementById('finalTotalValue');
 
     const updateCalculationsUI = (discountAmount, finalTotal) => {
         if (discountAmount > 0) {
@@ -263,7 +289,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             couponDiscountRow.style.display = 'none';
         }
-        finalTotalValue.textContent = `₹${finalTotal}`;
+        baseCartTotal = finalTotal;
+        recalculateWalletAndTotal();
     };
 
     document.querySelectorAll('.available-coupon-card').forEach(card => {
@@ -275,6 +302,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             inputCouponCode.value = card.dataset.code || '';
             inputCouponCode.focus();
+            
+            // Automatically apply the coupon!
+            if (btnApplyCoupon) {
+                btnApplyCoupon.click();
+            }
         });
     });
 
@@ -303,7 +335,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     appliedCodeDisplay.textContent = data.couponCode;
                     appliedCouponWrapper.style.display = 'flex';
                     singleCouponAlert.style.display = 'none';
-                    if (availableCouponsList) availableCouponsList.style.display = 'none';
+
+                    // Dynamic styling for selected/applied coupon card
+                    document.querySelectorAll('.available-coupon-card').forEach(card => {
+                        if (card.dataset.code === data.couponCode) {
+                            card.classList.add('applied');
+                            const badge = card.querySelector('.applied-badge');
+                            if (badge) badge.style.display = 'inline-block';
+                        } else {
+                            card.classList.remove('applied');
+                            const badge = card.querySelector('.applied-badge');
+                            if (badge) badge.style.display = 'none';
+                        }
+                    });
 
                     // Update prices
                     updateCalculationsUI(data.discountAmount, data.finalTotal);
@@ -339,7 +383,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     singleCouponAlert.style.display = 'none';
                     inputCouponCode.value = '';
                     couponInputGroup.style.display = 'flex';
-                    if (availableCouponsList) availableCouponsList.style.display = 'flex';
+                    
+                    // Remove applied states from coupon cards
+                    document.querySelectorAll('.available-coupon-card').forEach(card => {
+                        card.classList.remove('applied');
+                        const badge = card.querySelector('.applied-badge');
+                        if (badge) badge.style.display = 'none';
+                    });
 
                     // Update prices
                     updateCalculationsUI(0, data.finalTotal);
@@ -352,4 +402,110 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
+    window.removeCheckoutItem = async (itemId) => {
+        const confirmed = await KavoxNotify.confirm({
+            title: 'Remove Item?',
+            text: 'Are you sure you want to remove this item from your cart?',
+            confirmText: 'Yes, Remove',
+            cancelText: 'No, Keep'
+        });
+
+        if (confirmed.isConfirmed) {
+            try {
+                const response = await fetch(`/api/cart/remove/${itemId}`, { method: 'DELETE' });
+                const removeData = await response.json();
+
+                if (removeData.success) {
+                    const itemEl = document.getElementById(`checkout-item-${itemId}`);
+                    if (itemEl) {
+                        itemEl.style.opacity = '0';
+                        setTimeout(() => {
+                            itemEl.remove();
+                            
+                            // Re-fetch checkout summary to revalidate coupons and update pricing
+                            refreshCheckoutSummary();
+                        }, 300);
+                    }
+                } else {
+                    KavoxNotify.toast(removeData.message || 'Failed to remove item.', 'error');
+                }
+            } catch (error) {
+                console.error('Failed to remove checkout item:', error);
+                KavoxNotify.toast('An error occurred while removing the item.', 'error');
+            }
+        }
+    };
+
+    const refreshCheckoutSummary = async () => {
+        try {
+            const response = await fetch('/api/checkout/summary');
+            const data = await response.json();
+
+            if (data.success) {
+                const s = data.summary;
+                
+                // Update DOM elements
+                const subtotalEl = document.getElementById('checkoutSubtotal');
+                if (subtotalEl) subtotalEl.textContent = `₹${s.totalActualPrice}`;
+
+                const offerDiscountEl = document.getElementById('checkoutOfferDiscount');
+                if (offerDiscountEl) offerDiscountEl.textContent = `-₹${s.totalProductDiscount + s.totalCategoryDiscount}`;
+
+                // Update coupon display
+                const appliedCouponWrapper = document.getElementById('appliedCouponWrapper');
+                const couponInputGroup = document.getElementById('couponInputGroup');
+                const appliedCodeDisplay = document.getElementById('appliedCodeDisplay');
+                const couponDiscountRow = document.getElementById('couponDiscountRow');
+                const couponDiscountValue = document.getElementById('couponDiscountValue');
+
+                if (data.appliedCouponCode) {
+                    if (couponInputGroup) couponInputGroup.style.display = 'none';
+                    if (appliedCodeDisplay) appliedCodeDisplay.textContent = data.appliedCouponCode;
+                    if (appliedCouponWrapper) appliedCouponWrapper.style.display = 'flex';
+                    if (couponDiscountRow) couponDiscountRow.style.display = 'flex';
+                    if (couponDiscountValue) couponDiscountValue.textContent = `-₹${data.couponDiscount}`;
+                } else {
+                    if (appliedCouponWrapper) appliedCouponWrapper.style.display = 'none';
+                    if (couponInputGroup) couponInputGroup.style.display = 'flex';
+                    if (couponDiscountRow) couponDiscountRow.style.display = 'none';
+                    
+                    if (data.couponRemovedMessage) {
+                        KavoxNotify.toast(data.couponRemovedMessage, 'warning');
+                    }
+                }
+
+                // Recalculate wallet and enable/disable checkout button based on remaining unavailable products
+                const unavailableItems = document.querySelectorAll('.unavailable-checkout-item');
+                const btnPlaceOrder = document.getElementById('btnPlaceOrder');
+                const banner = document.getElementById('checkoutValidationBanner');
+
+                if (unavailableItems.length === 0) {
+                    if (btnPlaceOrder) {
+                        btnPlaceOrder.disabled = false;
+                        btnPlaceOrder.style.backgroundColor = '';
+                        btnPlaceOrder.style.cursor = '';
+                        btnPlaceOrder.textContent = 'PROCEED TO PAYMENT';
+                    }
+                    if (banner) {
+                        banner.style.display = 'none';
+                    }
+                } else {
+                    if (btnPlaceOrder) {
+                        btnPlaceOrder.disabled = true;
+                        btnPlaceOrder.style.backgroundColor = '#cbd5e1';
+                        btnPlaceOrder.style.cursor = 'not-allowed';
+                    }
+                }
+
+                // Recalculate totals
+                baseCartTotal = s.cartTotal - data.couponDiscount;
+                recalculateWalletAndTotal();
+
+                if (typeof window.updateBadges === 'function') window.updateBadges();
+            }
+        } catch (error) {
+            console.error('Failed to refresh checkout summary:', error);
+        }
+    };
 });

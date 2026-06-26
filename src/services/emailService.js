@@ -7,7 +7,7 @@ const initTransporter = async () => {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     console.error("❌ EMAIL_USER or EMAIL_PASS environment variables are missing.");
   }
-  
+
   transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -51,12 +51,12 @@ exports.sendOtpEmail = async (email, otp) => {
 
     const info = await transporter.sendMail(mailOptions);
     console.log("OTP Email sent successfully!");
-    
+
     return true;
   } catch (error) {
     console.error("Error sending OTP email:");
     console.error(error);
-    return false; 
+    return false;
   }
 };
 

@@ -183,7 +183,7 @@
         <div class="tab-nav">
           <button class="tab-btn active" onclick="switchTab('description', this)">Description</button>
           <button class="tab-btn" onclick="switchTab('specifications', this)">Specifications</button>
-          <button class="tab-btn" onclick="switchTab('reviews', this)">Reviews (124)</button>
+          <button class="tab-btn" onclick="switchTab('reviews', this)">Reviews (<%= reviews.length %>)</button>
         </div>
         <div id="description" class="tab-content">
           <p>
@@ -215,21 +215,860 @@
           </table>
         </div>
         <div id="reviews" class="tab-content" style="display: none;">
-          <div style="display: flex; gap: 40px; margin-top: 20px;">
-            <div style="flex: 0 0 200px;">
-              <div style="font-size: 48px; font-weight: 800; color: #000; margin-bottom: 5px;">4.5<span
-                  style="font-size: 20px; color: #888;">/5.0</span></div>
-              <div style="color: #22c55e; margin-bottom: 15px;">★★★★★</div>
-              <div style="font-size: 13px; color: #888;">Based on 124 Reviews</div>
+          <!-- Custom Styles for Review tab -->
+          <style>
+            .reviews-summary-container {
+              display: grid;
+              grid-template-columns: 1fr 1.5fr 1fr;
+              gap: 30px;
+              padding: 24px;
+              background: #f8fafc;
+              border-radius: 12px;
+              margin-top: 20px;
+              margin-bottom: 30px;
+              border: 1px solid #e2e8f0;
+            }
+
+            @media (max-width: 768px) {
+              .reviews-summary-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+              }
+            }
+
+            .rating-summary-card {
+              text-align: center;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              align-items: center;
+              padding: 10px;
+            }
+
+            .rating-breakdown-card {
+              padding: 10px;
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+            }
+
+            .rating-bar-row {
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              font-size: 13px;
+              color: #475569;
+            }
+
+            .rating-bar-container {
+              flex: 1;
+              height: 8px;
+              background: #e2e8f0;
+              border-radius: 4px;
+              overflow: hidden;
+            }
+
+            .rating-bar-fill {
+              height: 100%;
+              background: #fbbf24;
+              border-radius: 4px;
+            }
+
+            .review-action-card {
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              align-items: center;
+              padding: 10px;
+              text-align: center;
+              border-left: 1px solid #e2e8f0;
+            }
+
+            @media (max-width: 768px) {
+              .review-action-card {
+                border-left: none;
+                border-top: 1px solid #e2e8f0;
+                padding-top: 20px;
+              }
+            }
+
+            .reviews-list {
+              display: flex;
+              flex-direction: column;
+              gap: 20px;
+              margin-top: 20px;
+            }
+
+            .review-item {
+              padding: 20px;
+              border: 1px solid #e2e8f0;
+              border-radius: 8px;
+              background: #ffffff;
+              transition: box-shadow 0.2s;
+            }
+
+            .review-item:hover {
+              box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            }
+
+            .review-header {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              margin-bottom: 12px;
+            }
+
+            .review-user-info {
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              font-size: 14px;
+              font-weight: 600;
+              color: #1e293b;
+            }
+
+            .review-stars {
+              color: #fbbf24;
+              font-size: 15px;
+            }
+
+            .review-title {
+              font-size: 15px;
+              font-weight: 700;
+              color: #1e293b;
+              margin: 8px 0;
+            }
+
+            .review-content {
+              font-size: 14px;
+              color: #475569;
+              line-height: 1.6;
+            }
+
+            .review-images-row {
+              display: flex;
+              gap: 8px;
+              margin-top: 12px;
+              flex-wrap: wrap;
+            }
+
+            .review-img-thumbnail {
+              width: 70px;
+              height: 70px;
+              object-fit: cover;
+              border-radius: 6px;
+              cursor: pointer;
+              border: 1px solid #cbd5e1;
+              transition: transform 0.2s;
+            }
+
+            .review-img-thumbnail:hover {
+              transform: scale(1.05);
+            }
+
+            /* Star selection in Modal */
+            .star-rating-select {
+              display: flex;
+              gap: 8px;
+              font-size: 28px;
+              cursor: pointer;
+              color: #cbd5e1;
+            }
+
+            .star-rating-select .star.selected {
+              color: #fbbf24;
+            }
+
+            /* Image upload previews */
+            .review-upload-previews {
+              display: flex;
+              gap: 12px;
+              margin-top: 12px;
+              flex-wrap: wrap;
+            }
+
+            .review-preview-wrapper {
+              position: relative;
+              width: 70px;
+              height: 70px;
+              border-radius: 8px;
+              overflow: hidden;
+              border: 1px solid #cbd5e1;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            }
+
+            .review-preview-box {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+            }
+
+            .review-preview-delete {
+              position: absolute;
+              top: 2px;
+              right: 2px;
+              background: rgba(239, 68, 68, 0.9);
+              color: white;
+              border: none;
+              width: 18px;
+              height: 18px;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 11px;
+              font-weight: 700;
+              cursor: pointer;
+              box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+              transition: background 0.2s;
+            }
+
+            .review-preview-delete:hover {
+              background: rgb(220, 38, 38);
+            }
+
+            .review-upload-plus-btn {
+              width: 70px;
+              height: 70px;
+              border: 2px dashed #cbd5e1;
+              border-radius: 8px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 24px;
+              color: #64748b;
+              cursor: pointer;
+              transition: all 0.2s ease;
+              background: #f8fafc;
+              box-sizing: border-box;
+            }
+
+            .review-upload-plus-btn:hover {
+              border-color: #000000;
+              color: #000000;
+              background: #f1f5f9;
+            }
+
+            /* Modal styles */
+            .review-modal {
+              display: none;
+              position: fixed;
+              inset: 0;
+              background: rgba(0, 0, 0, 0.7);
+              z-index: 20000;
+              align-items: center;
+              justify-content: center;
+              backdrop-filter: blur(8px);
+              padding: 20px;
+            }
+            
+            .review-modal.active {
+              display: flex;
+            }
+
+            .review-modal-content {
+              background: #ffffff;
+              width: 100%;
+              max-width: 600px;
+              border-radius: 12px;
+              max-height: 90vh;
+              overflow-y: auto;
+              box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+              display: flex;
+              flex-direction: column;
+            }
+
+            .review-modal-header {
+              padding: 20px 24px;
+              border-bottom: 1px solid #e2e8f0;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              background: #fafafa;
+            }
+
+            .review-modal-body {
+              padding: 24px;
+              display: flex;
+              flex-direction: column;
+              gap: 16px;
+              overflow-y: auto;
+            }
+
+            .review-modal-footer {
+              padding: 16px 24px;
+              border-top: 1px solid #e2e8f0;
+              display: flex;
+              justify-content: flex-end;
+              gap: 12px;
+              background: #fafafa;
+            }
+
+            .form-group {
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+            }
+
+            .form-group label {
+              font-size: 13px;
+              font-weight: 600;
+              color: #334155;
+            }
+
+            .form-control {
+              width: 100%;
+              padding: 10px 14px;
+              border: 1px solid #cbd5e1;
+              border-radius: 8px;
+              font-size: 14px;
+              outline: none;
+              transition: border-color 0.2s;
+              box-sizing: border-box;
+            }
+
+            .form-control:focus {
+              border-color: #6366f1;
+            }
+
+            /* Buttons */
+            .btn-review-primary {
+              background: #000000;
+              color: #ffffff;
+              padding: 10px 20px;
+              border: none;
+              border-radius: 6px;
+              font-weight: 700;
+              font-size: 13px;
+              cursor: pointer;
+              text-transform: uppercase;
+              transition: all 0.2s;
+            }
+
+            .btn-review-primary:hover {
+              background: #1e293b;
+            }
+
+            .btn-review-secondary {
+              background: #ffffff;
+              color: #475569;
+              padding: 10px 20px;
+              border: 1px solid #cbd5e1;
+              border-radius: 6px;
+              font-weight: 600;
+              font-size: 13px;
+              cursor: pointer;
+              text-transform: uppercase;
+              transition: all 0.2s;
+            }
+
+            .btn-review-secondary:hover {
+              background: #f8fafc;
+            }
+
+            .btn-review-danger {
+              background: #ef4444;
+              color: #ffffff;
+              padding: 10px 20px;
+              border: none;
+              border-radius: 6px;
+              font-weight: 700;
+              font-size: 13px;
+              cursor: pointer;
+              text-transform: uppercase;
+              transition: all 0.2s;
+            }
+
+            .btn-review-danger:hover {
+              background: #dc2626;
+            }
+          </style>
+
+          <div class="reviews-summary-container">
+            <!-- Left: Avg Rating -->
+            <div class="rating-summary-card">
+              <div style="font-size: 48px; font-weight: 800; color: #1e293b; margin-bottom: 4px;">
+                <%= product.averageRating ? product.averageRating.toFixed(1) : '0.0' %>
+                <span style="font-size: 18px; color: #64748b; font-weight: 500;">/ 5</span>
+              </div>
+              <div class="review-stars" style="font-size: 20px; margin-bottom: 8px;">
+                <% const filledStars = Math.round(product.averageRating || 0); %>
+                <% for (let i = 1; i <= 5; i++) { %>
+                  <%= i <= filledStars ? '★' : '☆' %>
+                <% } %>
+              </div>
+              <div style="font-size: 13px; color: #64748b;">Based on <%= reviews.length %> Reviews</div>
             </div>
-            <div style="flex: 1;">
-              <p style="font-style: italic; color: #666; margin-bottom: 20px;">"Extremely comfortable and high quality
-                stuff. Highly recommend for daily wear!" - <strong>Sameer A.</strong></p>
-              <p style="font-style: italic; color: #666;">"The fit is perfect and the color is exactly as shown in the
-                pictures." - <strong>Neha G.</strong></p>
+
+            <!-- Middle: Breakdown -->
+            <div class="rating-breakdown-card">
+              <% [5, 4, 3, 2, 1].forEach(star => { %>
+                <% 
+                  const count = ratingBreakdown[star] || 0;
+                  const pct = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
+                %>
+                <div class="rating-bar-row">
+                  <span style="width: 50px; text-align: right;"><%= star %> Stars</span>
+                  <div class="rating-bar-container">
+                    <div class="rating-bar-fill" style="width: <%= pct %>%;"></div>
+                  </div>
+                  <span style="width: 25px;"><%= count %></span>
+                </div>
+              <% }) %>
+            </div>
+
+            <!-- Right: Action Cards -->
+            <div class="review-action-card">
+              <% if (typeof currentUser !== 'undefined' && currentUser) { %>
+                <% if (canReview) { %>
+                  <% if (existingReview) { %>
+                    <p style="font-size: 13px; color: #475569; margin-bottom: 12px; font-weight: 500;">You have submitted a review for this product.</p>
+                    <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 200px;">
+                      <button class="btn-review-primary" onclick="openReviewModal(true)">Edit Review</button>
+                      <button class="btn-review-danger" onclick="deleteUserReview('<%= existingReview._id %>')">Delete Review</button>
+                    </div>
+                  <% } else { %>
+                    <p style="font-size: 13px; color: #475569; margin-bottom: 12px; font-weight: 500;">Bought this product? Share your experience with others!</p>
+                    <button class="btn-review-primary" onclick="openReviewModal(false)">Write a Review</button>
+                  <% } %>
+                <% } else { %>
+                  <p style="font-size: 13px; color: #64748b; font-weight: 500; line-height: 1.5;">
+                    <span style="display: block; font-size: 16px; margin-bottom: 6px;">🔒 Verified Purchase Only</span>
+                    You can only submit reviews for products you have purchased and had successfully delivered.
+                  </p>
+                <% } %>
+              <% } else { %>
+                <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">Please login to submit a review.</p>
+                <a href="/login" class="btn-review-primary" style="text-decoration: none; display: inline-block; text-align: center;">Login</a>
+              <% } %>
             </div>
           </div>
+
+          <!-- Filters Row -->
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 20px;">
+            <h3 style="font-size: 16px; font-weight: 700; color: #1e293b; margin: 0;">Customer Feedback</h3>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <label for="reviewSortSelect" style="font-size: 13px; font-weight: 600; color: #475569;">Sort by:</label>
+              <select id="reviewSortSelect" onchange="sortReviews(this.value)" class="form-control" style="width: auto; height: 36px; padding: 4px 10px; font-size: 13px;">
+                <option value="latest">Latest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="highest">Highest Rating</option>
+                <option value="lowest">Lowest Rating</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Reviews List -->
+          <div id="reviewsList" class="reviews-list">
+            <% if (reviews.length > 0) { %>
+              <% reviews.forEach(r => { %>
+                <div class="review-item">
+                  <div class="review-header">
+                    <div>
+                      <div class="review-user-info">
+                        <span><%= r.userId ? r.userId.name : 'Anonymous' %></span>
+                        <% if (r.isVerifiedPurchase) { %>
+                          <span style="background-color: #f0fdf4; color: #16a34a; border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 3px;">
+                            ✓ Verified Purchase
+                          </span>
+                        <% } %>
+                      </div>
+                      <div class="review-stars" style="margin-top: 4px;">
+                        <% for (let i = 1; i <= 5; i++) { %>
+                          <%= i <= r.rating ? '★' : '☆' %>
+                        <% } %>
+                      </div>
+                    </div>
+                    <span style="font-size: 12px; color: #94a3b8;"><%= new Date(r.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) %></span>
+                  </div>
+
+                  <div class="review-title"><%= r.title %></div>
+                  <div class="review-content"><%= r.review %></div>
+
+                  <% if (r.images && r.images.length > 0) { %>
+                    <div class="review-images-row">
+                      <% r.images.forEach(img => { %>
+                        <img src="<%= img %>" alt="Review photo" class="review-img-thumbnail" onclick="openLightbox('<%= img %>')">
+                      <% }) %>
+                    </div>
+                  <% } %>
+                </div>
+              <% }) %>
+            <% } else { %>
+              <div style="text-align: center; padding: 40px; color: #94a3b8; font-size: 14px;">No reviews yet. Be the first to share your experience!</div>
+            <% } %>
+          </div>
         </div>
+
+        <!-- Write / Edit Review Modal -->
+        <% if (typeof currentUser !== 'undefined' && currentUser && canReview) { %>
+          <div id="reviewModal" class="review-modal">
+            <div class="review-modal-content">
+              <div class="review-modal-header">
+                <h3 id="reviewModalTitle" style="margin: 0; font-size: 16px; font-weight: 700; color: #1e293b;">Submit Product Review</h3>
+                <button type="button" onclick="closeReviewModal()" style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 20px;">&times;</button>
+              </div>
+              <form id="reviewForm" onsubmit="submitReview(event)" enctype="multipart/form-data">
+                <div class="review-modal-body">
+                  <input type="hidden" id="reviewIdInput" value="<%= existingReview ? existingReview._id : '' %>">
+                  <input type="hidden" id="reviewRatingInput" value="<%= existingReview ? existingReview.rating : '5' %>">
+                  
+                  <!-- Stars select -->
+                  <div class="form-group">
+                    <label>Your Rating *</label>
+                    <div class="star-rating-select" id="starSelector">
+                      <% for (let i = 1; i <= 5; i++) { %>
+                        <span class="star <%= (existingReview && existingReview.rating >= i) || (!existingReview && i <= 5) ? 'selected' : '' %>" data-value="<%= i %>" onclick="setSelectRating(<%= i %>)">★</span>
+                      <% } %>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="reviewTitleInput">Review Title *</label>
+                    <input type="text" id="reviewTitleInput" class="form-control" placeholder="e.g. Excellent Product! Highly recommend" required max="100" value="<%= existingReview ? existingReview.title : '' %>">
+                  </div>
+
+                  <div class="form-group">
+                    <label for="reviewBodyInput">Detailed Review *</label>
+                    <textarea id="reviewBodyInput" class="form-control" placeholder="Describe your experience with the product. How is the fit, quality, comfort, etc.?" required rows="5" max="1000" style="resize: vertical;"><%= existingReview ? existingReview.review : '' %></textarea>
+                  </div>
+
+                  <!-- Optional Images -->
+                  <div class="form-group">
+                    <label>Product Images (Optional, Maximum 5 images)</label>
+                    <input type="file" id="reviewImagesInput" name="images" accept="image/*" multiple onchange="previewReviewImages(event)" style="display: none;">
+                    <div class="review-upload-previews" id="reviewPreviewsContainer" data-existing="<%= existingReview && existingReview.images ? JSON.stringify(existingReview.images) : '[]' %>">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="review-modal-footer">
+                  <button type="button" class="btn-review-secondary" onclick="closeReviewModal()">Cancel</button>
+                  <button type="submit" class="btn-review-primary">Submit Review</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        <% } %>
+
+        <!-- Image Lightbox Modal -->
+        <div id="lightboxModal" class="review-modal" onclick="closeLightbox()">
+          <div style="position: relative; max-width: 90vw; max-height: 90vh;">
+            <img id="lightboxImage" src="" alt="Enlarged review photo" style="max-width: 100%; max-height: 90vh; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+            <button type="button" onclick="closeLightbox()" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px;">&times;</button>
+          </div>
+        </div>
+
+        <!-- Reviews Script -->
+        <script>
+          // Select Star logic
+          function setSelectRating(val) {
+            document.getElementById('reviewRatingInput').value = val;
+            const stars = document.querySelectorAll('#starSelector .star');
+            stars.forEach((star, index) => {
+              if (index < val) {
+                star.classList.add('selected');
+              } else {
+                star.classList.remove('selected');
+              }
+            });
+          }
+
+          let selectedReviewFiles = [];
+          let existingImages = [];
+
+          function openReviewModal(isEdit) {
+            const modal = document.getElementById('reviewModal');
+            if (modal) {
+              document.getElementById('reviewModalTitle').innerText = isEdit ? 'Edit Your Product Review' : 'Submit Product Review';
+              
+              selectedReviewFiles = [];
+              existingImages = [];
+              
+              const container = document.getElementById('reviewPreviewsContainer');
+              if (isEdit && container && container.dataset.existing) {
+                try {
+                  existingImages = JSON.parse(container.dataset.existing);
+                } catch(e) {
+                  console.error("Failed to parse existing images:", e);
+                }
+              }
+              
+              renderPreviews();
+              modal.classList.add('active');
+            }
+          }
+
+          function closeReviewModal() {
+            const modal = document.getElementById('reviewModal');
+            if (modal) {
+              modal.classList.remove('active');
+            }
+          }
+
+          function renderPreviews() {
+            const container = document.getElementById('reviewPreviewsContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            // Render existing images first
+            existingImages.forEach((imgUrl, index) => {
+              const wrapper = document.createElement('div');
+              wrapper.className = 'review-preview-wrapper';
+
+              const img = document.createElement('img');
+              img.src = imgUrl;
+              img.className = 'review-preview-box';
+              wrapper.appendChild(img);
+
+              const delBtn = document.createElement('button');
+              delBtn.type = 'button';
+              delBtn.className = 'review-preview-delete';
+              delBtn.innerHTML = '&times;';
+              delBtn.onclick = () => {
+                existingImages.splice(index, 1);
+                renderPreviews();
+              };
+              wrapper.appendChild(delBtn);
+
+              container.appendChild(wrapper);
+            });
+
+            // Render new files
+            selectedReviewFiles.forEach((file, index) => {
+              const wrapper = document.createElement('div');
+              wrapper.className = 'review-preview-wrapper';
+
+              const img = document.createElement('img');
+              img.className = 'review-preview-box';
+              wrapper.appendChild(img);
+
+              const reader = new FileReader();
+              reader.onload = function(e) {
+                img.src = e.target.result;
+              }
+              reader.readAsDataURL(file);
+
+              const delBtn = document.createElement('button');
+              delBtn.type = 'button';
+              delBtn.className = 'review-preview-delete';
+              delBtn.innerHTML = '&times;';
+              delBtn.onclick = () => {
+                selectedReviewFiles.splice(index, 1);
+                renderPreviews();
+              };
+              wrapper.appendChild(delBtn);
+
+              container.appendChild(wrapper);
+            });
+
+            // Render plus button if total images < 5
+            if (existingImages.length + selectedReviewFiles.length < 5) {
+              const plusBtn = document.createElement('div');
+              plusBtn.className = 'review-upload-plus-btn';
+              plusBtn.innerHTML = '<span>+</span>';
+              plusBtn.title = 'Add Image';
+              plusBtn.onclick = () => {
+                document.getElementById('reviewImagesInput').click();
+              };
+              container.appendChild(plusBtn);
+            }
+          }
+
+          function previewReviewImages(event) {
+            const files = Array.from(event.target.files);
+            if (files.length === 0) return;
+
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+            const maxFileSize = 5 * 1024 * 1024; // 5MB limit
+
+            // Validate format and size
+            for (const file of files) {
+              if (!allowedTypes.includes(file.type)) {
+                KavoxNotify.toast(`File "${file.name}" is not a valid image format. Only JPEG, JPG, PNG, and WEBP are allowed.`, 'error');
+                event.target.value = '';
+                return;
+              }
+              if (file.size > maxFileSize) {
+                KavoxNotify.toast(`Image "${file.name}" exceeds the 5MB size limit.`, 'error');
+                event.target.value = '';
+                return;
+              }
+            }
+
+            if (existingImages.length + selectedReviewFiles.length + files.length > 5) {
+              KavoxNotify.toast('You can upload a maximum of 5 images.', 'error');
+              event.target.value = '';
+              return;
+            }
+
+            selectedReviewFiles = [...selectedReviewFiles, ...files];
+            event.target.value = ''; // clear input so user can choose more files later
+            renderPreviews();
+          }
+
+          // Submit review logic
+          async function submitReview(event) {
+            event.preventDefault();
+            
+            const reviewId = document.getElementById('reviewIdInput').value;
+            const rating = document.getElementById('reviewRatingInput').value;
+            const title = document.getElementById('reviewTitleInput').value;
+            const reviewText = document.getElementById('reviewBodyInput').value;
+
+            KavoxNotify.loading("Submitting review details...");
+
+            const formData = new FormData();
+            formData.append("productId", window.productId);
+            formData.append("rating", rating);
+            formData.append("title", title);
+            formData.append("review", reviewText);
+
+            // Append remaining existing images
+            existingImages.forEach(img => {
+              formData.append("keepImages", img);
+            });
+
+            // Append new files
+            selectedReviewFiles.forEach(file => {
+              formData.append("images", file);
+            });
+
+            const url = reviewId ? `/api/reviews/${reviewId}` : '/api/reviews';
+            const method = reviewId ? 'PUT' : 'POST';
+
+            try {
+              const res = await fetch(url, {
+                method: method,
+                body: formData
+              }).then(r => r.json());
+
+              KavoxNotify.closeLoading();
+
+              if (res.success) {
+                KavoxNotify.toast(res.message, "success");
+                closeReviewModal();
+                setTimeout(() => window.location.reload(), 1000);
+              } else {
+                KavoxNotify.alert({ title: "Submission Failed", text: res.message || "An error occurred.", icon: "error" });
+              }
+            } catch (error) {
+              KavoxNotify.closeLoading();
+              KavoxNotify.toast("Connection error occurred saving review.", "error");
+            }
+          }
+
+          // Delete user review
+          async function deleteUserReview(reviewId) {
+            const confirm = await KavoxNotify.confirm({
+              title: "Delete Review?",
+              text: "Are you sure you want to permanently delete your review? This action is irreversible.",
+              icon: "warning",
+              confirmText: "Delete",
+              cancelText: "Cancel"
+            });
+
+            if (!confirm.isConfirmed) return;
+
+            KavoxNotify.loading("Deleting review...");
+            try {
+              const res = await fetch(`/api/reviews/${reviewId}`, {
+                method: 'DELETE'
+              }).then(r => r.json());
+
+              KavoxNotify.closeLoading();
+
+              if (res.success) {
+                KavoxNotify.toast(res.message, "success");
+                setTimeout(() => window.location.reload(), 1000);
+              } else {
+                KavoxNotify.toast(res.message || "Failed to delete review.", "error");
+              }
+            } catch (error) {
+              KavoxNotify.closeLoading();
+              KavoxNotify.toast("Network error deleting review.", "error");
+            }
+          }
+
+          // Sort reviews async
+          async function sortReviews(sortType) {
+            try {
+              const res = await fetch(`/api/reviews/product/${window.productId}?sort=${sortType}`).then(r => r.json());
+              if (res.success) {
+                const list = document.getElementById('reviewsList');
+                list.innerHTML = '';
+                
+                if (res.reviews.length > 0) {
+                  res.reviews.forEach(r => {
+                    const starsStr = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+                    const dateStr = new Date(r.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+                    
+                    let verifiedBadge = '';
+                    if (r.isVerifiedPurchase) {
+                      verifiedBadge = `
+                        <span style="background-color: #f0fdf4; color: #16a34a; border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 3px;">
+                          ✓ Verified Purchase
+                        </span>
+                      `;
+                    }
+
+                    let imagesRow = '';
+                    if (r.images && r.images.length > 0) {
+                      let imagesHtml = '';
+                      r.images.forEach(img => {
+                        imagesHtml += `<img src="${img}" alt="Review photo" class="review-img-thumbnail" onclick="openLightbox('${img}')">`;
+                      });
+                      imagesRow = `<div class="review-images-row">${imagesHtml}</div>`;
+                    }
+
+                    const item = document.createElement('div');
+                    item.className = 'review-item';
+                    item.innerHTML = `
+                      <div class="review-header">
+                        <div>
+                          <div class="review-user-info">
+                            <span>${r.userId ? r.userId.name : 'Anonymous'}</span>
+                            ${verifiedBadge}
+                          </div>
+                          <div class="review-stars" style="margin-top: 4px;">
+                            ${starsStr}
+                          </div>
+                        </div>
+                        <span style="font-size: 12px; color: #94a3b8;">${dateStr}</span>
+                      </div>
+
+                      <div class="review-title">${r.title}</div>
+                      <div class="review-content">${r.review}</div>
+                      ${imagesRow}
+                    `;
+                    list.appendChild(item);
+                  });
+                } else {
+                  list.innerHTML = '<div style="text-align: center; padding: 40px; color: #94a3b8; font-size: 14px;">No reviews yet. Be the first to share your experience!</div>';
+                }
+              }
+            } catch (error) {
+              console.error("Sort Reviews Error:", error);
+            }
+          }
+
+          // Lightbox functions
+          function openLightbox(src) {
+            const lightbox = document.getElementById('lightboxModal');
+            const img = document.getElementById('lightboxImage');
+            if (lightbox && img) {
+              img.src = src;
+              lightbox.classList.add('active');
+            }
+          }
+
+          function closeLightbox() {
+            const lightbox = document.getElementById('lightboxModal');
+            if (lightbox) {
+              lightbox.classList.remove('active');
+            }
+          }
+        </script>
       </div>
 
       <!-- Related Products -->

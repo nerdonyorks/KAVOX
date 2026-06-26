@@ -13,7 +13,9 @@ const getDetailedTotals = (items) => {
     let cartTotal = 0;
 
     items.forEach(item => {
+        if (item.isUnavailable) return;
         const product = item.productId;
+        if (!product) return;
         const qty = item.quantity;
         const basePrice = product.price;
         const basePriceTotal = basePrice * qty;
@@ -71,24 +73,36 @@ exports.getCheckout = async (req, res) => {
         }
 
         // Validate items are still active and in stock
-        let isValid = true;
-        for (let item of cart.items) {
+        let hasUnavailable = false;
+        let checkoutValidationErrors = [];
+
+        cart.items.forEach(item => {
             const product = item.productId;
             if (!product || product.isDeleted || !product.isActive || !product.category || !product.category.isActive || product.category.isDeleted) {
-                isValid = false;
-                break;
+                item.isUnlisted = true;
+                item.isUnavailable = true;
+                hasUnavailable = true;
+                const msg = "This product has been unlisted by the admin and must be removed before proceeding.";
+                if (!checkoutValidationErrors.includes(msg)) {
+                    checkoutValidationErrors.push(msg);
+                }
+            } else {
+                const variant = product.variants.find(v => v.size === item.size && v.color === item.color);
+                if (!variant || !variant.isActive) {
+                    item.isUnavailable = true;
+                    hasUnavailable = true;
+                    checkoutValidationErrors.push(`The selected variant for ${product.name} is unavailable.`);
+                } else if (variant.quantity <= 0) {
+                    item.isUnavailable = true;
+                    hasUnavailable = true;
+                    checkoutValidationErrors.push(`${product.name} (${item.size}/${item.color}) is out of stock.`);
+                } else if (variant.quantity < item.quantity) {
+                    item.isUnavailable = true;
+                    hasUnavailable = true;
+                    checkoutValidationErrors.push(`Insufficient stock for ${product.name} (${item.size}/${item.color}). Only ${variant.quantity} available.`);
+                }
             }
-            const variant = product.variants.find(v => v.size === item.size && v.color === item.color);
-            if (!variant || !variant.isActive || variant.quantity < item.quantity) {
-                isValid = false;
-                break;
-            }
-        }
-
-        if (!isValid) {
-            // Re-render cart so validations kick in there
-            return res.redirect("/cart");
-        }
+        });
 
         const summary = getDetailedTotals(cart.items);
         
@@ -105,6 +119,9 @@ exports.getCheckout = async (req, res) => {
                 couponDiscount = validation.discountAmount;
                 appliedCouponCode = validation.coupon.code;
             } else {
+                if (validation.coupon && summary.cartTotal < validation.coupon.minPurchaseAmount) {
+                    req.session.couponRemovedMessage = `Coupon removed because the order value no longer meets the minimum purchase requirement of ₹${validation.coupon.minPurchaseAmount}.`;
+                }
                 delete req.session.couponCode;
             }
         }
@@ -114,6 +131,9 @@ exports.getCheckout = async (req, res) => {
         const walletService = require("../services/walletService");
         const wallet = await walletService.getWallet(userId);
 
+        const couponRemovedMessage = req.session.couponRemovedMessage || "";
+        delete req.session.couponRemovedMessage;
+
         res.render("user/checkout", {
             title: "Checkout - KAVOX",
             cart,
@@ -122,7 +142,10 @@ exports.getCheckout = async (req, res) => {
             appliedCouponCode,
             couponDiscount,
             availableCoupons,
-            wallet
+            wallet,
+            couponRemovedMessage,
+            hasUnavailable,
+            checkoutValidationErrors
         });
     } catch (error) {
         console.error("Get Checkout Error:", error);
@@ -135,7 +158,8 @@ exports.getCheckout = async (req, res) => {
 exports.placeOrder = async (req, res) => {
     try {
         const userId = req.user._id;
-        const { addressId, paymentMethod, useWallet } = req.body;
+        const { addressId, paymentMethod } = req.body;
+        const useWallet = req.body.useWallet === true || req.body.useWallet === 'true';
 
         if (!addressId || !paymentMethod) {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Address and Payment Method are required." });
@@ -234,6 +258,14 @@ exports.placeOrder = async (req, res) => {
             }
         }
 
+        // Validate wallet balance before order creation
+        if (walletAmountUsed > 0) {
+            const hasSufficientBalance = await walletService.verifyWalletBalance(userId, walletAmountUsed);
+            if (!hasSufficientBalance) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Insufficient wallet balance." });
+            }
+        }
+
         // Deduct stock
         for (let item of cart.items) {
             const product = item.productId;
@@ -263,22 +295,6 @@ exports.placeOrder = async (req, res) => {
         });
 
         const newOrderId = 'ODR-' + Math.floor(100000000 + Math.random() * 900000000).toString();
-
-        // Perform Wallet deduction if applicable
-        if (walletAmountUsed > 0) {
-            try {
-                await walletService.debitWallet(userId, walletAmountUsed, 'WALLET_PAYMENT', newOrderId);
-            } catch (walletError) {
-                // Restore stock in case wallet debit fails
-                for (let item of cart.items) {
-                    const product = item.productId;
-                    const variant = product.variants.find(v => v.size === item.size && v.color === item.color);
-                    variant.quantity += item.quantity;
-                    await product.save();
-                }
-                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: walletError.message || "Failed to process wallet payment." });
-            }
-        }
 
         const newOrder = new Order({
             userId,
@@ -310,6 +326,26 @@ exports.placeOrder = async (req, res) => {
 
         await newOrder.save();
 
+        // Perform Wallet deduction after successful order placement
+        if (walletAmountUsed > 0) {
+            try {
+                await walletService.debitWallet(userId, walletAmountUsed, 'WALLET_PAYMENT', newOrderId);
+            } catch (walletError) {
+                // Rollback Order creation
+                await Order.deleteOne({ _id: newOrder._id });
+                // Restore stock
+                for (let item of cart.items) {
+                    const product = item.productId;
+                    const variant = product.variants.find(v => v.size === item.size && v.color === item.color);
+                    if (variant) {
+                        variant.quantity += item.quantity;
+                        await product.save();
+                    }
+                }
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: walletError.message || "Failed to process wallet payment." });
+            }
+        }
+
         // Clear coupon code from session
         delete req.session.couponCode;
 
@@ -327,5 +363,74 @@ exports.placeOrder = async (req, res) => {
     } catch (error) {
         console.error("Place Order Error:", error);
         res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: "Failed to place order." });
+    }
+};
+
+exports.getCheckoutSummary = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const cart = await Cart.findOne({ userId }).populate({
+            path: "items.productId",
+            populate: { path: "category" }
+        });
+
+        if (!cart || cart.items.length === 0) {
+            return res.json({
+                success: true,
+                summary: { totalActualPrice: 0, totalProductDiscount: 0, totalCategoryDiscount: 0, cartTotal: 0 },
+                couponDiscount: 0,
+                appliedCouponCode: "",
+                couponRemovedMessage: "",
+                finalTotal: 0
+            });
+        }
+
+        // Populate active offers first
+        const products = cart.items.map(item => item.productId).filter(Boolean);
+        await offerService.populateProductOffers(products);
+
+        // Mark items as unavailable/unlisted to exclude them from detailed totals
+        cart.items.forEach(item => {
+            const product = item.productId;
+            if (!product || product.isDeleted || !product.isActive || !product.category || !product.category.isActive || product.category.isDeleted) {
+                item.isUnavailable = true;
+            } else {
+                const variant = product.variants.find(v => v.size === item.size && v.color === item.color);
+                if (!variant || !variant.isActive || variant.quantity <= 0) {
+                    item.isUnavailable = true;
+                }
+            }
+        });
+
+        const summary = getDetailedTotals(cart.items);
+
+        let couponDiscount = 0;
+        let appliedCouponCode = "";
+        let couponRemovedMessage = "";
+
+        if (req.session.couponCode) {
+            const validation = await couponService.validateCoupon(req.session.couponCode, summary.cartTotal, userId);
+            if (validation.isValid) {
+                couponDiscount = validation.discountAmount;
+                appliedCouponCode = validation.coupon.code;
+            } else {
+                if (validation.coupon && summary.cartTotal < validation.coupon.minPurchaseAmount) {
+                    couponRemovedMessage = `Coupon removed because the order value no longer meets the minimum purchase requirement of ₹${validation.coupon.minPurchaseAmount}.`;
+                }
+                delete req.session.couponCode;
+            }
+        }
+
+        res.json({
+            success: true,
+            summary,
+            couponDiscount,
+            appliedCouponCode,
+            couponRemovedMessage,
+            finalTotal: summary.cartTotal - couponDiscount
+        });
+    } catch (error) {
+        console.error("Get Checkout Summary Error:", error);
+        res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ success: false, message: "Failed to recalculate totals." });
     }
 };

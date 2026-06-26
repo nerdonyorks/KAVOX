@@ -161,39 +161,74 @@
    GLOBAL SHIMMER SKELETON — use .shimmer on any placeholder element
    ========================================================================== */
 @keyframes kavox-shimmer {
-    0%   { background-position: -600px 0; }
-    100% { background-position:  600px 0; }
+  0% {
+    background-position: -600px 0;
+  }
+
+  100% {
+    background-position: 600px 0;
+  }
 }
 
 .shimmer {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%);
-    background-size: 600px 100%;
-    animation: kavox-shimmer 1.4s infinite linear;
-    border-radius: 4px;
-    color: transparent !important;
-    border-color: transparent !important;
-    pointer-events: none;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%);
+  background-size: 600px 100%;
+  animation: kavox-shimmer 1.4s infinite linear;
+  border-radius: 4px;
+  color: transparent !important;
+  border-color: transparent !important;
+  pointer-events: none;
 }
 
 /* Inline block for text-line placeholders */
 .shimmer-line {
-    display: block;
-    border-radius: 4px;
+  display: block;
+  border-radius: 4px;
 }
 
 /* Prevent interaction on entire skeleton cards */
 .shimmer-card {
-    pointer-events: none;
+  pointer-events: none;
 }
 
 /* Preset sizes — combine with .shimmer */
-.shimmer-title  { height: 22px; width: 60%; margin-bottom: 10px; }
-.shimmer-text   { height: 13px; width: 90%; margin-bottom: 8px;  }
-.shimmer-text-sm { height: 11px; width: 50%; margin-bottom: 6px; }
-.shimmer-badge  { height: 24px; width: 80px;  border-radius: 20px; }
-.shimmer-btn    { height: 40px; width: 120px; border-radius: 6px;  }
-.shimmer-avatar { border-radius: 50%; }
-.shimmer-thumb  { border-radius: 8px; }
+.shimmer-title {
+  height: 22px;
+  width: 60%;
+  margin-bottom: 10px;
+}
+
+.shimmer-text {
+  height: 13px;
+  width: 90%;
+  margin-bottom: 8px;
+}
+
+.shimmer-text-sm {
+  height: 11px;
+  width: 50%;
+  margin-bottom: 6px;
+}
+
+.shimmer-badge {
+  height: 24px;
+  width: 80px;
+  border-radius: 20px;
+}
+
+.shimmer-btn {
+  height: 40px;
+  width: 120px;
+  border-radius: 6px;
+}
+
+.shimmer-avatar {
+  border-radius: 50%;
+}
+
+.shimmer-thumb {
+  border-radius: 8px;
+}
 
 /* Admin Layout Scoped Styles */
 
@@ -255,6 +290,25 @@ body.admin-layout {
   flex-direction: column;
   z-index: 1000;
   color: #ffffff;
+  overflow-y: auto;
+}
+
+/* Sidebar premium custom scrollbar */
+.admin-layout .sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.admin-layout .sidebar::-webkit-scrollbar-track {
+  background: #000000;
+}
+
+.admin-layout .sidebar::-webkit-scrollbar-thumb {
+  background: #262626;
+  border-radius: 4px;
+}
+
+.admin-layout .sidebar::-webkit-scrollbar-thumb:hover {
+  background: #404040;
 }
 
 .admin-layout .logo {
@@ -728,24 +782,61 @@ body.admin-layout {
 }
 
 /* Action Buttons */
-.admin-layout .btn-view {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  color: #000000;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  transition: var(--transition);
-  background: white;
-  padding: 0;
-  /* Remove text padding since it's an icon now */
+.admin-layout .action-btn,
+.admin-layout .btn-view,
+.admin-layout .coupon-action-btn,
+.admin-layout .offer-action-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  color: #1e293b !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  background: #ffffff !important;
+  padding: 0 !important;
+  cursor: pointer !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 
-.admin-layout .btn-view:hover {
-  background-color: #f3f4f6;
-  border-color: #d1d5db;
+.admin-layout .action-btn:hover,
+.admin-layout .btn-view:hover,
+.admin-layout .coupon-action-btn:hover,
+.admin-layout .offer-action-btn:hover {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  transform: translateY(-1px) !important;
+  color: #6366f1 !important;
+}
+
+/* Red Delete Action Buttons Style */
+.admin-layout .action-btn[title*="Delete"],
+.admin-layout .btn-view[title*="Delete"],
+.admin-layout .coupon-action-btn[title*="Delete"],
+.admin-layout .offer-action-btn[title*="Delete"],
+.admin-layout .coupon-action-btn.delete,
+.admin-layout .offer-action-btn.delete,
+.admin-layout .action-btn[style*="color: #ef4444"],
+.admin-layout .btn-view[style*="color: #ef4444"] {
+  color: #ef4444 !important;
+  border-color: rgba(239, 68, 68, 0.15) !important;
+  background: #ffffff !important;
+}
+
+.admin-layout .action-btn[title*="Delete"]:hover,
+.admin-layout .btn-view[title*="Delete"]:hover,
+.admin-layout .coupon-action-btn[title*="Delete"]:hover,
+.admin-layout .offer-action-btn[title*="Delete"]:hover,
+.admin-layout .coupon-action-btn.delete:hover,
+.admin-layout .offer-action-btn.delete:hover,
+.admin-layout .action-btn[style*="color: #ef4444"]:hover,
+.admin-layout .btn-view[style*="color: #ef4444"]:hover {
+  background-color: rgba(239, 68, 68, 0.05) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #ef4444 !important;
 }
 
 /* Toggle Switch - Red/Green Pill */
@@ -800,6 +891,52 @@ body.admin-layout {
   border-radius: 4px;
   font-size: 12px;
   font-weight: 800;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-layout .btn-primary:hover {
+  background-color: #4f46e5 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.admin-layout .btn-primary:active {
+  transform: translateY(0);
+}
+
+.admin-layout .btn-secondary {
+  background-color: #ffffff;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+  padding: 12px 24px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-layout .btn-secondary:hover {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+  transform: translateY(-2px);
+}
+
+.admin-layout .btn-secondary:active {
+  transform: translateY(0);
+}
+
+/* Action table button hovers */
+.admin-layout .action-btn {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.admin-layout .action-btn:hover {
+  color: #6366f1 !important;
+  background: #f1f5f9;
+  transform: scale(1.1);
 }
 
 .admin-layout .form-control {
@@ -1937,6 +2074,9 @@ select.form-control {
   background: #fff;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .user-layout .product-image-wrapper {
@@ -1945,10 +2085,20 @@ select.form-control {
   border-radius: 4px;
   overflow: hidden;
   aspect-ratio: 4/5;
+  flex-shrink: 0;
+}
+
+.user-layout .product-image-wrapper a {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 15px;
+  box-sizing: border-box;
 }
 
 .user-layout .product-image-wrapper img {
@@ -2058,6 +2208,9 @@ select.form-control {
 .user-layout .product-card-info {
   padding: 15px 15px 25px;
   text-align: left;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
 }
 
 .user-layout .product-brand {
@@ -2113,6 +2266,7 @@ select.form-control {
   display: grid;
   grid-template-columns: 1fr 1.2fr;
   gap: 10px;
+  margin-top: auto;
 }
 
 .user-layout .btn-action {
@@ -2516,6 +2670,7 @@ select.form-control {
   inset: 0;
   background: linear-gradient(90deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 50%, rgba(0, 0, 0, 0) 100%);
   z-index: 2;
+  pointer-events: none;
 }
 
 .user-layout .hero-content {
@@ -3490,7 +3645,7 @@ select.form-control {
   position: fixed;
   top: 20px;
   right: 20px;
-  z-index: 10300;
+  z-index: 30300;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -3640,7 +3795,7 @@ select.form-control {
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  z-index: 10100;
+  z-index: 30100;
   display: none;
   align-items: center;
   justify-content: center;
@@ -3956,7 +4111,7 @@ select.form-control {
   inset: 0;
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(3px);
-  z-index: 10200;
+  z-index: 30200;
   display: none;
   flex-direction: column;
   align-items: center;
@@ -4948,7 +5103,10 @@ select.form-control {
 /* Order Success Modal Animation */
 .order-success-modal {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
@@ -4970,7 +5128,7 @@ select.form-control {
   padding: 40px 60px;
   border-radius: 12px;
   text-align: center;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
   transform: scale(0.8);
   transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
@@ -5018,7 +5176,9 @@ select.form-control {
 }
 
 @keyframes stroke {
-  100% { stroke-dashoffset: 0; }
+  100% {
+    stroke-dashoffset: 0;
+  }
 }
 
 .order-success-modal h2 {
@@ -5031,4 +5191,42 @@ select.form-control {
 .order-success-modal p {
   color: #666;
   font-size: 14px;
+}
+
+/* Banners Table Column Widths & Layout Overrides */
+.admin-layout .banners-table th:nth-child(1),
+.admin-layout .banners-table td:nth-child(1) {
+  width: 15% !important;
+}
+
+.admin-layout .banners-table th:nth-child(2),
+.admin-layout .banners-table td:nth-child(2) {
+  width: 25% !important;
+}
+
+.admin-layout .banners-table th:nth-child(3),
+.admin-layout .banners-table td:nth-child(3) {
+  width: 30% !important;
+}
+
+.admin-layout .banners-table td:nth-child(3) a {
+  word-break: break-all;
+  display: block;
+}
+
+.admin-layout .banners-table th:nth-child(4),
+.admin-layout .banners-table td:nth-child(4) {
+  width: 15% !important;
+}
+
+.admin-layout .banners-table th:nth-child(5),
+.admin-layout .banners-table td:nth-child(5) {
+  width: 10% !important;
+  text-align: center;
+}
+
+.admin-layout .banners-table th:nth-child(6),
+.admin-layout .banners-table td:nth-child(6) {
+  width: 10% !important;
+  text-align: center;
 }

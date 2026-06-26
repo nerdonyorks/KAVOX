@@ -336,7 +336,7 @@
       // Define regex patterns
       const namePattern = /^[A-Za-z0-9]{3,}$/;
       const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      const refPattern = /^[A-Za-z0-9]*$/;
+      const refPattern = /^[A-Za-z0-9-]*$/;
 
       // Toggle Password Visibility
       window.togglePasswordVisibility = function(inputId, btn) {
@@ -405,7 +405,7 @@
             break;
           case 'referralCode':
             if (value && !refPattern.test(value)) {
-              showError(inputId, 'referralCodeError', 'Referral code can only contain letters and numbers.');
+              showError(inputId, 'referralCodeError', 'Referral code can only contain letters, numbers, and hyphens.');
               isValid = false;
             }
             break;

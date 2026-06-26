@@ -3,6 +3,7 @@ const Cart = require('../models/cartModel');
 const mongoose = require('mongoose');
 const couponService = require('../services/couponService');
 const { HTTP_STATUS } = require('../utils/constants');
+const offerService = require('../services/offerService');
 
 // Helper to get cart total from orderController (we will export this from orderController)
 const { getDetailedTotals } = require('./orderController');
@@ -120,10 +121,10 @@ exports.createCoupon = async (req, res) => {
             });
         }
 
-        if (parsedMax !== null && (isNaN(parsedMax) || parsedMax <= 0)) {
+        if (parsedMax !== null && (isNaN(parsedMax) || parsedMax <= 0) || parsedMax < minPurchaseAmount) {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({
                 success: false,
-                message: "Maximum discount must be greater than 0."
+                message: "Maximum discount must be greater than 0 and less than minimum purchase amount."
             });
         }
 
@@ -389,6 +390,12 @@ exports.applyCoupon = async (req, res) => {
             });
         }
 
+        // Populate active offers first
+        if (cart.items.length > 0) {
+            const products = cart.items.map(item => item.productId).filter(Boolean);
+            await offerService.populateProductOffers(products);
+        }
+
         // Get detailed totals
         const summary = getDetailedTotals(cart.items);
         const cartTotal = summary.cartTotal; // Active total after category & product discounts
@@ -446,6 +453,12 @@ exports.removeCoupon = async (req, res) => {
                 discountAmount: 0,
                 finalTotal: 0
             });
+        }
+
+        // Populate active offers first
+        if (cart.items.length > 0) {
+            const products = cart.items.map(item => item.productId).filter(Boolean);
+            await offerService.populateProductOffers(products);
         }
 
         const summary = getDetailedTotals(cart.items);

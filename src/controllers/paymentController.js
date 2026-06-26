@@ -130,7 +130,8 @@ exports.createOrder = async (req, res) => {
 exports.verifyPayment = async (req, res) => {
     try {
         const userId = req.user._id;
-        const { razorpayOrderId, razorpayPaymentId, razorpaySignature, addressId, useWallet } = req.body;
+        const { razorpayOrderId, razorpayPaymentId, razorpaySignature, addressId } = req.body;
+        const useWallet = req.body.useWallet === true || req.body.useWallet === 'true';
 
         if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature || !addressId) {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
@@ -208,6 +209,14 @@ exports.verifyPayment = async (req, res) => {
             }
         }
 
+        // Validate wallet balance before order creation
+        if (walletAmountUsed > 0) {
+            const hasSufficientBalance = await walletService.verifyWalletBalance(userId, walletAmountUsed);
+            if (!hasSufficientBalance) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Insufficient wallet balance." });
+            }
+        }
+
         const remainingTotalInPaisa = Math.round(remainingAmountPaid * 100);
 
         // Verify amount paid matches remaining expected amount (1 paisa tolerance)
@@ -265,22 +274,6 @@ exports.verifyPayment = async (req, res) => {
 
         const newOrderId = generateOrderId();
 
-        // Perform Wallet deduction if applicable
-        if (walletAmountUsed > 0) {
-            try {
-                await walletService.debitWallet(userId, walletAmountUsed, 'WALLET_PAYMENT', newOrderId);
-            } catch (walletError) {
-                // Restore stock in case wallet debit fails
-                for (let item of cart.items) {
-                    const product = item.productId;
-                    const variant = product.variants.find(v => v.size === item.size && v.color === item.color);
-                    variant.quantity += item.quantity;
-                    await product.save();
-                }
-                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: walletError.message || "Failed to process wallet payment." });
-            }
-        }
-
         // 5. Create Order
         const newOrder = new Order({
             userId,
@@ -314,6 +307,26 @@ exports.verifyPayment = async (req, res) => {
         });
 
         await newOrder.save();
+
+        // Perform Wallet deduction after successful order placement
+        if (walletAmountUsed > 0) {
+            try {
+                await walletService.debitWallet(userId, walletAmountUsed, 'WALLET_PAYMENT', newOrderId);
+            } catch (walletError) {
+                // Rollback Order creation
+                await Order.deleteOne({ _id: newOrder._id });
+                // Restore stock
+                for (let item of cart.items) {
+                    const product = item.productId;
+                    const variant = product.variants.find(v => v.size === item.size && v.color === item.color);
+                    if (variant) {
+                        variant.quantity += item.quantity;
+                        await product.save();
+                    }
+                }
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: walletError.message || "Failed to process wallet payment." });
+            }
+        }
 
         // Clear coupon code session
         delete req.session.couponCode;

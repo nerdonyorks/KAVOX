@@ -1,6 +1,7 @@
 const Product = require("../models/productModel");
 const Category = require("../models/categoryModel");
 const Wishlist = require("../models/wishlist");
+const Review = require("../models/reviewModel");
 const { HTTP_STATUS, MESSAGES } = require("../utils/constants");
 const sharp = require("sharp");
 const path = require("path");
@@ -111,6 +112,20 @@ exports.createProduct = async (req, res) => {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Variants required." });
           }
 
+          const seenRestore = new Set();
+          for (const v of parsedVariants) {
+            if (v.size && v.color) {
+              const key = `${v.size.trim().toUpperCase()}_${v.color.trim().toUpperCase()}`;
+              if (seenRestore.has(key)) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({
+                  success: false,
+                  message: `Duplicate variant detected (Size: ${v.size}, Color: ${v.color}). Each variant must have a unique combination of size and color.`
+                });
+              }
+              seenRestore.add(key);
+            }
+          }
+
           let fileCursor = 0;
           const processedVariants = [];
 
@@ -168,6 +183,22 @@ exports.createProduct = async (req, res) => {
       }
     } else {
       variants = [];
+    }
+
+    if (variants && variants.length > 0) {
+      const seenCreate = new Set();
+      for (const v of variants) {
+        if (v.size && v.color) {
+          const key = `${v.size.trim().toUpperCase()}_${v.color.trim().toUpperCase()}`;
+          if (seenCreate.has(key)) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({
+              success: false,
+              message: `Duplicate variant detected (Size: ${v.size}, Color: ${v.color}). Each variant must have a unique combination of size and color.`
+            });
+          }
+          seenCreate.add(key);
+        }
+      }
     }
 
     let fileCursor = 0;
@@ -303,6 +334,21 @@ exports.updateProduct = async (req, res) => {
       try {
         const parsedVariants = typeof variants === 'string' ? JSON.parse(variants) : variants;
         console.log(`[BACKEND] Updating Product ID: ${req.params.id}, Files Received: ${files.length}, Variants: ${parsedVariants.length}`);
+
+        const seenUpdate = new Set();
+        for (const v of parsedVariants) {
+          if (v.size && v.color) {
+            const key = `${v.size.trim().toUpperCase()}_${v.color.trim().toUpperCase()}`;
+            if (seenUpdate.has(key)) {
+              return res.status(HTTP_STATUS.BAD_REQUEST).json({
+                success: false,
+                message: `Duplicate variant detected (Size: ${v.size}, Color: ${v.color}). Each variant must have a unique combination of size and color.`
+              });
+            }
+            seenUpdate.add(key);
+          }
+        }
+
         let fileCursor = 0;
         const processedVariants = [];
 
@@ -601,6 +647,27 @@ exports.userGetProductDetails = async (req, res) => {
     const stockText = totalStock > 0 ? (totalStock < 10 ? `Only ${totalStock} Left!` : 'In Stock') : 'Out of Stock';
     const stockClass = totalStock > 0 ? (totalStock < 10 ? 'stock-low' : 'stock-in') : 'stock-out';
 
+    // Fetch product reviews
+    const reviews = await Review.find({ productId: product._id, status: "APPROVED", isDeleted: false })
+      .populate("userId", "name")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const ratingBreakdown = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    reviews.forEach(r => {
+      if (ratingBreakdown[r.rating] !== undefined) {
+        ratingBreakdown[r.rating]++;
+      }
+    });
+
+    let canReview = false;
+    let existingReview = null;
+    if (currentUser) {
+      const reviewService = require("../services/reviewService");
+      canReview = await reviewService.verifyUserPurchase(currentUser._id, product._id);
+      existingReview = await Review.findOne({ userId: currentUser._id, productId: product._id, isDeleted: false }).lean();
+    }
+
     res.render("user/product-details", {
       title: `${product.name} - KAVOX`,
       product,
@@ -609,7 +676,12 @@ exports.userGetProductDetails = async (req, res) => {
       wishlistProductIds,
       isBlocked,
       stockText,
-      stockClass
+      stockClass,
+      reviews,
+      ratingBreakdown,
+      canReview,
+      existingReview,
+      currentUser: currentUser || null
     });
   } catch (error) {
     console.error("User Get Product Details Error:", error);

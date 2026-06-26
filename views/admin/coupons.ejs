@@ -378,11 +378,43 @@
       document.getElementById('couponModal').classList.remove('active');
     }
 
-    // Attach real-time error clearance
+    function validateDiscountAndMin() {
+      const discountType = document.getElementById('discountType').value;
+      const discountValue = document.getElementById('discountValue').value;
+      const minPurchaseAmount = document.getElementById('minPurchaseAmount').value;
+
+      const valNum = parseFloat(discountValue);
+      const minNum = parseFloat(minPurchaseAmount);
+
+      if (discountType === 'fixed' && !isNaN(valNum) && !isNaN(minNum)) {
+        if (valNum > minNum) {
+          document.getElementById('valueError').textContent = "Discount amount cannot be greater than the minimum purchase amount.";
+          document.getElementById('valueError').style.display = 'block';
+          document.getElementById('discountValue').classList.add('is-invalid');
+          return false;
+        } else {
+          if (document.getElementById('valueError').textContent === "Discount amount cannot be greater than the minimum purchase amount.") {
+            hideFieldError('discountValue', 'valueError');
+          }
+        }
+      }
+      return true;
+    }
+
+    // Attach real-time error clearance & immediate validation feedback
     document.getElementById('couponCode').addEventListener('input', () => hideFieldError('couponCode', 'codeError'));
-    document.getElementById('discountType').addEventListener('change', () => hideFieldError('discountValue', 'valueError'));
-    document.getElementById('discountValue').addEventListener('input', () => hideFieldError('discountValue', 'valueError'));
-    document.getElementById('minPurchaseAmount').addEventListener('input', () => hideFieldError('minPurchaseAmount', 'minError'));
+    document.getElementById('discountType').addEventListener('change', () => {
+      hideFieldError('discountValue', 'valueError');
+      validateDiscountAndMin();
+    });
+    document.getElementById('discountValue').addEventListener('input', () => {
+      hideFieldError('discountValue', 'valueError');
+      validateDiscountAndMin();
+    });
+    document.getElementById('minPurchaseAmount').addEventListener('input', () => {
+      hideFieldError('minPurchaseAmount', 'minError');
+      validateDiscountAndMin();
+    });
     document.getElementById('maxDiscount').addEventListener('input', () => hideFieldError('maxDiscount', 'maxError'));
     document.getElementById('expiryDate').addEventListener('change', () => hideFieldError('expiryDate', 'expiryError'));
 
@@ -447,6 +479,13 @@
         document.getElementById('minError').textContent = "Please enter a valid minimum purchase amount greater than 0.";
         document.getElementById('minError').style.display = 'block';
         document.getElementById('minPurchaseAmount').classList.add('is-invalid');
+        isValid = false;
+      }
+
+      if (isValid && discountType === 'fixed' && valNum > minNum) {
+        document.getElementById('valueError').textContent = "Discount amount cannot be greater than the minimum purchase amount.";
+        document.getElementById('valueError').style.display = 'block';
+        document.getElementById('discountValue').classList.add('is-invalid');
         isValid = false;
       }
 

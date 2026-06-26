@@ -44,7 +44,7 @@ exports.validateCoupon = async (code, cartTotal, userId) => {
             message: `Minimum purchase of ₹${coupon.minPurchaseAmount} is required to use this coupon.`
         };
     }
-
+   
     // Check if user has already used this coupon code in a non-cancelled order
     const hasUsed = await Order.exists({
         userId,

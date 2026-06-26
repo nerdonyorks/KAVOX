@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Banner Management - KAVOX Admin</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+  <script src="/js/notifications.js"></script>
+  <script src="/js/cropperManager.js"></script>
+  <style>
+    .banner-preview-img {
+      width: 120px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #475569;
+      font-size: 13px;
+    }
+
+    .form-control {
+      width: 100%;
+      height: 44px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      font-size: 14px;
+      box-sizing: border-box;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-control:focus {
+      border-color: #6366f1;
+    }
+
+    .banner-img-input-container {
+      border: 2px dashed #cbd5e1;
+      border-radius: 8px;
+      padding: 24px;
+      text-align: center;
+      background: #f8fafc;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .banner-img-input-container:hover {
+      border-color: #6366f1;
+    }
+
+    .preview-upload-box {
+      max-width: 100%;
+      max-height: 140px;
+      object-fit: cover;
+      border-radius: 6px;
+      display: none;
+      margin: 0 auto 12px auto;
+    }
+  </style>
+</head>
+
+<body class="admin-layout">
+
+  <%- include('partials/sidebar', { activePage: 'banners' }) %>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <header class="header">
+      <h1>BANNER MANAGEMENT</h1>
+    </header>
+
+    <div class="content-wrapper">
+      
+      <!-- Actions Row -->
+      <div class="card" style="margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h2 style="font-size: 15px; font-weight: 700; margin: 0; color: #1e293b;">Promotional Home Page Banners</h2>
+          <button class="btn-primary" onclick="openAddModal()" style="height: 42px; display: flex; align-items: center; gap: 8px;">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M12 4v16m8-8H4"></path>
+            </svg>
+            ADD BANNER
+          </button>
+        </div>
+      </div>
+
+      <!-- Banners Table -->
+      <div class="table-wrapper">
+        <table class="products-table banners-table">
+          <thead>
+            <tr>
+              <th>Banner Image</th>
+              <th>Heading Details</th>
+              <th>Link Target</th>
+              <th>Validity Dates</th>
+              <th>Status</th>
+              <th style="text-align: center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="bannersTableBody">
+            <% if (typeof banners !== 'undefined' && banners.length > 0) { %>
+              <% banners.forEach(b => { %>
+                <tr id="row-<%= b._id %>">
+                  <td>
+                    <img src="<%= b.image %>" alt="Banner Preview" class="banner-preview-img">
+                  </td>
+                  <td>
+                    <strong style="font-size: 14px; color: #1e293b; display: block;"><%= b.title %></strong>
+                    <span style="font-size: 12px; color: #64748b;"><%= b.subtitle || 'No Subtitle' %></span>
+                  </td>
+                  <td>
+                    <a href="<%= b.link %>" target="_blank" style="color: #6366f1; font-weight: 600; text-decoration: none; font-size: 13px;">
+                      <%= b.link %>
+                    </a>
+                  </td>
+                  <td>
+                    <% if (b.startDate || b.endDate) { %>
+                      <div style="font-size: 12px; color: #475569;">
+                        <strong>Start:</strong> <%= b.startDate ? new Date(b.startDate).toLocaleDateString() : 'N/A' %><br>
+                        <strong>End:</strong> <%= b.endDate ? new Date(b.endDate).toLocaleDateString() : 'N/A' %>
+                      </div>
+                    <% } else { %>
+                      <span style="color: #94a3b8; font-size: 12px;">Always active</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <span id="badge-<%= b._id %>" class="status-badge <%= b.isActive ? 'status-active' : 'status-inactive' %>" onclick="toggleBannerStatus('<%= b._id %>')" style="cursor: pointer;">
+                      <%= b.isActive ? 'Active' : 'Inactive' %>
+                    </span>
+                  </td>
+                  <td style="text-align: center;">
+                    <div style="display: flex; gap: 8px; justify-content: center;">
+                      <button class="action-btn" onclick="openEditModal('<%= b._id %>', '<%= b.title.replace(/'/g, `\\'`) %>', '<%= (b.subtitle || '').replace(/'/g, `\\'`) %>', '<%= b.link.replace(/'/g, `\\'`) %>', '<%= b.startDate ? new Date(b.startDate).toISOString().split('T')[0] : '' %>', '<%= b.endDate ? new Date(b.endDate).toISOString().split('T')[0] : '' %>', '<%= b.isActive %>', '<%= b.image %>')" title="Edit Banner">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </button>
+                      <button class="action-btn" onclick="deleteBanner('<%= b._id %>')" title="Delete Banner" style="color: #ef4444;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="6" style="text-align: center; padding: 40px; color: #64748b;">No banners created yet.</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Add/Edit Banner Modal -->
+  <div id="bannerModal" class="modal">
+    <div class="modal-content card" style="max-width: 600px; padding: 0;">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid var(--border-color); background: #fafafa;">
+        <h2 id="modalTitle" style="margin: 0; font-size: 18px; font-weight: 700; color: #1e293b;">Add Promotion Banner</h2>
+        <button type="button" onclick="closeModal()" style="background: none; border: none; color: #94a3b8; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <form id="bannerForm" onsubmit="saveBanner(event)" style="padding: 24px;" enctype="multipart/form-data">
+        <input type="hidden" id="bannerId">
+
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          
+          <div class="form-group" style="margin: 0;">
+            <label for="bannerTitle">Banner Title *</label>
+            <input type="text" id="bannerTitle" class="form-control" placeholder="e.g. MEGA SUMMER SALE" required>
+          </div>
+
+          <div class="form-group" style="margin: 0;">
+            <label for="bannerSubtitle">Subtitle / Caption</label>
+            <input type="text" id="bannerSubtitle" class="form-control" placeholder="e.g. GET UP TO 50% OFF TODAY">
+          </div>
+
+          <div class="form-group" style="margin: 0;">
+            <label for="bannerLink">Link Redirect URL *</label>
+            <input type="text" id="bannerLink" class="form-control" placeholder="e.g. /shop?category=Sneakers" required>
+          </div>
+
+          <!-- Validity Dates -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group" style="margin: 0;">
+              <label for="startDate">Start Date</label>
+              <input type="date" id="startDate" class="form-control">
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label for="endDate">End Date</label>
+              <input type="date" id="endDate" class="form-control">
+            </div>
+          </div>
+
+          <!-- Image Upload Container -->
+          <div class="form-group" style="margin: 0;">
+            <label>Banner Image (Ideal aspect ratio 1200x500) *</label>
+            <div class="banner-img-input-container" onclick="document.getElementById('bannerImageInput').click()">
+              <img id="imagePreview" class="preview-upload-box" src="" alt="Upload Preview">
+              <div id="uploadPrompt">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin: 0 auto 8px auto; color: #64748b; display: block;">
+                  <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span style="font-size: 13px; font-weight: 500; color: #475569;">Click to upload banner image file</span>
+              </div>
+              <input type="file" id="bannerImageInput" name="image" style="display: none;" accept="image/*" onchange="previewImage(event)">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin: 0;">
+            <label for="bannerStatus">Status</label>
+            <select id="bannerStatus" class="form-control">
+              <option value="true">Active</option>
+              <option value="false">Inactive</option>
+            </select>
+          </div>
+
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+          <button type="button" class="btn-secondary" onclick="closeModal()" style="height: 42px;">Cancel</button>
+          <button type="submit" id="submitBtn" class="btn-primary" style="height: 42px;">SAVE BANNER</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const modal = document.getElementById('bannerModal');
+    const form = document.getElementById('bannerForm');
+    let croppedImageFile = null;
+
+    function openAddModal() {
+      document.getElementById('bannerId').value = '';
+      form.reset();
+      croppedImageFile = null;
+      document.getElementById('bannerImageInput').value = '';
+      document.getElementById('modalTitle').innerText = 'Add Promotion Banner';
+      document.getElementById('imagePreview').style.display = 'none';
+      document.getElementById('uploadPrompt').style.display = 'block';
+      modal.classList.add('active');
+    }
+
+    function openEditModal(id, title, subtitle, link, start, end, active, imgUrl) {
+      document.getElementById('bannerId').value = id;
+      document.getElementById('bannerTitle').value = title;
+      document.getElementById('bannerSubtitle').value = subtitle;
+      document.getElementById('bannerLink').value = link;
+      document.getElementById('startDate').value = start;
+      document.getElementById('endDate').value = end;
+      document.getElementById('bannerStatus').value = active === 'true' || active === true ? 'true' : 'false';
+      croppedImageFile = null;
+      document.getElementById('bannerImageInput').value = '';
+
+      const preview = document.getElementById('imagePreview');
+      preview.src = imgUrl;
+      preview.style.display = 'block';
+      document.getElementById('uploadPrompt').style.display = 'none';
+
+      document.getElementById('modalTitle').innerText = 'Edit Promotion Banner';
+      modal.classList.add('active');
+    }
+
+    function closeModal() {
+      modal.classList.remove('active');
+    }
+
+    function previewImage(event) {
+      const input = event.target;
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+        if (!allowedTypes.includes(file.type)) {
+          KavoxNotify.toast("Please upload only image files (JPEG, PNG, WEBP).", "error");
+          input.value = '';
+          return;
+        }
+
+        CropperManager.init(file, {
+          aspectRatio: 1200 / 500,
+          width: 1200,
+          height: 500,
+          callback: (croppedFile, previewUrl) => {
+            if (croppedFile) {
+              croppedImageFile = croppedFile;
+              const preview = document.getElementById('imagePreview');
+              preview.src = previewUrl;
+              preview.style.display = 'block';
+              document.getElementById('uploadPrompt').style.display = 'none';
+            } else {
+              input.value = '';
+            }
+          }
+        });
+      }
+    }
+
+    async function saveBanner(event) {
+      event.preventDefault();
+
+      const id = document.getElementById('bannerId').value;
+      const title = document.getElementById('bannerTitle').value;
+      const subtitle = document.getElementById('bannerSubtitle').value;
+      const link = document.getElementById('bannerLink').value;
+      const start = document.getElementById('startDate').value;
+      const end = document.getElementById('endDate').value;
+      const active = document.getElementById('bannerStatus').value;
+
+      if (!id && !croppedImageFile) {
+        KavoxNotify.toast("Please select and crop a banner image.", "error");
+        return;
+      }
+
+      KavoxNotify.loading("Saving banner details...");
+
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("subtitle", subtitle);
+      formData.append("link", link);
+      formData.append("startDate", start);
+      formData.append("endDate", end);
+      formData.append("isActive", active);
+
+      if (croppedImageFile) {
+        formData.append("image", croppedImageFile);
+      }
+
+      const url = id ? `/api/admin/banners/${id}` : '/api/admin/banners';
+      const method = id ? 'PUT' : 'POST';
+
+      try {
+        const res = await fetch(url, {
+          method: method,
+          body: formData
+        }).then(r => r.json());
+
+        KavoxNotify.closeLoading();
+
+        if (res.success) {
+          KavoxNotify.toast(res.message, "success");
+          setTimeout(() => window.location.reload(), 1000);
+        } else {
+          KavoxNotify.alert({ title: "Failed to Save", text: res.message || "An error occurred.", icon: "error" });
+        }
+      } catch (error) {
+        KavoxNotify.closeLoading();
+        KavoxNotify.toast("Connection error occurred saving banner.", "error");
+      }
+    }
+
+    async function toggleBannerStatus(id) {
+      try {
+        const res = await fetch(`/api/admin/banners/${id}/toggle`, {
+          method: 'PATCH'
+        }).then(r => r.json());
+
+        if (res.success) {
+          KavoxNotify.toast(res.message, "success");
+          const badge = document.getElementById(`badge-${id}`);
+          if (res.isActive) {
+            badge.className = 'status-badge status-active';
+            badge.innerText = 'Active';
+          } else {
+            badge.className = 'status-badge status-inactive';
+            badge.innerText = 'Inactive';
+          }
+        } else {
+          KavoxNotify.toast(res.message || "Failed to toggle status.", "error");
+        }
+      } catch (error) {
+        KavoxNotify.toast("Network error toggling status.", "error");
+      }
+    }
+
+    async function deleteBanner(id) {
+      const confirm = await KavoxNotify.confirm({
+        title: "Delete Banner?",
+        text: "Are you sure you want to permanently delete this banner? This action is irreversible.",
+        icon: "warning",
+        confirmText: "Delete",
+        cancelText: "Cancel"
+      });
+
+      if (!confirm.isConfirmed) return;
+
+      KavoxNotify.loading("Deleting banner...");
+      try {
+        const res = await fetch(`/api/admin/banners/${id}`, {
+          method: 'DELETE'
+        }).then(r => r.json());
+
+        KavoxNotify.closeLoading();
+        if (res.success) {
+          KavoxNotify.toast(res.message, "success");
+          document.getElementById(`row-${id}`).remove();
+        } else {
+          KavoxNotify.toast(res.message || "Failed to delete banner.", "error");
+        }
+      } catch (error) {
+        KavoxNotify.closeLoading();
+        KavoxNotify.toast("Network error deleting banner.", "error");
+      }
+    }
+  </script>
+  <%- include('../partials/cropperModal') %>
+</body>
+
+</html>

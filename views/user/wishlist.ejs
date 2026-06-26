@@ -27,6 +27,7 @@
       font-weight: 800;
       letter-spacing: -0.5px;
     }
+
     @media (max-width: 768px) {
       .wishlist-container {
         margin: 20px auto;
@@ -63,7 +64,7 @@
         right: 8px;
         font-size: 14px;
       }
-      
+
       .wishlist-actions .btn-add-cart {
         padding: 8px;
         font-size: 11px;
@@ -265,6 +266,9 @@
                     </div>
                     <a href="/product/<%= product._id %>" class="btn-view-product"
                       style="<%= isOutOfStock ? 'background: #999;' : '' %>">VIEW DETAILS</a>
+                    <button class="btn-view-product" onclick="openAddToCartModal('<%= product._id %>')">Add to
+                      Cart</button>
+
                   </div>
                 </div>
                 <% }) %>
