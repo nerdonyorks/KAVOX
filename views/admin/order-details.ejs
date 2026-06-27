@@ -216,6 +216,22 @@
                 <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.1rem;">
                   <span>Total</span><span>₹<%= order.pricing.total %></span>
                 </div>
+                <% if (order.walletAmountUsed > 0) { %>
+                  <div style="display: flex; justify-content: space-between; margin-top: 10px; color: #15803d; font-size: 0.95rem;">
+                    <span>Wallet Amount Used</span><span>-₹<%= order.walletAmountUsed %></span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; margin-top: 5px; font-weight: bold; font-size: 1.05rem;">
+                    <span>Remaining Amount</span><span>₹<%= order.remainingAmountPaid %></span>
+                  </div>
+                <% } %>
+                <% if (order.refundAmount > 0) { %>
+                  <div style="display: flex; justify-content: space-between; margin-top: 10px; color: #15803d; font-weight: bold; font-size: 0.95rem;">
+                    <span>Refunded to Wallet</span><span>₹<%= order.refundAmount %></span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; margin-top: 5px; font-size: 0.95rem;">
+                    <span>Refund Status</span><span style="font-weight: bold; color: #047857;"><%= order.refundStatus %></span>
+                  </div>
+                <% } %>
               </div>
             </div>
 
@@ -236,6 +252,38 @@
                 <div class="info-value">
                   <%= order.userId ? order.userId.phone : 'Unknown' %>
                 </div>
+              </div>
+            </div>
+
+            <div class="info-card">
+              <h3>Payment Details</h3>
+              <div style="margin-top: 15px;">
+                <div class="info-label">Payment Method</div>
+                <div class="info-value">
+                  <% if (order.walletAmountUsed > 0 && order.remainingAmountPaid > 0) { %>
+                    WALLET + <%= order.paymentMethod %> (Partial)
+                  <% } else { %>
+                    <%= order.paymentMethod %>
+                  <% } %>
+                </div>
+
+                <div class="info-label" style="margin-top: 10px;">Payment Status</div>
+                <div class="info-value">
+                  <span class="badge-status" style="padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 700;
+                    <%= order.paymentStatus === 'Completed' ? 'background-color: #d1fae5; color: #065f46;' : (order.paymentStatus === 'Failed' ? 'background-color: #fee2e2; color: #991b1b;' : 'background-color: #fef3c7; color: #92400e;') %>">
+                    <%= order.paymentStatus %>
+                  </span>
+                </div>
+
+                <% if (order.paymentMethod === 'RAZORPAY') { %>
+                  <div class="info-label" style="margin-top: 10px;">Razorpay Payment ID</div>
+                  <div class="info-value" style="font-family: monospace;"><%= order.razorpayPaymentId || 'N/A' %></div>
+
+                  <div class="info-label" style="margin-top: 10px;">Transaction Date</div>
+                  <div class="info-value">
+                    <%= order.transactionDate ? new Date(order.transactionDate).toLocaleString('en-IN') : 'N/A' %>
+                  </div>
+                <% } %>
               </div>
             </div>
 

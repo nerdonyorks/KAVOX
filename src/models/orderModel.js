@@ -67,7 +67,16 @@ const orderSchema = new Schema({
   },
   cancellationReason: { type: String },
   returnReason: { type: String },
-  couponApplied: { type: String }
+  couponApplied: { type: String },
+  couponCode: { type: String },
+  couponDiscount: { type: Number, default: 0 },
+  razorpayOrderId: { type: String },
+  razorpayPaymentId: { type: String },
+  transactionDate: { type: Date },
+  walletAmountUsed: { type: Number, default: 0 },
+  remainingAmountPaid: { type: Number, default: 0 },
+  refundStatus: { type: String, enum: ['N/A', 'Pending', 'Completed'], default: 'N/A' },
+  refundAmount: { type: Number, default: 0 }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', orderSchema);

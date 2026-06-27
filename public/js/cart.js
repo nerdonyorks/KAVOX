@@ -329,6 +329,32 @@ async function removeFromCart(itemId) {
                             
                             if (document.getElementById('summaryTotal')) 
                                 document.getElementById('summaryTotal').innerText = `₹${s.cartTotal}`;
+
+                            // Update dynamic validation errors and checkout button
+                            const btnCheckout = document.querySelector('.btn-checkout');
+                            const valBanner = document.querySelector('.validation-banner');
+                            if (data.validationErrors && data.validationErrors.length > 0) {
+                                if (btnCheckout) {
+                                    btnCheckout.disabled = true;
+                                    btnCheckout.innerText = 'RESOLVE ISSUES TO CHECKOUT';
+                                }
+                                if (valBanner) {
+                                    valBanner.style.display = 'block';
+                                    valBanner.innerHTML = data.validationErrors.map(err => `
+                                        <div class="error-item"><i class="fa-solid fa-triangle-exclamation"></i>
+                                            ${err}
+                                        </div>
+                                    `).join('');
+                                }
+                            } else {
+                                if (btnCheckout) {
+                                    btnCheckout.disabled = false;
+                                    btnCheckout.innerText = 'PROCEED TO CHECKOUT';
+                                }
+                                if (valBanner) {
+                                    valBanner.style.display = 'none';
+                                }
+                            }
                         }
                     }, 300);
                 }

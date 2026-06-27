@@ -332,38 +332,53 @@
               <div class="cart-layout">
                 <!-- Cart Items List -->
                 <div class="cart-items-panel">
-                  <% cart.items.forEach(item=> { %>
-                    <div class="cart-item" id="cart-item-<%= item._id %>">
-                      <div class="item-img">
-                        <% const variantImage=item.productId.variants.find(v=> v.size === item.size && v.color ===
-                          item.color)?.images[0]?.url || item.productId.images[0]?.url;
-                          %>
-                          <img src="<%= variantImage %>" alt="<%= item.productId.name %>">
+                  <% cart.items.forEach(item=> { 
+                    const isUnlisted = item.isUnlisted;
+                    const isUnavailable = item.isUnavailable;
+                    const productName = item.productId ? item.productId.name : 'Unknown Product';
+                    
+                    let variantImage = '/images/placeholder.jpg';
+                    if (item.productId && item.productId.variants) {
+                      variantImage = item.productId.variants.find(v=> v.size === item.size && v.color === item.color)?.images[0]?.url || item.productId.images[0]?.url || '/images/placeholder.jpg';
+                    }
+                  %>
+                    <div class="cart-item <%= isUnavailable ? 'unavailable-item' : '' %>" id="cart-item-<%= item._id %>" style="<%= isUnavailable ? 'background-color: #f8fafc; border-color: #e2e8f0;' : '' %>">
+                      <div class="item-img" style="<%= isUnavailable ? 'opacity: 0.6;' : '' %>">
+                          <img src="<%= variantImage %>" alt="<%= productName %>">
                       </div>
-                      <div class="item-details">
+                      <div class="item-details" style="<%= isUnavailable ? 'opacity: 0.6;' : '' %>">
                         <div class="item-title">
-                          <a href="/product/<%= item.productId._id %>">
-                            <%= item.productId.name %>
-                          </a>
+                          <% if (item.productId) { %>
+                            <a href="/product/<%= item.productId._id %>">
+                              <%= productName %>
+                            </a>
+                          <% } else { %>
+                            <span style="font-size: 18px; font-weight: 700;"><%= productName %></span>
+                          <% } %>
                           <span class="item-variant">Size: <strong>
                               <%= item.size %>
                             </strong> | Color: <strong>
                               <%= item.color %>
                             </strong></span>
+                          <% if (isUnavailable) { %>
+                            <span style="display: inline-block; background-color: #fee2e2; color: #b91c1c; font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 4px; margin-top: 6px;">
+                              <%= isUnlisted ? 'PRODUCT NO LONGER AVAILABLE' : 'UNAVAILABLE (OUT OF STOCK / VARIANT ISSUE)' %>
+                            </span>
+                          <% } %>
                         </div>
                         <div class="item-price">
                           <span class="current-price">₹<%= item.price %></span>
                         </div>
                       </div>
                       <div class="item-actions">
-                        <div class="qty-control">
-                          <button class="qty-btn" onclick="updateCartQty('<%= item._id %>', -1)"><i
+                        <div class="qty-control" style="<%= isUnavailable ? 'opacity: 0.5; pointer-events: none;' : '' %>">
+                          <button class="qty-btn" <%= isUnavailable ? 'disabled' : '' %> onclick="updateCartQty('<%= item._id %>', -1)"><i
                               class="fa-solid fa-minus"></i></button>
                           <input type="number" id="qty-<%= item._id %>" value="<%= item.quantity %>" readonly>
-                          <button class="qty-btn" onclick="updateCartQty('<%= item._id %>', 1)"><i
+                          <button class="qty-btn" <%= isUnavailable ? 'disabled' : '' %> onclick="updateCartQty('<%= item._id %>', 1)"><i
                               class="fa-solid fa-plus"></i></button>
                         </div>
-                        <div class="item-subtotal" id="subtotal-<%= item._id %>">₹<%= item.totalPrice %>
+                        <div class="item-subtotal" id="subtotal-<%= item._id %>" style="<%= isUnavailable ? 'opacity: 0.6;' : '' %>">₹<%= item.totalPrice %>
                         </div>
                         <button class="remove-btn" onclick="removeFromCart('<%= item._id %>')"><i
                             class="fa-regular fa-trash-can"></i></button>

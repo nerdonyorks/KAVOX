@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Report - KAVOX Admin</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/notifications.js"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Premium Sales Report Custom Styling */
+    .report-filter-card {
+      background: var(--bg-card, #ffffff);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      border: 1px solid var(--border-color, #f1f5f9);
+    }
+
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 16px;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .filter-group label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .filter-control {
+      height: 42px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #1e293b;
+      font-size: 14px;
+      font-weight: 500;
+      outline: none;
+      transition: all 0.2s ease-in-out;
+      min-width: 160px;
+    }
+
+    .filter-control:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+
+    .btn-download-group {
+      display: flex;
+      gap: 12px;
+      margin-left: auto;
+    }
+
+    .btn-download {
+      height: 42px;
+      padding: 0 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-download-pdf {
+      background: #ef4444;
+      color: #ffffff;
+    }
+
+    .btn-download-pdf:hover {
+      background: #dc2626;
+      box-shadow: 0 4px 10px rgba(239, 68, 68, 0.25);
+    }
+
+    .btn-download-excel {
+      background: #10b981;
+      color: #ffffff;
+    }
+
+    .btn-download-excel:hover {
+      background: #059669;
+      box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .chart-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 24px;
+      border: 1px solid var(--border-color, #e2e8f0);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      min-height: 340px;
+    }
+
+    .chart-card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 12px;
+    }
+
+    .chart-container {
+      position: relative;
+      width: 100%;
+      height: 250px;
+    }
+
+    .stat-detail-subtext {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+
+    .orders-table th {
+      background: #0f172a;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      padding: 14px 16px;
+    }
+
+    .orders-table td {
+      padding: 14px 16px;
+      font-size: 13px;
+      vertical-align: middle;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .orders-table tr:hover {
+      background-color: #f8fafc;
+    }
+
+    .custom-date-container {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    /* Shimmer screen overlay during API fetches */
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(2px);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .loading-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #e2e8f0;
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body class="admin-layout">
+
+  <%- include('partials/sidebar', { activePage: 'report' }) %>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <header class="header">
+      <h1>SALES & ANALYTICS REPORT</h1>
+    </header>
+
+    <div class="content-wrapper" style="position: relative;">
+      
+      <!-- Loading Overlay for Entire Dashboard -->
+      <div id="dashboardLoader" class="loading-overlay">
+        <div class="spinner"></div>
+      </div>
+
+      <!-- Filters Panel -->
+      <div class="report-filter-card">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="filterType">Time Period</label>
+            <select id="filterType" class="filter-control" onchange="handleFilterChange()">
+              <option value="daily">Daily Report (Today)</option>
+              <option value="weekly">Weekly Report (Last 7 Days)</option>
+              <option value="monthly">Monthly Report (Current Month)</option>
+              <option value="yearly">Yearly Report (Current Year)</option>
+              <option value="custom">Custom Date Range</option>
+            </select>
+          </div>
+
+          <div id="customDateRange" class="custom-date-container" style="display: none;">
+            <div class="filter-group">
+              <label for="startDate">Start Date</label>
+              <input type="date" id="startDate" class="filter-control" onchange="validateDatesAndRefresh()">
+            </div>
+            <div class="filter-group">
+              <label for="endDate">End Date</label>
+              <input type="date" id="endDate" class="filter-control" onchange="validateDatesAndRefresh()">
+            </div>
+          </div>
+
+          <div class="btn-download-group">
+            <a href="#" id="downloadPdfBtn" class="btn-download btn-download-pdf">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              PDF Report
+            </a>
+            <a href="#" id="downloadExcelBtn" class="btn-download btn-download-excel">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Excel Sheets
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Metric Cards -->
+      <div class="stats-grid" style="margin-bottom: 28px;">
+        <div class="card stat-card">
+          <div class="stat-info">
+            <div id="statOrders" class="stat-value">0</div>
+            <div class="stat-label">Delivered Orders</div>
+            <div class="stat-detail-subtext">Successful completions</div>
+          </div>
+          <div class="stat-icon-box" style="color: #6366f1;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          </div>
+        </div>
+
+        <div class="card stat-card">
+          <div class="stat-info">
+            <div id="statGross" class="stat-value">₹0</div>
+            <div class="stat-label">Gross Revenue</div>
+            <div class="stat-detail-subtext">Before discount deductions</div>
+          </div>
+          <div class="stat-icon-box" style="color: #3b82f6;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          </div>
+        </div>
+
+        <div class="card stat-card">
+          <div class="stat-info">
+            <div id="statDiscounts" class="stat-value">₹0</div>
+            <div class="stat-label">Deducted Discounts</div>
+            <div id="statDiscountsSplit" class="stat-detail-subtext">Offers: ₹0 | Coupons: ₹0</div>
+          </div>
+          <div class="stat-icon-box" style="color: #f59e0b;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+          </div>
+        </div>
+
+        <div class="card stat-card" style="border-left: 4px solid #10b981;">
+          <div class="stat-info">
+            <div id="statNet" class="stat-value" style="color: #10b981;">₹0</div>
+            <div class="stat-label" style="font-weight: 700;">Net Revenue Yield</div>
+            <div class="stat-detail-subtext">Net store value captured</div>
+          </div>
+          <div class="stat-icon-box" style="color: #10b981; background: rgba(16, 185, 129, 0.1);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Section -->
+      <div class="charts-grid">
+        <!-- Revenue Line Chart -->
+        <div class="chart-card">
+          <div class="chart-card-title">Revenue Progress Trend</div>
+          <div class="chart-container">
+            <canvas id="salesTrendChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Order Volume Bar Chart -->
+        <div class="chart-card">
+          <div class="chart-card-title">Delivered Orders Volume</div>
+          <div class="chart-container">
+            <canvas id="orderTrendChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Payment Split Donut -->
+        <div class="chart-card">
+          <div class="chart-card-title">Payment Method Mix</div>
+          <div class="chart-container">
+            <canvas id="paymentSplitChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Revenue Breakdown Doughnut -->
+        <div class="chart-card">
+          <div class="chart-card-title">Gross Revenue Allocation</div>
+          <div class="chart-container">
+            <canvas id="revenueBreakdownChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Details Grid Card -->
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 20px;">
+          <h2 style="font-size: 16px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Detailed Orders List</h2>
+        </div>
+
+        <div style="width: 100%; overflow-x: auto;">
+          <table class="orders-table" style="width: 100%; text-align: left; border-collapse: collapse;">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Placed Date</th>
+                <th>Customer Name</th>
+                <th>Payment Type</th>
+                <th style="text-align: right;">Gross Price</th>
+                <th style="text-align: right;">Offers Disc.</th>
+                <th style="text-align: right;">Coupons Disc.</th>
+                <th style="text-align: right;">Final Paid</th>
+                <th style="text-align: center;">Status</th>
+              </tr>
+            </thead>
+            <tbody id="salesTableBody">
+              <tr>
+                <td colspan="9" style="text-align: center; color: #64748b; padding: 30px;">Loading sales list...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Section -->
+        <div id="tablePagination" class="pagination" style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 8px;">
+          <!-- Managed Dynamically by Javascript -->
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    let currentFilter = 'daily';
+    let currentStart = '';
+    let currentEnd = '';
+    let currentTablePage = 1;
+
+    // Store Chart.js instances for clear/redraw
+    let charts = {};
+
+    document.addEventListener("DOMContentLoaded", function () {
+      // Set max date for calendar inputs to today
+      const todayStr = new Date().toISOString().split('T')[0];
+      document.getElementById('startDate').max = todayStr;
+      document.getElementById('endDate').max = todayStr;
+
+      // Initial report data load
+      loadDashboardData();
+    });
+
+    function handleFilterChange() {
+      const type = document.getElementById('filterType').value;
+      currentFilter = type;
+      currentTablePage = 1;
+
+      if (type === 'custom') {
+        document.getElementById('customDateRange').style.display = 'flex';
+      } else {
+        document.getElementById('customDateRange').style.display = 'none';
+        loadDashboardData();
+      }
+    }
+
+    function validateDatesAndRefresh() {
+      const start = document.getElementById('startDate').value;
+      const end = document.getElementById('endDate').value;
+      
+      if (!start || !end) return; // Wait until both are filled
+      
+      const startDateObj = new Date(start);
+      const endDateObj = new Date(end);
+      const today = new Date();
+      today.setHours(23,59,59,999);
+
+      if (startDateObj > today || endDateObj > today) {
+        KavoxNotify.toast("Future dates are not allowed.", "error");
+        return;
+      }
+
+      if (endDateObj < startDateObj) {
+        KavoxNotify.toast("End date cannot be earlier than start date.", "error");
+        return;
+      }
+
+      currentStart = start;
+      currentEnd = end;
+      currentTablePage = 1;
+      loadDashboardData();
+    }
+
+    function updateDownloadLinks() {
+      const pdfBtn = document.getElementById('downloadPdfBtn');
+      const excelBtn = document.getElementById('downloadExcelBtn');
+
+      let queryParams = `?filter=${currentFilter}`;
+      if (currentFilter === 'custom') {
+        queryParams += `&startDate=${currentStart}&endDate=${currentEnd}`;
+      }
+
+      pdfBtn.href = `/admin/reports/download/pdf${queryParams}`;
+      excelBtn.href = `/admin/reports/download/excel${queryParams}`;
+    }
+
+    function showSpinner() {
+      document.getElementById('dashboardLoader').classList.add('active');
+    }
+
+    function hideSpinner() {
+      document.getElementById('dashboardLoader').classList.remove('active');
+    }
+
+    async function loadDashboardData() {
+      showSpinner();
+      updateDownloadLinks();
+
+      try {
+        let queryParams = `?filter=${currentFilter}`;
+        if (currentFilter === 'custom') {
+          queryParams += `&startDate=${currentStart}&endDate=${currentEnd}`;
+        }
+
+        // Fetch metrics & charts in parallel with paginated table data
+        const [summaryRes, salesRes] = await Promise.all([
+          fetch(`/admin/reports/summary${queryParams}`).then(r => r.json()),
+          fetch(`/admin/reports/sales${queryParams}&page=${currentTablePage}`).then(r => r.json())
+        ]);
+
+        if (summaryRes.success && salesRes.success) {
+          updateSummaryCards(summaryRes.data.summary);
+          renderDashboardCharts(summaryRes.data);
+          renderSalesTable(salesRes);
+        } else {
+          KavoxNotify.toast(summaryRes.message || salesRes.message || "Failed to load dashboard data.", "error");
+        }
+      } catch (error) {
+        console.error("Dashboard Load Error:", error);
+        KavoxNotify.toast("Connection error loading sales report dashboard.", "error");
+      } finally {
+        hideSpinner();
+      }
+    }
+
+    async function loadSalesTableOnly(page) {
+      showSpinner();
+      currentTablePage = page;
+      try {
+        let queryParams = `?filter=${currentFilter}&page=${currentTablePage}`;
+        if (currentFilter === 'custom') {
+          queryParams += `&startDate=${currentStart}&endDate=${currentEnd}`;
+        }
+
+        const res = await fetch(`/admin/reports/sales${queryParams}`).then(r => r.json());
+        if (res.success) {
+          renderSalesTable(res);
+        } else {
+          KavoxNotify.toast(res.message || "Failed to load order rows.", "error");
+        }
+      } catch (error) {
+        console.error("Table Load Error:", error);
+      } finally {
+        hideSpinner();
+      }
+    }
+
+    function updateSummaryCards(summary) {
+      document.getElementById('statOrders').innerText = summary.totalOrders;
+      document.getElementById('statGross').innerText = `₹${summary.grossSales.toLocaleString()}`;
+      document.getElementById('statDiscounts').innerText = `₹${summary.discounts.toLocaleString()}`;
+      document.getElementById('statDiscountsSplit').innerText = `Offers: ₹${summary.offerDiscounts.toLocaleString()} | Coupons: ₹${summary.couponDiscounts.toLocaleString()}`;
+      document.getElementById('statNet').innerText = `₹${summary.netRevenue.toLocaleString()}`;
+    }
+
+    function renderSalesTable(res) {
+      const tbody = document.getElementById('salesTableBody');
+      const paginationDiv = document.getElementById('tablePagination');
+      tbody.innerHTML = '';
+      paginationDiv.innerHTML = '';
+
+      if (!res.orders || res.orders.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #64748b; padding: 40px;">No delivered orders found in this period.</td></tr>`;
+        return;
+      }
+
+      res.orders.forEach(o => {
+        const orderDateStr = new Date(o.date).toLocaleDateString("en-IN", {
+          year: "numeric",
+          month: "short",
+          day: "numeric"
+        });
+
+        tbody.innerHTML += `
+          <tr>
+            <td><span style="font-family: monospace; font-weight: 700; color: #475569;">#${o.orderId}</span></td>
+            <td>${orderDateStr}</td>
+            <td style="font-weight: 600; color: #1e293b;">${o.customer}</td>
+            <td>
+              <span class="status-badge" style="background: #e2e8f0; color: #475569; font-size: 11px;">
+                ${o.paymentMethod.toUpperCase() === 'RAZORPAY' ? 'Online' : o.paymentMethod}
+              </span>
+            </td>
+            <td style="text-align: right; font-weight: 500;">₹${o.grossAmount.toLocaleString()}</td>
+            <td style="text-align: right; color: #dc2626;">₹${o.offerDiscount.toLocaleString()}</td>
+            <td style="text-align: right; color: #dc2626;">₹${o.couponDiscount.toLocaleString()}</td>
+            <td style="text-align: right; font-weight: 700; color: #059669;">₹${o.finalAmount.toLocaleString()}</td>
+            <td style="text-align: center;">
+              <span class="status-badge status-active">
+                ${o.status}
+              </span>
+            </td>
+          </tr>
+        `;
+      });
+
+      // Pagination rendering
+      if (res.totalPages > 1) {
+        let pagHtml = '';
+        if (res.page > 1) {
+          pagHtml += `<a href="javascript:void(0)" onclick="loadSalesTableOnly(${res.page - 1})">&laquo;</a>`;
+        }
+        for (let i = 1; i <= res.totalPages; i++) {
+          pagHtml += `<a href="javascript:void(0)" onclick="loadSalesTableOnly(${i})" class="${res.page === i ? 'active' : ''}">${i}</a>`;
+        }
+        if (res.page < res.totalPages) {
+          pagHtml += `<a href="javascript:void(0)" onclick="loadSalesTableOnly(${res.page + 1})">&raquo;</a>`;
+        }
+        paginationDiv.innerHTML = pagHtml;
+      }
+    }
+
+    function renderDashboardCharts(data) {
+      // Destroy existing chart objects if they exist
+      Object.keys(charts).forEach(key => {
+        if (charts[key]) charts[key].destroy();
+      });
+
+      // Helper for clean styling
+      const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: { grid: { color: "#f1f5f9" }, ticks: { font: { size: 10 } } },
+          x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+        }
+      };
+
+      // 1. Sales Trend Line Chart
+      const salesCtx = document.getElementById('salesTrendChart').getContext('2d');
+      const salesLabels = data.salesTrend.map(t => t.label);
+      const salesValues = data.salesTrend.map(t => t.value);
+      
+      charts.sales = new Chart(salesCtx, {
+        type: 'line',
+        data: {
+          labels: salesLabels.length > 0 ? salesLabels : ['No Data'],
+          datasets: [{
+            data: salesValues.length > 0 ? salesValues : [0],
+            borderColor: '#6366f1',
+            backgroundColor: 'rgba(99, 102, 241, 0.08)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2.5,
+            pointBackgroundColor: '#6366f1'
+          }]
+        },
+        options: {
+          ...chartOptions,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) { return ` Revenue: ₹${context.raw.toLocaleString()}`; }
+              }
+            }
+          }
+        }
+      });
+
+      // 2. Order Volume Bar Chart
+      const orderCtx = document.getElementById('orderTrendChart').getContext('2d');
+      const orderLabels = data.orderTrend.map(t => t.label);
+      const orderValues = data.orderTrend.map(t => t.value);
+
+      charts.order = new Chart(orderCtx, {
+        type: 'bar',
+        data: {
+          labels: orderLabels.length > 0 ? orderLabels : ['No Data'],
+          datasets: [{
+            data: orderValues.length > 0 ? orderValues : [0],
+            backgroundColor: '#3b82f6',
+            borderRadius: 6,
+            barPercentage: 0.6
+          }]
+        },
+        options: {
+          ...chartOptions,
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+
+      // 3. Payment Method Distribution Pie Chart
+      const paymentCtx = document.getElementById('paymentSplitChart').getContext('2d');
+      const payLabels = data.paymentData.map(p => p.label);
+      const payValues = data.paymentData.map(p => p.value);
+      const hasPayData = payValues.reduce((a, b) => a + b, 0) > 0;
+
+      charts.payment = new Chart(paymentCtx, {
+        type: 'doughnut',
+        data: {
+          labels: hasPayData ? payLabels : ['No Orders'],
+          datasets: [{
+            data: hasPayData ? payValues : [1],
+            backgroundColor: hasPayData ? ['#10b981', '#6366f1', '#f59e0b'] : ['#e2e8f0'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '65%',
+          plugins: {
+            legend: {
+              display: true,
+              position: 'right',
+              labels: { boxWidth: 12, font: { size: 11 } }
+            }
+          }
+        }
+      });
+
+      // 4. Revenue Analysis: Gross vs Discounts vs Net
+      const revCtx = document.getElementById('revenueBreakdownChart').getContext('2d');
+      const s = data.summary;
+      const hasBreakdownData = s.grossSales > 0;
+
+      charts.revenue = new Chart(revCtx, {
+        type: 'doughnut',
+        data: {
+          labels: hasBreakdownData ? ['Net Revenue', 'Product Offers', 'Category Offers', 'Coupons'] : ['No Sales'],
+          datasets: [{
+            data: hasBreakdownData ? [s.netRevenue, s.productOfferDiscounts, s.categoryOfferDiscounts, s.couponDiscounts] : [1],
+            backgroundColor: hasBreakdownData ? ['#10b981', '#f43f5e', '#ec4899', '#f59e0b'] : ['#e2e8f0'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '65%',
+          plugins: {
+            legend: {
+              display: true,
+              position: 'right',
+              labels: { boxWidth: 12, font: { size: 11 } }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  if (!hasBreakdownData) return ' No Sales Data';
+                  return ` ${context.label}: ₹${context.raw.toLocaleString()}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+
+</html>

@@ -151,7 +151,7 @@
         
         <div class="order-details-header">
             <h1 style="margin:0; font-size: 28px; font-weight: 800;">ORDER DETAILS</h1>
-            <% if (order.orderStatus === 'Delivered') { %>
+            <% if (['Delivered', 'Return Requested', 'Return Approved', 'Return Rejected', 'Returned'].includes(order.orderStatus) || order.items.some(i => ['Delivered', 'Return Requested', 'Return Approved', 'Return Rejected', 'Returned'].includes(i.itemStatus))) { %>
                 <a href="/order/<%= order._id %>/invoice" class="btn-primary" target="_blank">DOWNLOAD INVOICE</a>
             <% } %>
         </div>
@@ -170,14 +170,32 @@
                         </div>
                     </div>
                     <div class="order-items-list">
-                        <% order.items.forEach(item => { %>
+                        <% order.items.forEach(item => { 
+                            let imgUrl = '';
+                            if (item.productId) {
+                                const prod = item.productId;
+                                const variant = prod.variants && prod.variants.find(v => v.size === item.size && v.color === item.color);
+                                if (variant && variant.images && variant.images.length > 0) {
+                                    const primaryImg = variant.images.find(img => img.isPrimary) || variant.images[0];
+                                    imgUrl = primaryImg.url;
+                                }
+                                if (!imgUrl && prod.images && prod.images.length > 0) {
+                                    const primaryImg = prod.images.find(img => img.isPrimary) || prod.images[0];
+                                    imgUrl = primaryImg.url;
+                                }
+                            }
+                        %>
                             <div class="order-item-row">
                                 <div class="item-primary-info">
-                                    <div class="item-img-placeholder">
-                                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                                    </div>
+                                    <% if (imgUrl) { %>
+                                        <img src="<%= imgUrl %>" alt="<%= item.productName %>" style="width:64px; height:64px; object-fit:cover; border-radius:8px; flex-shrink:0;">
+                                    <% } else { %>
+                                        <div class="item-img-placeholder">
+                                            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                        </div>
+                                    <% } %>
                                     <div>
-                                        <h6><a href="/product/<%= item.productId._id %>"><%= item.productName %></a></h6>
+                                        <h6><a href="/product/<%= item.productId ? item.productId._id : '#' %>"><%= item.productName %></a></h6>
                                         <p class="item-meta">Size: <strong><%= item.size %></strong> | Color: <strong><%= item.color %></strong><br>
                                         Qty: <strong><%= item.quantity %></strong> &times; ₹<%= item.price %></p>
                                     </div>
@@ -344,6 +362,26 @@
                         <span>Total</span>
                         <span class="text-primary">₹<%= order.pricing.total %></span>
                     </div>
+                    <% if (order.walletAmountUsed > 0) { %>
+                        <div class="summary-row" style="margin-top: 10px; border-top: 1px dashed #eee; padding-top: 10px;">
+                            <span>Wallet Amount Used</span>
+                            <span class="text-success">- ₹<%= order.walletAmountUsed %></span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Remaining Amount</span>
+                            <span class="text-primary" style="font-weight: 600;">₹<%= order.remainingAmountPaid %></span>
+                        </div>
+                    <% } %>
+                    <% if (order.refundAmount > 0) { %>
+                        <div class="summary-row" style="margin-top: 10px; border-top: 1px dashed #eee; padding-top: 10px;">
+                            <span>Refunded to Wallet</span>
+                            <span class="text-success" style="font-weight: 600;">₹<%= order.refundAmount %></span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Refund Status</span>
+                            <span class="badge" style="background-color: #d1fae5; color: #065f46; font-size: 0.85em; padding: 2px 8px; border-radius: 4px;"><%= order.refundStatus %></span>
+                        </div>
+                    <% } %>
                 </div>
 
                 <div class="summary-card">
@@ -360,12 +398,28 @@
                     <h6>PAYMENT DETAILS</h6>
                     <div class="payment-info">
                         <span class="payment-label">Method</span>
-                        <span class="payment-value"><%= order.paymentMethod %></span>
+                        <span class="payment-value">
+                            <% if (order.walletAmountUsed > 0 && order.remainingAmountPaid > 0) { %>
+                                WALLET + <%= order.paymentMethod %> (Partial)
+                            <% } else { %>
+                                <%= order.paymentMethod %>
+                            <% } %>
+                        </span>
                     </div>
-                    <div class="payment-info" style="margin-bottom:0;">
+                    <div class="payment-info" style="<%= order.paymentMethod !== 'RAZORPAY' ? 'margin-bottom:0;' : '' %>">
                         <span class="payment-label">Status</span>
-                        <span class="payment-value" style="color: <%= order.paymentStatus === 'Completed' ? '#22c55e' : '#f57c00' %>"><%= order.paymentStatus %></span>
+                        <span class="payment-value" style="color: <%= order.paymentStatus === 'Completed' ? '#22c55e' : (order.paymentStatus === 'Failed' ? '#ef4444' : '#f57c00') %>"><%= order.paymentStatus %></span>
                     </div>
+                    <% if (order.paymentMethod === 'RAZORPAY') { %>
+                        <div class="payment-info">
+                            <span class="payment-label">Payment ID</span>
+                            <span class="payment-value" style="font-family: monospace; font-size: 0.85em;"><%= order.razorpayPaymentId || 'N/A' %></span>
+                        </div>
+                        <div class="payment-info" style="margin-bottom:0;">
+                            <span class="payment-label">Date</span>
+                            <span class="payment-value"><%= order.transactionDate ? new Date(order.transactionDate).toLocaleString('en-IN') : 'N/A' %></span>
+                        </div>
+                    <% } %>
                 </div>
             </div>
         </div>

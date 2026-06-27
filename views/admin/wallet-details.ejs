@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/notifications.js"></script>
+  <style>
+    /* Styling for Admin Wallet Details */
+    .admin-wallet-grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 30px;
+      align-items: start;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-bottom: 25px;
+    }
+
+    .stat-badge {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .stat-badge-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .stat-badge-value {
+      font-size: 22px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .stat-badge-value.credit {
+      color: #059669;
+    }
+
+    .stat-badge-value.debit {
+      color: #dc2626;
+    }
+
+    .back-btn-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #475569;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 20px;
+      transition: color 0.15s ease;
+    }
+
+    .back-btn-link:hover {
+      color: #0f172a;
+    }
+
+    .badge-tx {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .badge-tx.credit {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+
+    .badge-tx.debit {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+
+    .form-group-custom {
+      margin-bottom: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group-custom label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-group-custom input,
+    .form-group-custom select {
+      height: 40px;
+      padding: 0 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .form-group-custom input:focus,
+    .form-group-custom select:focus {
+      border-color: #2563eb;
+    }
+
+    .btn-submit-adjust {
+      width: 100%;
+      height: 42px;
+      background: var(--primary-color, #1e293b);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      margin-top: 10px;
+    }
+
+    .btn-submit-adjust:hover {
+      background: #0f172a;
+    }
+  </style>
+</head>
+
+<body class="admin-layout">
+
+  <%- include('partials/sidebar', { activePage: 'wallets' }) %>
+
+  <main class="main-content">
+    <header class="header">
+      <h1>WALLET LEDGER DETAILS</h1>
+    </header>
+
+    <div class="content-wrapper">
+      
+      <!-- Back Link -->
+      <a href="/admin/wallets" class="back-btn-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Back to Wallets Listing
+      </a>
+
+      <!-- Page Grid -->
+      <div class="admin-wallet-grid">
+        
+        <!-- Left Side: User Info & Transaction History -->
+        <div style="display: flex; flex-direction: column; gap: 30px;">
+          
+          <!-- User Details Card -->
+          <div class="card" style="padding: 25px;">
+            <h2 style="font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 20px;">CUSTOMER WALLET SUMMARY</h2>
+            
+            <div style="display: flex; gap: 40px; margin-bottom: 25px; border-bottom: 1px solid #f1f5f9; padding-bottom: 20px;">
+              <div>
+                <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Customer Name</div>
+                <div style="font-size: 16px; font-weight: 700; color: #0f172a; margin-top: 4px;"><%= targetUser.name %></div>
+              </div>
+              <div>
+                <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Email Address</div>
+                <div style="font-size: 16px; font-weight: 700; color: #0f172a; margin-top: 4px;"><%= targetUser.email %></div>
+              </div>
+              <div>
+                <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Mobile Phone</div>
+                <div style="font-size: 16px; font-weight: 700; color: #0f172a; margin-top: 4px;"><%= targetUser.phone || 'N/A' %></div>
+              </div>
+            </div>
+
+            <div class="info-grid">
+              <div class="stat-badge">
+                <span class="stat-badge-label">Available Balance</span>
+                <span class="stat-badge-value">₹<%= Number(wallet.balance).toFixed(2) %></span>
+              </div>
+              <div class="stat-badge">
+                <span class="stat-badge-label">Total Credits</span>
+                <span class="stat-badge-value credit">₹<%= Number(wallet.totalCredits || 0).toFixed(2) %></span>
+              </div>
+              <div class="stat-badge">
+                <span class="stat-badge-label">Total Debits</span>
+                <span class="stat-badge-value debit">₹<%= Number(wallet.totalDebits || 0).toFixed(2) %></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Transaction Ledger Card -->
+          <div class="card" style="padding: 0; overflow: hidden;">
+            <div style="padding: 20px 25px; border-bottom: 1px solid #f1f5f9;">
+              <h2 style="font-size: 15px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px; margin: 0;">TRANSACTION LOG</h2>
+            </div>
+            
+            <div class="table-wrapper">
+              <table class="users-table">
+                <thead>
+                  <tr>
+                    <th>Date & Time</th>
+                    <th>Type</th>
+                    <th>Ref Order</th>
+                    <th>Reason / Details</th>
+                    <th style="text-align: right;">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (transactions && transactions.length > 0) { %>
+                    <% transactions.forEach(tx => { %>
+                      <tr>
+                        <td>
+                          <%= new Date(tx.createdAt).toLocaleString('en-IN') %>
+                        </td>
+                        <td>
+                          <span class="badge-tx <%= tx.type.toLowerCase() %>"><%= tx.type %></span>
+                        </td>
+                        <td>
+                          <% if (tx.orderId) { %>
+                            <% if (tx.orderDocId) { %>
+                              <a href="/admin/order/<%= tx.orderDocId %>" style="color: #2563eb; font-weight: bold; text-decoration: none;"><%= tx.orderId %></a>
+                            <% } else { %>
+                              <span style="font-family: monospace; font-weight: 600;"><%= tx.orderId %></span>
+                            <% } %>
+                          <% } else { %>
+                            <span style="color: #94a3b8;">—</span>
+                          <% } %>
+                        </td>
+                        <td>
+                          <% if (tx.description === 'ORDER_CANCELLATION_REFUND') { %>
+                            Order Cancellation Refund
+                          <% } else if (tx.description === 'RETURN_REFUND') { %>
+                            Product Return Refund
+                          <% } else if (tx.description === 'WALLET_PAYMENT') { %>
+                            Purchase Checkout Deduction
+                          <% } else if (tx.description === 'ADMIN_ADJUSTMENT') { %>
+                            Admin Manual Adjustment
+                          <% } else { %>
+                            <%= tx.description %>
+                          <% } %>
+                        </td>
+                        <td style="text-align: right; font-weight: 700; font-size: 15px; color: <%= tx.type === 'CREDIT' ? '#059669' : '#dc2626' %>">
+                          <%= tx.type === 'CREDIT' ? '+' : '-' %>₹<%= Number(tx.amount).toFixed(2) %>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } else { %>
+                    <tr>
+                      <td colspan="5" style="text-align: center; padding: 40px; color: #64748b;">
+                        No transactions found for this user.
+                      </td>
+                    </tr>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Side: Manual Adjustment Panel -->
+        <div class="card" style="padding: 25px; sticky; top: 20px;">
+          <h2 style="font-size: 16px; font-weight: 800; color: #1e293b; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px;">BALANCE ADJUSTMENT</h2>
+          
+          <form id="adjustmentForm" onsubmit="event.preventDefault(); handleAdjustment();">
+            
+            <div class="form-group-custom">
+              <label for="adjustType">Adjustment Type</label>
+              <select id="adjustType" required>
+                <option value="CREDIT">CREDIT (Add Funds)</option>
+                <option value="DEBIT">DEBIT (Deduct Funds)</option>
+              </select>
+            </div>
+
+            <div class="form-group-custom">
+              <label for="adjustAmount">Amount (INR)</label>
+              <input type="number" id="adjustAmount" min="1" step="0.01" placeholder="e.g. 500.00" required>
+            </div>
+
+            <div class="form-group-custom">
+              <label for="adjustReason">Reason / Remarks</label>
+              <input type="text" id="adjustReason" placeholder="e.g. Customer goodwill bonus" required>
+            </div>
+
+            <button type="submit" class="btn-submit-adjust">Apply Adjustment</button>
+          </form>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    async function handleAdjustment() {
+      const type = document.getElementById("adjustType").value;
+      const amount = parseFloat(document.getElementById("adjustAmount").value);
+      const reason = document.getElementById("adjustReason").value.trim();
+      const userId = "<%= targetUser._id %>";
+
+      if (isNaN(amount) || amount <= 0) {
+        KavoxNotify.toast("Please enter a valid amount greater than zero.", "error");
+        return;
+      }
+
+      if (!reason) {
+        KavoxNotify.toast("Please specify a reason for the adjustment.", "error");
+        return;
+      }
+
+      const confirmResult = await KavoxNotify.confirm({
+        title: "Confirm Balance Adjustment",
+        text: `Are you sure you want to perform a manual ${type} of ₹${amount.toFixed(2)} for ${"<%= targetUser.name %>"}?`,
+        icon: "warning",
+        confirmText: "Yes, Apply",
+        cancelText: "Cancel"
+      });
+
+      if (!confirmResult.isConfirmed) return;
+
+      KavoxNotify.loading("Applying balance adjustment...");
+
+      try {
+        const response = await fetch("/api/admin/wallets/adjust", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ userId, amount, type, reason })
+        });
+
+        const data = await response.json();
+        KavoxNotify.closeLoading();
+
+        if (data.success) {
+          KavoxNotify.toast(data.message || "Adjustment applied successfully!", "success");
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        } else {
+          KavoxNotify.toast(data.message || "Failed to apply adjustment.", "error");
+        }
+      } catch (error) {
+        KavoxNotify.closeLoading();
+        console.error("Adjustment error:", error);
+        KavoxNotify.toast("An unexpected error occurred. Please try again.", "error");
+      }
+    }
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Reviews Moderation - KAVOX Admin</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/notifications.js"></script>
+  <style>
+    .review-product-img {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+
+    .rating-stars {
+      color: #fbbf24;
+      font-size: 14px;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .status-badge.approved {
+      background-color: #f0fdf4;
+      color: #16a34a;
+    }
+
+    .status-badge.hidden-status {
+      background-color: #fef2f2;
+      color: #dc2626;
+    }
+
+    .status-badge.pending {
+      background-color: #fef3c7;
+      color: #d97706;
+    }
+
+    .review-text-cell {
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: normal;
+      font-size: 13px;
+      color: #475569;
+    }
+
+    .review-title-text {
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    /* Custom Admin Filters layout */
+    .filter-container {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .filter-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+    }
+
+    .form-control-inline {
+      height: 40px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      font-size: 13px;
+      outline: none;
+      min-width: 150px;
+    }
+  </style>
+</head>
+
+<body class="admin-layout">
+
+  <%- include('partials/sidebar', { activePage: 'reviews' }) %>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <header class="header">
+      <h1>CUSTOMER REVIEWS MODERATION</h1>
+    </header>
+
+    <div class="content-wrapper">
+      
+      <!-- Actions / Filters Row -->
+      <div class="card" style="margin-bottom: 24px;">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <h2 style="font-size: 15px; font-weight: 700; margin: 0; color: #1e293b;">Search & Moderation Filters</h2>
+          
+          <div class="filter-container">
+            <!-- Search -->
+            <div class="filter-group" style="flex: 1; min-width: 250px;">
+              <label for="searchInput">Search Product or Customer</label>
+              <input type="text" id="searchInput" class="form-control-inline" placeholder="Search product or customer name..." value="<%= searchQuery %>">
+            </div>
+
+            <!-- Status Filter -->
+            <div class="filter-group">
+              <label for="statusFilter">Status</label>
+              <select id="statusFilter" class="form-control-inline" onchange="applyFilters()">
+                <option value="ALL" <%= statusFilter === 'ALL' ? 'selected' : '' %>>All Statuses</option>
+                <option value="APPROVED" <%= statusFilter === 'APPROVED' ? 'selected' : '' %>>Approved</option>
+                <option value="HIDDEN" <%= statusFilter === 'HIDDEN' ? 'selected' : '' %>>Hidden</option>
+                <option value="PENDING" <%= statusFilter === 'PENDING' ? 'selected' : '' %>>Pending</option>
+              </select>
+            </div>
+
+            <!-- Rating Filter -->
+            <div class="filter-group">
+              <label for="ratingFilter">Rating</label>
+              <select id="ratingFilter" class="form-control-inline" onchange="applyFilters()">
+                <option value="ALL" <%= ratingFilter === 'ALL' ? 'selected' : '' %>>All Ratings</option>
+                <option value="5" <%= ratingFilter === '5' ? 'selected' : '' %>>5 Stars</option>
+                <option value="4" <%= ratingFilter === '4' ? 'selected' : '' %>>4 Stars</option>
+                <option value="3" <%= ratingFilter === '3' ? 'selected' : '' %>>3 Stars</option>
+                <option value="2" <%= ratingFilter === '2' ? 'selected' : '' %>>2 Stars</option>
+                <option value="1" <%= ratingFilter === '1' ? 'selected' : '' %>>1 Star</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reviews Table -->
+      <div class="table-wrapper">
+        <table class="products-table">
+          <thead>
+            <tr>
+              <th style="width: 80px;">Image</th>
+              <th>Product Details</th>
+              <th>Customer</th>
+              <th style="width: 110px;">Rating</th>
+              <th>Review details</th>
+              <th>Submitted Date</th>
+              <th style="text-align: center; width: 130px;">Status</th>
+              <th style="text-align: center; width: 120px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="reviewsTableBody">
+            <% if (reviews && reviews.length > 0) { %>
+              <% reviews.forEach(r => { %>
+                <tr id="row-<%= r._id %>">
+                  <td>
+                    <img src="<%= r.productId && r.productId.images && r.productId.images.length > 0 ? (r.productId.images[0].url || r.productId.images[0]) : '/images/placeholder.png' %>" alt="Product thumbnail" class="review-product-img">
+                  </td>
+                  <td>
+                    <strong style="font-size: 14px; color: #1e293b; display: block;"><%= r.productId ? r.productId.name : 'Unknown Product' %></strong>
+                  </td>
+                  <td>
+                    <strong style="font-size: 14px; color: #1e293b; display: block;"><%= r.userId ? r.userId.name : 'Anonymous' %></strong>
+                    <span style="font-size: 12px; color: #64748b;"><%= r.userId ? r.userId.email : '' %></span>
+                  </td>
+                  <td>
+                    <div class="rating-stars">
+                      <% for(let i = 1; i <= 5; i++) { %>
+                        <%= i <= r.rating ? '★' : '☆' %>
+                      <% } %>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="review-text-cell">
+                      <span class="review-title-text"><%= r.title %></span>
+                      <span><%= r.review %></span>
+                    </div>
+                  </td>
+                  <td>
+                    <span style="font-size: 13px; color: #475569;"><%= new Date(r.createdAt).toLocaleDateString() %></span>
+                  </td>
+                  <td style="text-align: center;">
+                    <span id="badge-<%= r._id %>" class="status-badge <%= r.status.toLowerCase() === 'approved' ? 'approved' : (r.status.toLowerCase() === 'hidden' ? 'hidden-status' : 'pending') %>">
+                      <%= r.status %>
+                    </span>
+                  </td>
+                  <td style="text-align: center;">
+                    <div style="display: flex; gap: 8px; justify-content: center;">
+                      <!-- Approve Button -->
+                      <button class="action-btn" onclick="moderateReview('<%= r._id %>', 'APPROVED')" title="Approve Review" style="color: #16a34a; border-color: rgba(22, 163, 74, 0.15);">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+                      </button>
+                      <!-- Hide Button -->
+                      <button class="action-btn" onclick="moderateReview('<%= r._id %>', 'HIDDEN')" title="Hide Review" style="color: #ea580c; border-color: rgba(234, 88, 12, 0.15);">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>
+                      </button>
+                      <!-- Delete Button -->
+                      <button class="action-btn" onclick="deleteReview('<%= r._id %>')" title="Delete Review" style="color: #ef4444;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="8" style="text-align: center; padding: 40px; color: #64748b;">No customer reviews match these search criteria.</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <div id="pagination" class="pagination" style="margin-top: 20px;">
+          <% if (typeof currentPage !== 'undefined' && typeof totalPages !== 'undefined') { %>
+            <% if (currentPage > 1) { %>
+              <a href="javascript:void(0)" onclick="goToPage(<%= currentPage - 1 %>)">&laquo;</a>
+            <% } %>
+            
+            <% for(let i = 1; i <= totalPages; i++) { %>
+              <a href="javascript:void(0)" onclick="goToPage(<%= i %>)" class="<%= currentPage === i ? 'active' : '' %>"><%= i %></a>
+            <% } %>
+            
+            <% if (currentPage < totalPages) { %>
+              <a href="javascript:void(0)" onclick="goToPage(<%= currentPage + 1 %>)">&raquo;</a>
+            <% } %>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let searchTimeout;
+    const searchInput = document.getElementById('searchInput');
+    
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        applyFilters();
+      }, 600);
+    });
+
+    function applyFilters(page = 1) {
+      const search = searchInput.value;
+      const status = document.getElementById('statusFilter').value;
+      const rating = document.getElementById('ratingFilter').value;
+
+      let url = `/admin/reviews?page=${page}`;
+      if (search) url += `&search=${encodeURIComponent(search)}`;
+      if (status !== 'ALL') url += `&status=${status}`;
+      if (rating !== 'ALL') url += `&rating=${rating}`;
+
+      window.location.href = url;
+    }
+
+    function goToPage(page) {
+      applyFilters(page);
+    }
+
+    async function moderateReview(id, status) {
+      KavoxNotify.loading(`Updating review status to ${status.toLowerCase()}...`);
+      try {
+        const res = await fetch(`/api/admin/reviews/${id}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        }).then(r => r.json());
+
+        KavoxNotify.closeLoading();
+        if (res.success) {
+          KavoxNotify.toast(res.message, "success");
+          
+          const badge = document.getElementById(`badge-${id}`);
+          badge.innerText = status;
+          
+          // Reset classes
+          badge.className = 'status-badge ' + (status.toLowerCase() === 'approved' ? 'approved' : 'hidden-status');
+        } else {
+          KavoxNotify.toast(res.message || "Failed to update review status.", "error");
+        }
+      } catch (error) {
+        KavoxNotify.closeLoading();
+        KavoxNotify.toast("Connection error moderating review.", "error");
+      }
+    }
+
+    async function deleteReview(id) {
+      const confirm = await KavoxNotify.confirm({
+        title: "Delete Review?",
+        text: "Are you sure you want to delete this review? This review will be soft-deleted.",
+        icon: "warning",
+        confirmText: "Delete",
+        cancelText: "Cancel"
+      });
+
+      if (!confirm.isConfirmed) return;
+
+      KavoxNotify.loading("Deleting review...");
+      try {
+        const res = await fetch(`/api/admin/reviews/${id}`, {
+          method: 'DELETE'
+        }).then(r => r.json());
+
+        KavoxNotify.closeLoading();
+        if (res.success) {
+          KavoxNotify.toast(res.message, "success");
+          document.getElementById(`row-${id}`).remove();
+        } else {
+          KavoxNotify.toast(res.message || "Failed to delete review.", "error");
+        }
+      } catch (error) {
+        KavoxNotify.closeLoading();
+        KavoxNotify.toast("Network error deleting review.", "error");
+      }
+    }
+  </script>
+</body>
+
+</html>

@@ -220,12 +220,8 @@
             <!-- Pricing & Status Section -->
             <div class="modal-section">
               <h3 class="modal-section-title">Pricing & Status</h3>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-                <div class="form-group">
-                  <label class="form-label">Offer (%)</label>
-                  <input type="number" id="prodOffer" class="form-control no-spinner" placeholder="Enter discount %" step="0.01" min="0" max="100">
-                </div>
-                <div class="form-group">
+              <div style="display: grid; grid-template-columns: 1fr; gap: 24px;">
+                <div class="form-group" style="margin-bottom: 0;">
                   <label class="form-label">Status</label>
                   <select id="prodStatus" class="form-control">
                     <option value="true">Active</option>
@@ -585,7 +581,6 @@
             catSelect.value = catId;
             document.getElementById('prodPrice').value = p.price;
             document.getElementById('prodDescription').value = p.description;
-            document.getElementById('prodOffer').value = p.productOffer || 0;
             document.getElementById('prodStatus').value = p.isActive.toString();
 
             if (p.variants && p.variants.length > 0) {
@@ -614,7 +609,6 @@
           category: document.getElementById('prodCategory').value,
           price: document.getElementById('prodPrice').value,
           description: document.getElementById('prodDescription').value.trim(),
-          productOffer: document.getElementById('prodOffer').value,
           isActive: document.getElementById('prodStatus').value === "true",
           showOnHome: false
         };
@@ -650,6 +644,7 @@
         const vCards = document.querySelectorAll('.variant-card-modern');
         const variants = [];
         const formData = new FormData();
+        const seenVariants = new Set();
 
         vCards.forEach(card => {
           const vId = card.id;
@@ -679,7 +674,18 @@
           }
 
           if (vData.size && vData.color && validImgCount === 3) {
-            variants.push(vData);
+            const key = `${vData.size.toUpperCase()}_${vData.color.toUpperCase()}`;
+            if (seenVariants.has(key)) {
+              const errorDiv = document.getElementById(`error_${vId}`);
+              if (errorDiv) {
+                errorDiv.textContent = `This variant (Size: ${vData.size}, Color: ${vData.color}) already exists.`;
+                errorDiv.style.display = 'block';
+              }
+              isValid = false;
+            } else {
+              seenVariants.add(key);
+              variants.push(vData);
+            }
           } else {
             let errorMsg = "";
             if (!vData.size) errorMsg = `Please select a size for this variant.`;
@@ -707,7 +713,6 @@
         formData.append('category', data.category);
         formData.append('price', data.price);
         formData.append('description', data.description);
-        formData.append('productOffer', data.productOffer);
         formData.append('isActive', data.isActive);
         formData.append('variants', JSON.stringify(variants));
 

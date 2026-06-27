@@ -14,20 +14,15 @@ const walletSchema = new mongoose.Schema({
     default: 0
   },
 
-  transactions: [
-    {
-      amount: Number,
-      type: {
-        type: String,
-        enum: ["credit", "debit"]
-      },
-      description: String,
-      createdAt: {
-        type: Date,
-        default: Date.now
-      }
-    }
-  ]
+  totalCredits: {
+    type: Number,
+    default: 0
+  },
+
+  totalDebits: {
+    type: Number,
+    default: 0
+  }
 
 }, { timestamps: true });
 

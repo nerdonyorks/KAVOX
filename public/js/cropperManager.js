@@ -1,7 +1,4 @@
-/**
- * CropperManager - Centralized utility for handling image selection and cropping across KAVOX.
- * Enforces the "Strict Global Rule" of cropping before upload.
- */
+
 const CropperManager = {
     cropper: null,
     currentFile: null,
@@ -10,10 +7,10 @@ const CropperManager = {
     modal: null,
     imageElement: null,
 
-    
+
     init(file, options = {}) {
         if (!file) return;
-        
+
         this.currentFile = file;
         this.aspectRatio = options.aspectRatio || 1;
         this.callback = options.callback || null;
@@ -32,7 +29,7 @@ const CropperManager = {
         reader.onload = (e) => {
             this.imageElement.src = e.target.result;
             this.modal.style.display = 'flex';
-            
+
             if (this.cropper) {
                 this.cropper.destroy();
             }
@@ -73,11 +70,11 @@ const CropperManager = {
         canvas.toBlob((blob) => {
             const fileName = this.currentFile.name.replace(/\.[^/.]+$/, "") + "_cropped.jpg";
             const croppedFile = new File([blob], fileName, { type: 'image/jpeg' });
-            
+
             if (this.callback) {
                 this.callback(croppedFile, URL.createObjectURL(blob));
             }
-            
+
             this.close();
         }, 'image/jpeg', 0.9);
     },

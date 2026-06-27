@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>General Ledger - KAVOX Admin</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/notifications.js"></script>
+  <style>
+    /* Premium Ledger Styling */
+    .ledger-filter-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      border: 1px solid var(--border-color, #e2e8f0);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 16px;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .filter-group label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .filter-control {
+      height: 42px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #1e293b;
+      font-size: 14px;
+      font-weight: 500;
+      outline: none;
+      transition: all 0.2s;
+      min-width: 170px;
+    }
+
+    .filter-control:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+
+    .btn-download-group {
+      display: flex;
+      gap: 12px;
+      margin-left: auto;
+    }
+
+    .btn-download {
+      height: 42px;
+      padding: 0 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-download-pdf {
+      background: #ef4444;
+      color: #ffffff;
+    }
+
+    .btn-download-pdf:hover {
+      background: #dc2626;
+      box-shadow: 0 4px 10px rgba(239, 68, 68, 0.25);
+    }
+
+    .btn-download-excel {
+      background: #10b981;
+      color: #ffffff;
+    }
+
+    .btn-download-excel:hover {
+      background: #059669;
+      box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);
+    }
+
+    .orders-table th {
+      background: #0f172a;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      padding: 14px 16px;
+    }
+
+    .orders-table td {
+      padding: 14px 16px;
+      font-size: 13px;
+      vertical-align: middle;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .orders-table tr:hover {
+      background-color: #f8fafc;
+    }
+
+    .custom-date-container {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(2px);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .loading-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #e2e8f0;
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+
+<body class="admin-layout">
+
+  <%- include('partials/sidebar', { activePage: 'ledger' }) %>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <header class="header">
+      <h1>GENERAL LEDGER BOOK</h1>
+    </header>
+
+    <div class="content-wrapper" style="position: relative;">
+
+      <!-- Loading Overlay -->
+      <div id="ledgerLoader" class="loading-overlay">
+        <div class="spinner"></div>
+      </div>
+
+      <!-- Filters Panel -->
+      <div class="ledger-filter-card">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="filterType">Time Period</label>
+            <select id="filterType" class="filter-control" onchange="handleFilterChange()">
+              <option value="daily">Daily Book (Today)</option>
+              <option value="weekly">Weekly Book (Last 7 Days)</option>
+              <option value="monthly" selected>Monthly Book (Current Month)</option>
+              <option value="yearly">Yearly Book (Current Year)</option>
+              <option value="custom">Custom Date Range</option>
+            </select>
+          </div>
+
+          <div id="customDateRange" class="custom-date-container" style="display: none;">
+            <div class="filter-group">
+              <label for="startDate">Start Date</label>
+              <input type="date" id="startDate" class="filter-control" onchange="validateDatesAndRefresh()">
+            </div>
+            <div class="filter-group">
+              <label for="endDate">End Date</label>
+              <input type="date" id="endDate" class="filter-control" onchange="validateDatesAndRefresh()">
+            </div>
+          </div>
+
+          <div class="btn-download-group">
+            <a href="#" id="downloadPdfBtn" class="btn-download btn-download-pdf">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Export PDF
+            </a>
+            <a href="#" id="downloadExcelBtn" class="btn-download btn-download-excel">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Export Excel
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI Summary Cards -->
+      <div class="stats-grid" style="margin-bottom: 28px;">
+        <div class="card stat-card">
+          <div class="stat-info">
+            <div id="statDebit" class="stat-value" style="color: #ef4444;">₹0</div>
+            <div class="stat-label">Total Outflows (Debits)</div>
+            <div class="stat-detail-subtext">Refunds & discount values</div>
+          </div>
+          <div class="stat-icon-box" style="color: #ef4444;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7 7 7-7"/></svg>
+          </div>
+        </div>
+
+        <div class="card stat-card">
+          <div class="stat-info">
+            <div id="statCredit" class="stat-value" style="color: #10b981;">₹0</div>
+            <div class="stat-label">Total Inflows (Credits)</div>
+            <div class="stat-detail-subtext">Sales & wallet payments</div>
+          </div>
+          <div class="stat-icon-box" style="color: #10b981;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7-7-7 7"/></svg>
+          </div>
+        </div>
+
+        <div class="card stat-card" style="border-left: 4px solid #6366f1;">
+          <div class="stat-info">
+            <div id="statBalance" class="stat-value" style="color: #6366f1;">₹0</div>
+            <div class="stat-label" style="font-weight: 700;">Closing Ledger Balance</div>
+            <div class="stat-detail-subtext">Balanced net store ledger</div>
+          </div>
+          <div class="stat-icon-box" style="color: #6366f1; background: rgba(99, 102, 241, 0.1);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ledger Entries Table Card -->
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 20px;">
+          <h2 style="font-size: 16px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Double-Entry Ledger Sheet</h2>
+        </div>
+
+        <div style="width: 100%; overflow-x: auto;">
+          <table class="orders-table" style="width: 100%; text-align: left; border-collapse: collapse;">
+            <thead>
+              <tr>
+                <th>Date & Time</th>
+                <th>Transaction Type</th>
+                <th>Reference ID</th>
+                <th style="text-align: right;">Debit (Out)</th>
+                <th style="text-align: right;">Credit (In)</th>
+                <th style="text-align: right;">Running Balance</th>
+              </tr>
+            </thead>
+            <tbody id="ledgerTableBody">
+              <tr>
+                <td colspan="6" style="text-align: center; color: #64748b; padding: 30px;">Loading ledger rows...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div id="tablePagination" class="pagination" style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 8px;">
+          <!-- Managed Dynamically by Javascript -->
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    let currentFilter = 'monthly';
+    let currentStart = '';
+    let currentEnd = '';
+    let currentTablePage = 1;
+
+    document.addEventListener("DOMContentLoaded", function () {
+      // Set bounds for calendar inputs
+      const todayStr = new Date().toISOString().split('T')[0];
+      document.getElementById('startDate').max = todayStr;
+      document.getElementById('endDate').max = todayStr;
+
+      // Initial load
+      loadLedgerData();
+    });
+
+    function handleFilterChange() {
+      const type = document.getElementById('filterType').value;
+      currentFilter = type;
+      currentTablePage = 1;
+
+      if (type === 'custom') {
+        document.getElementById('customDateRange').style.display = 'flex';
+      } else {
+        document.getElementById('customDateRange').style.display = 'none';
+        loadLedgerData();
+      }
+    }
+
+    function validateDatesAndRefresh() {
+      const start = document.getElementById('startDate').value;
+      const end = document.getElementById('endDate').value;
+      
+      if (!start || !end) return;
+      
+      const startDateObj = new Date(start);
+      const endDateObj = new Date(end);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+
+      if (startDateObj > today || endDateObj > today) {
+        KavoxNotify.toast("Future dates are not allowed.", "error");
+        return;
+      }
+
+      if (endDateObj < startDateObj) {
+        KavoxNotify.toast("End date cannot be earlier than start date.", "error");
+        return;
+      }
+
+      currentStart = start;
+      currentEnd = end;
+      currentTablePage = 1;
+      loadLedgerData();
+    }
+
+    function updateDownloadLinks() {
+      const pdfBtn = document.getElementById('downloadPdfBtn');
+      const excelBtn = document.getElementById('downloadExcelBtn');
+
+      let queryParams = `?filter=${currentFilter}`;
+      if (currentFilter === 'custom') {
+        queryParams += `&startDate=${currentStart}&endDate=${currentEnd}`;
+      }
+
+      pdfBtn.href = `/admin/ledger/download/pdf${queryParams}`;
+      excelBtn.href = `/admin/ledger/download/excel${queryParams}`;
+    }
+
+    function showSpinner() {
+      document.getElementById('ledgerLoader').classList.add('active');
+    }
+
+    function hideSpinner() {
+      document.getElementById('ledgerLoader').classList.remove('active');
+    }
+
+    async function loadLedgerData() {
+      showSpinner();
+      updateDownloadLinks();
+
+      try {
+        let queryParams = `?filter=${currentFilter}&page=${currentTablePage}`;
+        if (currentFilter === 'custom') {
+          queryParams += `&startDate=${currentStart}&endDate=${currentEnd}`;
+        }
+
+        const res = await fetch(`/admin/ledger/data${queryParams}`).then(r => r.json());
+        if (res.success) {
+          updateSummaryCards(res.summary);
+          renderLedgerTable(res);
+        } else {
+          KavoxNotify.toast(res.message || "Failed to load ledger records.", "error");
+        }
+      } catch (error) {
+        console.error("Ledger Load Error:", error);
+        KavoxNotify.toast("Connection error loading ledger sheet.", "error");
+      } finally {
+        hideSpinner();
+      }
+    }
+
+    async function loadLedgerPageOnly(page) {
+      showSpinner();
+      currentTablePage = page;
+      try {
+        let queryParams = `?filter=${currentFilter}&page=${currentTablePage}`;
+        if (currentFilter === 'custom') {
+          queryParams += `&startDate=${currentStart}&endDate=${currentEnd}`;
+        }
+
+        const res = await fetch(`/admin/ledger/data${queryParams}`).then(r => r.json());
+        if (res.success) {
+          renderLedgerTable(res);
+        } else {
+          KavoxNotify.toast(res.message || "Failed to load ledger rows.", "error");
+        }
+      } catch (error) {
+        console.error("Ledger Page Load Error:", error);
+      } finally {
+        hideSpinner();
+      }
+    }
+
+    function updateSummaryCards(s) {
+      document.getElementById('statDebit').innerText = `₹${s.totalDebit.toLocaleString()}`;
+      document.getElementById('statCredit').innerText = `₹${s.totalCredit.toLocaleString()}`;
+      document.getElementById('statBalance').innerText = `₹${s.closingBalance.toLocaleString()}`;
+    }
+
+    function renderLedgerTable(res) {
+      const tbody = document.getElementById('ledgerTableBody');
+      const paginationDiv = document.getElementById('tablePagination');
+      tbody.innerHTML = '';
+      paginationDiv.innerHTML = '';
+
+      if (!res.entries || res.entries.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #64748b; padding: 40px;">No transactions recorded in this period.</td></tr>`;
+        return;
+      }
+
+      res.entries.forEach(e => {
+        const transDateStr = new Date(e.date).toLocaleDateString("en-IN", {
+          year: "numeric",
+          month: "short",
+          day: "numeric"
+        }) + " " + new Date(e.date).toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' });
+
+        const debitVal = e.debit > 0 ? `<span style="color:#ef4444; font-weight:500;">₹${e.debit.toLocaleString()}</span>` : "-";
+        const creditVal = e.credit > 0 ? `<span style="color:#10b981; font-weight:500;">₹${e.credit.toLocaleString()}</span>` : "-";
+
+        tbody.innerHTML += `
+          <tr>
+            <td style="color: #64748b;">${transDateStr}</td>
+            <td style="font-weight: 700; color: #1e293b;">${e.type}</td>
+            <td><span style="font-family: monospace; font-weight: 700; color: #475569;">${e.referenceId}</span></td>
+            <td style="text-align: right;">${debitVal}</td>
+            <td style="text-align: right;">${creditVal}</td>
+            <td style="text-align: right; font-weight: 700; color: #1e293b;">₹${e.balance.toLocaleString()}</td>
+          </tr>
+        `;
+      });
+
+      // Pagination
+      if (res.totalPages > 1) {
+        let pagHtml = '';
+        if (res.page > 1) {
+          pagHtml += `<a href="javascript:void(0)" onclick="loadLedgerPageOnly(${res.page - 1})">&laquo;</a>`;
+        }
+        for (let i = 1; i <= res.totalPages; i++) {
+          pagHtml += `<a href="javascript:void(0)" onclick="loadLedgerPageOnly(${i})" class="${res.page === i ? 'active' : ''}">${i}</a>`;
+        }
+        if (res.page < res.totalPages) {
+          pagHtml += `<a href="javascript:void(0)" onclick="loadLedgerPageOnly(${res.page + 1})">&raquo;</a>`;
+        }
+        paginationDiv.innerHTML = pagHtml;
+      }
+    }
+  </script>
+</body>
+
+</html>

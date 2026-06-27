@@ -207,14 +207,28 @@
           showError('firstName', 'First name must be at least 3 characters');
           return false;
         }
+        const nameRegex = /^[a-zA-Z\s]+$/;
+        if (!nameRegex.test(value)) {
+          showError('firstName', 'Profile name cannot contain special characters.');
+          return false;
+        }
         hideError('firstName');
         return true;
       };
 
       const validateLastName = () => {
         const value = lastNameInput.value.trim();
-        if (value && value.length < 3) {
+        if (!value) {
+          hideError('lastName');
+          return true;
+        }
+        if (value.length < 3) {
           showError('lastName', 'Last name must be at least 3 characters');
+          return false;
+        }
+        const nameRegex = /^[a-zA-Z\s]+$/;
+        if (!nameRegex.test(value)) {
+          showError('lastName', 'Profile name cannot contain special characters.');
           return false;
         }
         hideError('lastName');

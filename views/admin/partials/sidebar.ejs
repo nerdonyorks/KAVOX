@@ -37,9 +37,27 @@
       </a>
     </div>
     <div class="nav-item">
+      <a href="/admin/reviews" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'reviews' ? 'active' : '' %>">
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 11H5v-2h14v2zm0-3H5V8h14v2zm0-3H5V5h14v2z"/></svg>
+        Reviews
+      </a>
+    </div>
+    <div class="nav-item">
       <a href="/admin/coupons" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'coupons' ? 'active' : '' %>">
         <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>
         Coupons
+      </a>
+    </div>
+    <div class="nav-item">
+      <a href="/admin/offers/products" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'product-offers' ? 'active' : '' %>">
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>
+        Product Offers
+      </a>
+    </div>
+    <div class="nav-item">
+      <a href="/admin/offers/categories" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'category-offers' ? 'active' : '' %>">
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>
+        Category Offers
       </a>
     </div>
     <div class="nav-item">
@@ -49,9 +67,21 @@
       </a>
     </div>
     <div class="nav-item">
+      <a href="/admin/wallets" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'wallets' ? 'active' : '' %>">
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+        Wallets
+      </a>
+    </div>
+    <div class="nav-item">
       <a href="/admin/report" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'report' ? 'active' : '' %>">
         <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
         Report
+      </a>
+    </div>
+    <div class="nav-item">
+      <a href="/admin/ledger" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'ledger' ? 'active' : '' %>">
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
+        Ledger Book
       </a>
     </div>
   </nav>

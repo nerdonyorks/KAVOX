@@ -1,28 +1,11 @@
-/**
- * Database Maintenance Scripts
- * ────────────────────────────
- * Consolidates all one-off DB helpers that were previously scattered
- * as scratch*.js / delete_test_products.js in the project root.
- *
- * Usage:
- *   node scripts/db-maintenance.js <command>
- *
- * Commands:
- *   find-test-products        Find products whose name matches /test/i
- *   find-test-items-in-carts  Count cart items that reference "test" products
- *   find-inactive-in-carts    Find inactive / soft-deleted products still in carts
- *   clean-null-cart-items      Remove cart items with null productId
- *   clean-invalid-cart-items   Remove cart items with invalid product / variant / category
- *   delete-test-products       Hard-delete all "test" products & tidy empty carts
- */
 
 const mongoose = require('mongoose');
 require('dotenv').config();
 
 // ── Models (lazy-loaded to keep startup fast) ─────────────────────
 const Product = () => require('../src/models/productModel');
-const Cart    = () => require('../src/models/cartModel');
-const User    = () => require('../src/models/userModel');
+const Cart = () => require('../src/models/cartModel');
+const User = () => require('../src/models/userModel');
 
 // ── Helpers ───────────────────────────────────────────────────────
 async function connect() {
@@ -179,12 +162,12 @@ async function deleteTestProducts() {
 
 // ── CLI dispatcher ────────────────────────────────────────────────
 const COMMANDS = {
-  'find-test-products':        findTestProducts,
-  'find-test-items-in-carts':  findTestItemsInCarts,
-  'find-inactive-in-carts':    findInactiveInCarts,
-  'clean-null-cart-items':     cleanNullCartItems,
-  'clean-invalid-cart-items':  cleanInvalidCartItems,
-  'delete-test-products':      deleteTestProducts,
+  'find-test-products': findTestProducts,
+  'find-test-items-in-carts': findTestItemsInCarts,
+  'find-inactive-in-carts': findInactiveInCarts,
+  'clean-null-cart-items': cleanNullCartItems,
+  'clean-invalid-cart-items': cleanInvalidCartItems,
+  'delete-test-products': deleteTestProducts,
 };
 
 async function main() {

@@ -2,10 +2,11 @@ const Cart = require("../models/cartModel");
 const Product = require("../models/productModel");
 const Wishlist = require("../models/wishlist");
 const { HTTP_STATUS, MESSAGES } = require("../utils/constants");
+const offerService = require("../services/offerService");
 
 // Helper to calculate cart totals
 const calculateTotals = (items) => {
-    return items.reduce((acc, item) => acc + item.totalPrice, 0);
+    return items.reduce((acc, item) => acc + (item.isUnavailable ? 0 : item.totalPrice), 0);
 };
 
 // Helper for detailed summary breakdown
@@ -16,27 +17,25 @@ const getDetailedTotals = (items) => {
     let cartTotal = 0;
 
     items.forEach(item => {
+        if (item.isUnavailable) return;
         const product = item.productId;
+        if (!product) return;
         const qty = item.quantity;
         const basePrice = product.price;
         const basePriceTotal = basePrice * qty;
         totalActualPrice += basePriceTotal;
 
-        const pOffer = product.productOffer || 0;
-        const cOffer = (product.category && product.category.offer) ? product.category.offer : 0;
-
-        // Always apply whichever offer is greater
-        const bestOffer = Math.max(pOffer, cOffer);
-        const finalItemPrice = bestOffer > 0
-            ? Math.round(basePrice * (1 - bestOffer / 100))
-            : basePrice;
+        const pricing = offerService.getDiscountedPrice(product);
+        const finalItemPrice = pricing.finalPrice;
+        const bestOffer = pricing.discountPercentage;
+        const offerType = pricing.offerType;
 
         const savedOnItem = (basePrice - finalItemPrice) * qty;
 
         // Attribute saving to the winning offer type
-        if (pOffer >= cOffer && pOffer > 0) {
+        if (offerType === 'PRODUCT') {
             totalProductDiscount += savedOnItem;
-        } else if (cOffer > pOffer && cOffer > 0) {
+        } else if (offerType === 'CATEGORY') {
             totalCategoryDiscount += savedOnItem;
         }
 
@@ -71,49 +70,53 @@ exports.getCart = async (req, res) => {
         let hasChanges = false;
         let validationErrors = [];
 
-        cart.items = cart.items.filter(item => {
+        // Populate active offers first
+        if (cart.items.length > 0) {
+            const products = cart.items.map(item => item.productId).filter(Boolean);
+            await offerService.populateProductOffers(products);
+        }
+
+        cart.items.forEach(item => {
             const product = item.productId;
             if (!product || product.isDeleted || !product.isActive || !product.category || !product.category.isActive || product.category.isDeleted) {
-                hasChanges = true;
-                validationErrors.push(`${product?.name || 'A product'} is no longer available.`);
-                return false;
-            }
-            // Variant check
-            const variant = product.variants.find(v => v.size === item.size && v.color === item.color);
-            if (!variant || !variant.isActive) {
-                hasChanges = true;
-                validationErrors.push(`The selected variant for ${product.name} is unavailable.`);
-                return false;
-            }
+                item.isUnlisted = true;
+                item.isUnavailable = true;
+                const msg = "This product has been unlisted by the admin and must be removed before proceeding.";
+                if (!validationErrors.includes(msg)) {
+                    validationErrors.push(msg);
+                }
+            } else {
+                // Variant check
+                const variant = product.variants.find(v => v.size === item.size && v.color === item.color);
+                if (!variant || !variant.isActive) {
+                    item.isUnavailable = true;
+                    validationErrors.push(`The selected variant for ${product.name} is unavailable.`);
+                } else {
+                    // Quantity validation
+                    if (variant.quantity <= 0) {
+                        item.isUnavailable = true;
+                        validationErrors.push(`${product.name} (${item.size}/${item.color}) is out of stock.`);
+                    } else if (item.quantity > variant.quantity) {
+                        hasChanges = true;
+                        validationErrors.push(`Quantity for ${product.name} (${item.size}/${item.color}) adjusted to maximum available stock (${variant.quantity}).`);
+                        item.quantity = variant.quantity;
+                        item.totalPrice = item.quantity * item.price;
+                    }
+                }
 
-            // Quantity validation
-            if (variant.quantity <= 0) {
-                hasChanges = true;
-                validationErrors.push(`${product.name} (${item.size}/${item.color}) is out of stock.`);
-                return false;
+                // RECALCULATE PRICE (Dynamic Sync)
+                if (!item.isUnavailable) {
+                    const pricing = offerService.getDiscountedPrice(product);
+                    const currentFinalPrice = pricing.finalPrice;
+
+                    // If price stored in cart is different from current offer-aware price, update it
+                    if (item.price !== currentFinalPrice) {
+                        item.price = currentFinalPrice;
+                        item.totalPrice = item.quantity * currentFinalPrice;
+                        hasChanges = true;
+                    }
+                }
             }
-
-            if (item.quantity > variant.quantity) {
-                hasChanges = true;
-                validationErrors.push(`Quantity for ${product.name} (${item.size}/${item.color}) adjusted to maximum available stock (${variant.quantity}).`);
-                item.quantity = variant.quantity;
-                item.totalPrice = item.quantity * item.price;
-            }
-
-            // RECALCULATE PRICE (Dynamic Sync)
-            const pOffer = product.productOffer || 0;
-            const cOffer = (product.category && product.category.offer) ? product.category.offer : 0;
-            const currentDiscount = Math.max(pOffer, cOffer);
-            const currentFinalPrice = Math.round(product.price * (1 - currentDiscount / 100));
-
-            // If price stored in cart is different from current offer-aware price, update it
-            if (item.price !== currentFinalPrice) {
-                item.price = currentFinalPrice;
-                item.totalPrice = item.quantity * currentFinalPrice;
-                hasChanges = true;
-            }
-
-            return true;
         });
 
         if (hasChanges) {
@@ -151,6 +154,9 @@ exports.addToCart = async (req, res) => {
             return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: "Product no longer available." });
         }
 
+        // Populate active offers
+        await offerService.populateProductOffers(product);
+
         // 2. Find Variant (Prefer variantId if passed)
         let variant;
         if (variantId) {
@@ -184,10 +190,8 @@ exports.addToCart = async (req, res) => {
                 item.color === variant.color
         );
 
-        const pOffer = product.productOffer || 0;
-        const cOffer = (product.category && product.category.offer) ? product.category.offer : 0;
-        const discount = Math.max(pOffer, cOffer);
-        const finalPrice = Math.round(product.price * (1 - discount / 100));
+        const pricing = offerService.getDiscountedPrice(product);
+        const finalPrice = pricing.finalPrice;
 
         if (existingItemIndex > -1) {
             const newQty = cart.items[existingItemIndex].quantity + parseInt(quantity);
@@ -252,6 +256,10 @@ exports.updateQuantity = async (req, res) => {
         if (!product || product.isDeleted || !product.isActive || !product.category || !product.category.isActive || product.category.isDeleted) {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Product is no longer available." });
         }
+
+        // Populate active offers
+        await offerService.populateProductOffers(product);
+
         const variant = product.variants.find(v => v.size === item.size && v.color === item.color);
         if (!variant || !variant.isActive) {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Selected variant is no longer available." });
@@ -267,10 +275,8 @@ exports.updateQuantity = async (req, res) => {
         }
 
         // Recalculate price in case offers changed
-        const pOffer = product.productOffer || 0;
-        const cOffer = (product.category && product.category.offer) ? product.category.offer : 0;
-        const currentDiscount = Math.max(pOffer, cOffer);
-        const currentFinalPrice = Math.round(product.price * (1 - currentDiscount / 100));
+        const pricing = offerService.getDiscountedPrice(product);
+        const currentFinalPrice = pricing.finalPrice;
 
         item.price = currentFinalPrice;
         item.quantity = newQty;
@@ -302,10 +308,41 @@ exports.removeFromCart = async (req, res) => {
         const { itemId } = req.params;
         const userId = req.user._id;
 
-        const cart = await Cart.findOne({ userId });
+        const cart = await Cart.findOne({ userId }).populate({
+            path: "items.productId",
+            populate: { path: "category" }
+        });
         if (!cart) return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: "Cart not found." });
 
         cart.items = cart.items.filter(item => item._id.toString() !== itemId);
+
+        if (cart.items.length > 0) {
+            const products = cart.items.map(item => item.productId).filter(Boolean);
+            await offerService.populateProductOffers(products);
+        }
+
+        let validationErrors = [];
+        cart.items.forEach(item => {
+            const product = item.productId;
+            if (!product || product.isDeleted || !product.isActive || !product.category || !product.category.isActive || product.category.isDeleted) {
+                item.isUnlisted = true;
+                item.isUnavailable = true;
+                const msg = "This product has been unlisted by the admin and must be removed before proceeding.";
+                if (!validationErrors.includes(msg)) {
+                    validationErrors.push(msg);
+                }
+            } else {
+                const variant = product.variants.find(v => v.size === item.size && v.color === item.color);
+                if (!variant || !variant.isActive) {
+                    item.isUnavailable = true;
+                    validationErrors.push(`The selected variant for ${product.name} is unavailable.`);
+                } else if (variant.quantity <= 0) {
+                    item.isUnavailable = true;
+                    validationErrors.push(`${product.name} (${item.size}/${item.color}) is out of stock.`);
+                }
+            }
+        });
+
         cart.cartTotal = calculateTotals(cart.items);
         await cart.save();
 
@@ -315,7 +352,8 @@ exports.removeFromCart = async (req, res) => {
             success: true,
             message: "Item removed from cart.",
             summary,
-            cartCount: cart.items.reduce((acc, item) => acc + item.quantity, 0)
+            cartCount: cart.items.reduce((acc, item) => acc + item.quantity, 0),
+            validationErrors
         });
     } catch (error) {
         console.error("Remove from Cart Error:", error);

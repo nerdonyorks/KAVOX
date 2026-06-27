@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css?v=<%= Date.now() %>">
+  <script src="/js/notifications.js"></script>
+  <style>
+    .offer-actions {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 4px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      background: #f8fafc;
+    }
+
+    .offer-action-btn {
+      width: 34px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+    }
+
+    .offer-action-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+    }
+
+    .offer-action-btn.edit {
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+
+    .offer-action-btn.edit:hover {
+      background: #0284c7;
+      color: #ffffff;
+    }
+
+    .offer-action-btn.delete {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .offer-action-btn.delete:hover {
+      background: #dc2626;
+      color: #ffffff;
+    }
+
+    .form-grid-custom {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .form-grid-custom {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .offers-table {
+      table-layout: fixed;
+      width: 100%;
+    }
+
+    .offers-table th:nth-child(1),
+    .offers-table td:nth-child(1) {
+      width: 18% !important; /* Offer Name */
+      font-family: inherit !important;
+      color: inherit !important;
+      white-space: normal !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
+    }
+
+    .offers-table th:nth-child(2),
+    .offers-table td:nth-child(2) {
+      width: 25% !important; /* Product Name */
+    }
+
+    .offers-table th:nth-child(3),
+    .offers-table td:nth-child(3) {
+      width: 11% !important; /* Base Price */
+    }
+
+    .offers-table th:nth-child(4),
+    .offers-table td:nth-child(4) {
+      width: 11% !important; /* Discount */
+    }
+
+    .offers-table th:nth-child(5),
+    .offers-table td:nth-child(5) {
+      width: 11% !important; /* Start Date */
+    }
+
+    .offers-table th:nth-child(6),
+    .offers-table td:nth-child(6) {
+      width: 12% !important; /* End Date */
+    }
+
+    .offers-table th:nth-child(7),
+    .offers-table td:nth-child(7) {
+      width: 10% !important; /* Status */
+      text-align: center !important;
+    }
+
+    .offers-table th:nth-child(8),
+    .offers-table td:nth-child(8) {
+      width: 105px !important; /* Action */
+      text-align: center !important;
+    }
+
+    .offers-table td {
+      white-space: normal !important;
+      word-wrap: break-word !important;
+    }
+  </style>
+</head>
+
+<body class="admin-layout">
+  <%- include('partials/sidebar', { activePage: 'product-offers' }) %>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <header class="header">
+      <h1>PRODUCT OFFERS</h1>
+    </header>
+
+    <div class="content-wrapper">
+      <!-- Standardized Search & Action Row -->
+      <div class="card" style="margin-bottom: 24px;">
+        <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
+          <div class="search-input-wrapper" style="flex: 1; max-width: 600px; display: flex; align-items: center; border: 1px solid #ddd; border-radius: 4px; padding: 0 10px; background: #fff;">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right: 5px;">
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+            <input type="text" id="searchInput" class="form-control" placeholder="Search Offer Name..." style="height: 42px; border:none; width: 100%; outline: none;" value="<%= searchQuery %>">
+          </div>
+          <button class="btn-primary" onclick="openAddModal()" style="height: 42px; white-space: nowrap; display: flex; align-items: center; gap: 8px; font-weight: 700; cursor: pointer; border-radius: 4px;">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M12 4v16m8-8H4"></path>
+            </svg>
+            ADD PRODUCT OFFER
+          </button>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="users-table offers-table">
+          <thead>
+            <tr>
+              <th>OFFER NAME</th>
+              <th>PRODUCT NAME</th>
+              <th>BASE PRICE</th>
+              <th>DISCOUNT</th>
+              <th>START DATE</th>
+              <th>END DATE</th>
+              <th>STATUS</th>
+              <th style="text-align: center;">ACTION</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (offers && offers.length > 0) { %>
+              <% offers.forEach(offer => { %>
+                <tr>
+                  <td><strong style="color: #1e293b;"><%= offer.name %></strong></td>
+                  <td><%= offer.productId ? offer.productId.name : 'Unknown Product' %></td>
+                  <td>₹<%= offer.productId ? offer.productId.price : 'N/A' %></td>
+                  <td style="color: #059669; font-weight: 700;"><%= offer.discountPercentage %>% OFF</td>
+                  <td><%= new Date(offer.startDate).toLocaleDateString('en-IN') %></td>
+                  <td>
+                    <% 
+                      const isExpired = new Date(offer.endDate) < new Date();
+                    %>
+                    <span style="<%= isExpired ? 'color: var(--error); font-weight: 600;' : '' %>">
+                      <%= new Date(offer.endDate).toLocaleDateString('en-IN') %> <%= isExpired ? '(Expired)' : '' %>
+                    </span>
+                  </td>
+                  <td>
+                    <span class="status-badge <%= offer.isActive && !isExpired ? 'status-active' : 'status-inactive' %>">
+                      <%= offer.isActive && !isExpired ? 'Active' : (isExpired ? 'Expired' : 'Inactive') %>
+                    </span>
+                  </td>
+                  <td style="text-align: center;">
+                    <div class="offer-actions">
+                      <button class="offer-action-btn edit" type="button" title="Edit offer"
+                        data-id="<%= offer._id %>"
+                        data-name="<%= offer.name %>"
+                        data-product-id="<%= offer.productId ? offer.productId._id : '' %>"
+                        data-discount-percentage="<%= offer.discountPercentage %>"
+                        data-start-date="<%= new Date(offer.startDate).toISOString().split('T')[0] %>"
+                        data-end-date="<%= new Date(offer.endDate).toISOString().split('T')[0] %>"
+                        data-is-active="<%= offer.isActive %>"
+                        onclick="openEditModal(this.dataset)">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                          <path d="M12 20h9"></path>
+                          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+                        </svg>
+                      </button>
+                      <button class="offer-action-btn delete" type="button" title="Delete offer" onclick="deleteOffer('<%= offer._id %>')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <polyline points="3 6 5 6 21 6"></polyline>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="8" style="text-align: center; padding: 30px; color: #64748b;">No product offers found.</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+        
+        <!-- Pagination -->
+        <% if (totalPages > 1) { %>
+          <div class="pagination" style="display: flex; justify-content: center; gap: 8px; padding: 20px; border-top: 1px solid #f1f5f9;">
+            <% for (let i = 1; i <= totalPages; i++) { %>
+              <a href="/admin/offers/products?page=<%= i %>&search=<%= searchQuery %>" 
+                 style="padding: 8px 16px; border: 1px solid <%= i === currentPage ? 'var(--primary-color)' : '#e2e8f0' %>; 
+                        background: <%= i === currentPage ? 'var(--primary-color)' : '#fff' %>; 
+                        color: <%= i === currentPage ? '#fff' : '#0f172a' %>; 
+                        text-decoration: none; border-radius: 6px; font-weight: 700;">
+                <%= i %>
+              </a>
+            <% } %>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add/Edit Offer Modal -->
+  <div id="offerModal" class="modal">
+    <div class="modal-content card" style="max-width: 550px; padding: 0; overflow-y: auto; max-height: 90vh;">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid var(--border-color); background: #fafafa;">
+        <h2 id="modalTitle" style="margin: 0; font-size: 18px; font-weight: 700; color: #1e293b;">Create Product Offer</h2>
+        <button type="button" onclick="closeModal()" style="background: none; border: none; color: #94a3b8; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <form id="offerForm" style="padding: 24px;">
+        <input type="hidden" id="offerId">
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          
+          <div class="form-group" style="margin: 0;">
+            <label class="form-label" style="display: block; margin-bottom: 8px; font-weight: 600; color: #475569; font-size: 13px;">OFFER NAME</label>
+            <input type="text" id="offerName" class="form-control" placeholder="e.g. Summer Clearance Sale" style="height: 44px; width: 100%;" required>
+          </div>
+
+          <div class="form-group" style="margin: 0;">
+            <label class="form-label" style="display: block; margin-bottom: 8px; font-weight: 600; color: #475569; font-size: 13px;">SELECT PRODUCT</label>
+            <select id="offerProductId" class="form-control" style="height: 44px; width: 100%;" required>
+              <option value="">-- Choose a Product --</option>
+              <% products.forEach(p => { %>
+                <option value="<%= p._id %>"><%= p.name %> (Base: ₹<%= p.price %>)</option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div class="form-grid-custom">
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label" style="display: block; margin-bottom: 8px; font-weight: 600; color: #475569; font-size: 13px;">DISCOUNT PERCENTAGE (%)</label>
+              <input type="number" id="discountPercentage" class="form-control" min="1" max="100" placeholder="e.g. 25" style="height: 44px; width: 100%;" required>
+            </div>
+
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label" style="display: block; margin-bottom: 8px; font-weight: 600; color: #475569; font-size: 13px;">STATUS</label>
+              <select id="offerStatus" class="form-control" style="height: 44px; width: 100%;">
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid-custom">
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label" style="display: block; margin-bottom: 8px; font-weight: 600; color: #475569; font-size: 13px;">START DATE</label>
+              <input type="date" id="startDate" class="form-control" style="height: 44px; width: 100%;" required>
+            </div>
+
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label" style="display: block; margin-bottom: 8px; font-weight: 600; color: #475569; font-size: 13px;">END DATE</label>
+              <input type="date" id="endDate" class="form-control" style="height: 44px; width: 100%;" required>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border-color);">
+          <button type="button" class="btn-secondary" onclick="closeModal()" style="height: 42px; padding: 0 24px; font-weight: 600;">CANCEL</button>
+          <button type="submit" id="submitBtn" class="btn-primary" style="height: 42px; padding: 0 24px; font-weight: 600;">SAVE OFFER</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function openAddModal() {
+      document.getElementById('modalTitle').innerText = "Create Product Offer";
+      document.getElementById('submitBtn').innerText = "SAVE OFFER";
+      document.getElementById('offerId').value = "";
+      document.getElementById('offerName').value = "";
+      document.getElementById('offerProductId').value = "";
+      document.getElementById('discountPercentage').value = "";
+      document.getElementById('offerStatus').value = "true";
+
+      const today = new Date().toISOString().split('T')[0];
+      const startInput = document.getElementById('startDate');
+      const endInput = document.getElementById('endDate');
+      startInput.value = today;
+      startInput.min = today;
+      endInput.value = "";
+      endInput.min = today;
+
+      document.getElementById('offerModal').classList.add('active');
+    }
+
+    function openEditModal(dataset) {
+      document.getElementById('modalTitle').innerText = "Edit Product Offer";
+      document.getElementById('submitBtn').innerText = "UPDATE OFFER";
+      document.getElementById('offerId').value = dataset.id || "";
+      document.getElementById('offerName').value = dataset.name || "";
+      document.getElementById('offerProductId').value = dataset.productId || "";
+      document.getElementById('discountPercentage').value = dataset.discountPercentage || "";
+      document.getElementById('offerStatus').value = dataset.isActive === "false" ? "false" : "true";
+
+      const today = new Date().toISOString().split('T')[0];
+      const startInput = document.getElementById('startDate');
+      const endInput = document.getElementById('endDate');
+      startInput.value = dataset.startDate || "";
+      startInput.min = today;
+      endInput.value = dataset.endDate || "";
+      endInput.min = today;
+
+      document.getElementById('offerModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('offerModal').classList.remove('active');
+    }
+
+    document.getElementById('offerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const id = document.getElementById('offerId').value;
+      const name = document.getElementById('offerName').value.trim();
+      const productId = document.getElementById('offerProductId').value;
+      const discountPercentage = parseFloat(document.getElementById('discountPercentage').value);
+      const isActive = document.getElementById('offerStatus').value === "true";
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+
+      if (!name || !productId || isNaN(discountPercentage) || discountPercentage <= 0 || discountPercentage > 100 || !startDate || !endDate) {
+        KavoxNotify.toast("Please fill in all details correctly.", "error");
+        return;
+      }
+
+      if (new Date(startDate) > new Date(endDate)) {
+        KavoxNotify.toast("Start date must be before end date.", "error");
+        return;
+      }
+
+      const payload = { name, productId, discountPercentage, isActive, startDate, endDate };
+      const url = id ? `/api/admin/offers/products/${id}` : '/api/admin/offers/products';
+      const method = id ? 'PUT' : 'POST';
+
+      try {
+        const response = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if (response.ok && result.success) {
+          KavoxNotify.toast(result.message, 'success');
+          closeModal();
+          setTimeout(() => window.location.reload(), 1000);
+        } else {
+          KavoxNotify.alert({ title: 'Error', text: result.message, icon: 'error' });
+        }
+      } catch (err) {
+        console.error(err);
+        KavoxNotify.toast("An error occurred while saving the offer.", "error");
+      }
+    });
+
+    async function deleteOffer(id) {
+      const confirm = await KavoxNotify.confirm({
+        title: 'Delete Product Offer',
+        text: "Are you sure you want to delete this offer?",
+        icon: 'warning',
+        confirmText: 'Yes, delete it!'
+      });
+
+      if (confirm.isConfirmed) {
+        try {
+          const response = await fetch(`/api/admin/offers/products/${id}`, { method: 'DELETE' });
+          const result = await response.json();
+          if (response.ok && result.success) {
+            KavoxNotify.toast(result.message, 'success');
+            setTimeout(() => window.location.reload(), 1000);
+          } else {
+            KavoxNotify.alert({ title: 'Error', text: result.message, icon: 'error' });
+          }
+        } catch (err) {
+          console.error(err);
+          KavoxNotify.toast("Failed to delete offer.", "error");
+        }
+      }
+    }
+
+    let searchTimeout;
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        window.location.href = `/admin/offers/products?search=${encodeURIComponent(e.target.value)}&page=1`;
+      }, 600);
+    });
+  </script>
+</body>
+
+</html>

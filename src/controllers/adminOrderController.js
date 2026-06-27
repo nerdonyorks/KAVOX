@@ -185,6 +185,7 @@ exports.updateItemStatus = async (req, res) => {
              return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Cannot change status of a cancelled, returned, or return requested item." });
         }
 
+        let couponRemovedMsg = null;
         // If cancelling, restore stock
         if (status === 'Cancelled' && item.itemStatus !== 'Cancelled') {
             const product = await Product.findById(item.productId);
@@ -198,7 +199,10 @@ exports.updateItemStatus = async (req, res) => {
             item.cancellationReason = 'Cancelled by Administrator';
 
             // Update pricing and refund
-            await updateOrderPricingAndRefund(order, item, false);
+            const result = await updateOrderPricingAndRefund(order, item, false);
+            if (result && result.couponRemovedMessage) {
+                couponRemovedMsg = result.couponRemovedMessage;
+            }
         }
 
         item.itemStatus = status;
@@ -211,7 +215,12 @@ exports.updateItemStatus = async (req, res) => {
         }
 
         await order.save();
-        res.status(HTTP_STATUS.OK).json({ success: true, message: "Product status updated successfully." });
+
+        let responseMessage = "Product status updated successfully.";
+        if (couponRemovedMsg) {
+            responseMessage += ` ${couponRemovedMsg}`;
+        }
+        res.status(HTTP_STATUS.OK).json({ success: true, message: responseMessage });
 
     } catch (error) {
         console.error("Update Item Status Error:", error);
@@ -229,6 +238,7 @@ exports.handleReturnRequest = async (req, res) => {
             return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: "Order not found." });
         }
 
+        let couponRemovedMsg = null;
         if (itemId) {
             // Partial Return
             const item = order.items.id(itemId);
@@ -250,7 +260,10 @@ exports.handleReturnRequest = async (req, res) => {
                 }
                 
                 // Update pricing and refund
-                await updateOrderPricingAndRefund(order, item, false);
+                const result = await updateOrderPricingAndRefund(order, item, false);
+                if (result && result.couponRemovedMessage) {
+                    couponRemovedMsg = result.couponRemovedMessage;
+                }
             } else if (action === 'reject') {
                 item.itemStatus = 'Return Rejected';
             }
@@ -298,7 +311,12 @@ exports.handleReturnRequest = async (req, res) => {
         }
 
         await order.save();
-        res.status(HTTP_STATUS.OK).json({ success: true, message: `Return request ${action}d successfully.` });
+
+        let responseMessage = `Return request ${action}d successfully.`;
+        if (couponRemovedMsg) {
+            responseMessage += ` ${couponRemovedMsg}`;
+        }
+        res.status(HTTP_STATUS.OK).json({ success: true, message: responseMessage });
 
     } catch (error) {
         console.error("Handle Return Error:", error);

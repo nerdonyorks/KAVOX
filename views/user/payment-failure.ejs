@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Failed - KAVOX</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .failure-container {
+      max-width: 600px;
+      margin: 80px auto;
+      text-align: center;
+      padding: 50px 40px;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
+    .failure-icon-wrapper {
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 30px;
+      background: #fef2f2;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 4px solid #fee2e2;
+    }
+    .failure-icon {
+      color: #ef4444;
+      font-size: 48px;
+      font-weight: 300;
+      line-height: 1;
+    }
+    .failure-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: #111;
+      margin-bottom: 10px;
+      letter-spacing: 1px;
+    }
+    .failure-subtitle {
+      font-size: 16px;
+      font-weight: 600;
+      color: #ef4444;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .failure-text {
+      color: #666;
+      font-size: 15px;
+      line-height: 1.6;
+      margin-bottom: 40px;
+      padding: 0 20px;
+    }
+    .failure-actions {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+    }
+    .btn-secondary {
+      background: #fff;
+      color: #111;
+      border: 2px solid #111;
+      padding: 12px 24px;
+      text-decoration: none;
+      font-weight: 700;
+      border-radius: 4px;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+    }
+    .btn-secondary:hover {
+      background: #111;
+      color: #fff;
+    }
+    .btn-danger {
+      background: #ef4444;
+      color: #fff;
+      border: 2px solid #ef4444;
+      padding: 12px 24px;
+      text-decoration: none;
+      font-weight: 700;
+      border-radius: 4px;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+    }
+    .btn-danger:hover {
+      background: #dc2626;
+      border-color: #dc2626;
+    }
+  </style>
+</head>
+<body class="user-layout">
+  <%- include('../partials/user-header') %>
+
+  <main class="failure-container">
+    <div class="failure-icon-wrapper">
+      <div class="failure-icon">&times;</div>
+    </div>
+    
+    <h2 class="failure-subtitle">Transaction Failed</h2>
+    <h1 class="failure-title">Payment Unsuccessful</h1>
+    
+    <p class="failure-text">
+      <% if (locals.errorMessage) { %>
+        <%= errorMessage %>
+      <% } else { %>
+        We couldn't process your payment. This could be due to incorrect details, insufficient funds, or a temporary network issue. Please try again.
+      <% } %>
+    </p>
+
+    <div class="failure-actions">
+      <a href="/checkout" class="btn-danger">Retry Payment</a>
+      <a href="/cart" class="btn-secondary">Go to Cart</a>
+    </div>
+  </main>
+
+  <%- include('../partials/user-footer') %>
+</body>
+</html>

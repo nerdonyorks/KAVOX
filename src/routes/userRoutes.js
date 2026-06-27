@@ -6,6 +6,8 @@ const cartController = require("../controllers/cartController");
 const wishlistController = require("../controllers/wishlistController");
 const orderController = require("../controllers/orderController");
 const orderManagementController = require("../controllers/orderManagementController");
+const couponController = require("../controllers/couponController");
+const reviewController = require("../controllers/reviewController");
 const { isLoggedIn, isLoggedOut } = require("../middleware/authMiddleware");
 const upload = require("../middleware/upload");
 
@@ -38,10 +40,29 @@ router.post("/api/wishlist/toggle", isLoggedIn, wishlistController.toggleWishlis
 
 // Checkout & Order Routes
 router.get("/checkout", isLoggedIn, orderController.getCheckout);
+router.get("/api/checkout/summary", isLoggedIn, orderController.getCheckoutSummary);
 router.post("/api/checkout/place-order", isLoggedIn, orderController.placeOrder);
-router.get("/order-success", isLoggedIn, (req, res) => {
-    const orderId = req.query.id;
-    res.render("user/order-success", { title: "Order Success", orderId });
+router.post("/api/checkout/apply-coupon", isLoggedIn, couponController.applyCoupon);
+router.post("/api/checkout/remove-coupon", isLoggedIn, couponController.removeCoupon);
+router.get("/coupons", isLoggedIn, couponController.renderUserCoupons);
+router.get("/order-success", isLoggedIn, async (req, res) => {
+    try {
+        const orderId = req.query.id;
+        const Order = require("../models/orderModel");
+        const order = await Order.findOne({ orderId, userId: req.user._id });
+        if (!order) {
+            return res.redirect("/");
+        }
+        res.render("user/order-success", { 
+            title: "Order Success - KAVOX", 
+            orderId: order.orderId,
+            paymentId: order.razorpayPaymentId || 'N/A',
+            amountPaid: order.pricing.total
+        });
+    } catch (error) {
+        console.error("Order success page error:", error);
+        res.redirect("/");
+    }
 });
 
 // Order Management Routes
@@ -73,5 +94,11 @@ router.delete("/api/users/addresses/:id", isLoggedIn, userController.deleteAddre
 router.patch("/api/users/addresses/:id/default", isLoggedIn, userController.setDefaultAddress);
 
 router.get("/api/products/:id/variants", productController.userGetProductVariants);
+
+// Product Review Routes
+router.post("/api/reviews", isLoggedIn, upload.array("images", 5), reviewController.createOrUpdateReview);
+router.put("/api/reviews/:id", isLoggedIn, upload.array("images", 5), reviewController.createOrUpdateReview);
+router.delete("/api/reviews/:id", isLoggedIn, reviewController.deleteReview);
+router.get("/api/reviews/product/:productId", reviewController.getProductReviews);
 
 module.exports = router;

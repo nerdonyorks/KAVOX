@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KAVOX - Home</title>
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/style.css?v=<%= Date.now() %>">
   <script src="/js/shimmer.js"></script>
 </head>
 
@@ -14,14 +14,139 @@
 
 
     <!-- Hero Banner -->
-    <section class="hero">
-      <div class="hero-content">
-        <h1>ELEVATE YOUR<br>FOOTWEAR GAME</h1>
-        <p>EXPERIENCE PREMIUM COMFORT & STYLE</p>
-        <a href="/shop" class="shop-now-btn">EXPLORE COLLECTION</a>
-      </div>
-      <img src="/images/banner.jpg" alt="Kavox" class="hero-image">
-    </section>
+    <% if (typeof banners !== 'undefined' && banners.length > 0) { %>
+      <style>
+        .hero-slider-track {
+          display: flex;
+          height: 100%;
+          width: 100%;
+          transition: transform 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+        }
+        .hero-slide {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+          box-sizing: border-box;
+        }
+        .hero-slide::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(90deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 50%, rgba(0, 0, 0, 0) 100%);
+          z-index: 2;
+          pointer-events: none;
+        }
+        .hero::before {
+          display: none !important;
+        }
+        @media (max-width: 768px) {
+          .hero-slide::before {
+            background: linear-gradient(0deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 100%);
+          }
+        }
+        .slide-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.4);
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .slide-dot.active {
+          background: #ffffff;
+          width: 24px;
+          border-radius: 5px;
+        }
+      </style>
+
+      <!-- Slideshow Hero Slider -->
+      <section class="hero" style="position: relative; overflow: hidden; background: #000; display: block; padding: 0;">
+        <div class="hero-slider-track">
+          <% banners.forEach((banner, index) => { %>
+            <div class="hero-slide" id="slide-<%= index %>">
+              <div class="hero-content" style="z-index: 3; position: relative;">
+                <h1><%= banner.title %></h1>
+                <% if (banner.subtitle) { %>
+                  <p><%= banner.subtitle %></p>
+                <% } %>
+                <a href="<%= banner.link %>" class="shop-now-btn">EXPLORE COLLECTION</a>
+              </div>
+              <img src="<%= banner.image %>" alt="<%= banner.title %>" class="hero-image" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; opacity: 0.65;">
+            </div>
+          <% }) %>
+        </div>
+        
+        <% if (banners.length > 1) { %>
+          <!-- Slider Navigation Dots -->
+          <div style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 3;">
+            <% banners.forEach((_, idx) => { %>
+              <span class="slide-dot <%= idx === 0 ? 'active' : '' %>" onclick="handleDotClick(<%= idx %>)"></span>
+            <% }) %>
+          </div>
+        <% } %>
+      </section>
+
+      <% if (banners.length > 1) { %>
+        <script>
+          let currentSlideIndex = 0;
+          const slidesCount = <%= banners.length %>;
+          const sliderTrack = document.querySelector('.hero-slider-track');
+          let autoSlideInterval = null;
+
+          function showSlide(index) {
+            if (index < 0) {
+              index = slidesCount - 1;
+            } else if (index >= slidesCount) {
+              index = 0;
+            }
+
+            sliderTrack.style.transform = `translateX(-${index * 100}%)`;
+
+            const dots = document.querySelectorAll('.slide-dot');
+            dots.forEach((dot, idx) => {
+              if (idx === index) {
+                dot.classList.add('active');
+              } else {
+                dot.classList.remove('active');
+              }
+            });
+
+            currentSlideIndex = index;
+          }
+
+          function nextSlide() {
+            showSlide(currentSlideIndex + 1);
+          }
+
+          function resetInterval() {
+            clearInterval(autoSlideInterval);
+            autoSlideInterval = setInterval(nextSlide, 5000);
+          }
+
+          // Initialize autoplay interval
+          autoSlideInterval = setInterval(nextSlide, 5000);
+
+          function handleDotClick(index) {
+            showSlide(index);
+            resetInterval();
+          }
+        </script>
+      <% } %>
+    <% } else { %>
+      <!-- Fallback Static Hero Banner -->
+      <section class="hero">
+        <div class="hero-content">
+          <h1>ELEVATE YOUR<br>FOOTWEAR GAME</h1>
+          <p>EXPERIENCE PREMIUM COMFORT & STYLE</p>
+          <a href="/shop" class="shop-now-btn">EXPLORE COLLECTION</a>
+        </div>
+        <img src="/images/banner.jpg" alt="Kavox" class="hero-image">
+      </section>
+    <% } %>
 
     <!-- New Arrivals -->
     <section class="section">
@@ -165,7 +290,9 @@
           }
 
           productGrid.innerHTML = products.map(product => {
-            const discount = product.productOffer || 0;
+            const pOffer = product.productOffer || 0;
+            const cOffer = (product.category && typeof product.category === 'object' && product.category.offer) ? product.category.offer : (product.categoryOffer || 0);
+            const discount = Math.max(pOffer, cOffer);
             const finalPrice = Math.round(product.price * (1 - discount / 100));
             const imgSrc = product.images && product.images.length > 0
               ? (product.images.find(img => img.isPrimary)?.url || product.images[0].url)

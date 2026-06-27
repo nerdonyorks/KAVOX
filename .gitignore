@@ -1,5 +1,7 @@
 .env
 node_modules/
+logs/
 
 # Scratch / temp files
 scratch*.js
+

@@ -2,6 +2,7 @@ const User = require("../models/userModel");
 const Product = require("../models/productModel");
 const Category = require("../models/categoryModel");
 const Wishlist = require("../models/wishlist");
+const Banner = require("../models/bannerModel");
 const otpService = require("../services/otpService");
 const emailService = require("../services/emailService");
 const { HTTP_STATUS, MESSAGES } = require("../utils/constants");
@@ -89,6 +90,9 @@ exports.renderHome = async (req, res) => {
       .limit(12)
       .lean();
 
+    const offerService = require("../services/offerService");
+    await offerService.populateProductOffers(products);
+
     // Get user's wishlist product IDs if logged in
     let wishlistProductIds = [];
     if (req.user) {
@@ -107,14 +111,20 @@ exports.renderHome = async (req, res) => {
       return res.json({ success: true, products: mappedProducts });
     }
 
-    res.render("user/home", { products, wishlistProductIds });
+    // Retrieve active promotional banners
+    const banners = await Banner.find({ isActive: true }).lean();
+
+    res.render("user/home", { products, wishlistProductIds, banners });
   } catch (err) {
     console.error("Home render error:", err);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).render("user/error", { message: MESSAGES.HOME_PAGE_LOAD_FAILED });
   }
 };
 
-exports.renderSignup = (req, res) => res.render("user/signup");
+exports.renderSignup = (req, res) => {
+  const referralCode = req.query.ref || req.query.referralCode || "";
+  res.render("user/signup", { referralCode });
+};
 
 exports.renderLogin = (req, res) => {
   const { error } = req.query;
@@ -237,6 +247,27 @@ exports.updateProfile = async (req, res, next) => {
 
     if (!user) {
       return res.redirect("/login");
+    }
+
+    const nameRegex = /^[a-zA-Z\s]+$/;
+    if (firstName && !nameRegex.test(firstName.trim())) {
+      if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Profile name cannot contain special characters." });
+      }
+      return res.status(HTTP_STATUS.BAD_REQUEST).render("user/editProfile", {
+        user: user,
+        error: "Profile name cannot contain special characters."
+      });
+    }
+
+    if (lastName && !nameRegex.test(lastName.trim())) {
+      if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Profile name cannot contain special characters." });
+      }
+      return res.status(HTTP_STATUS.BAD_REQUEST).render("user/editProfile", {
+        user: user,
+        error: "Profile name cannot contain special characters."
+      });
     }
 
     // Prepare current values for comparison

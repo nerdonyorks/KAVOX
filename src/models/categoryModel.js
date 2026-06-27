@@ -10,12 +10,7 @@ const categorySchema = new mongoose.Schema(
     image: {
       type: String,
     },
-    offer: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 100,
-    },
+
     isActive: {
       type: Boolean,
       default: true,
