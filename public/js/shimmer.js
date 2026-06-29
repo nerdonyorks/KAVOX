@@ -5,6 +5,7 @@
 
 // Global Loading (Shimmer)
 let loadingTimer = null;
+let activeRequests = 0;
 
 function showShimmer() {
     if (document.getElementById('global-shimmer-overlay')) return;
@@ -24,19 +25,24 @@ function showShimmer() {
         overlay.classList.add('dark-shimmer');
     }
 
-    // Apply fixed positioning styles to ensure it covers the entire viewport
+    // Apply fixed positioning styles to ensure it covers the entire viewport and blocks clicks
     Object.assign(overlay.style, {
         position: 'fixed',
         top: '0',
         left: '0',
-        width: '100vw',
-        height: '100vh',
+        right: '0',
+        bottom: '0',
         zIndex: '10050',
-        pointerEvents: 'none',
+        pointerEvents: 'auto',
+        opacity: '0',
         transition: 'opacity 0.3s ease'
     });
 
     document.body.appendChild(overlay);
+
+    // Force layout reflow and set opacity to 1 to trigger transition
+    overlay.offsetHeight;
+    overlay.style.opacity = '1';
 }
 
 function startTimer() {
@@ -45,10 +51,16 @@ function startTimer() {
 }
 
 function clearTimer() {
+    activeRequests = 0;
     if (loadingTimer) clearTimeout(loadingTimer);
     const overlay = document.getElementById('global-shimmer-overlay');
     if (overlay) {
-        overlay.remove();
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+            if (overlay.parentNode) {
+                overlay.remove();
+            }
+        }, 300);
     }
 }
 
@@ -82,17 +94,45 @@ document.addEventListener('DOMContentLoaded', () => {
     // Wrap fetch for global loading feedback
     const originalFetch = window.fetch;
     window.fetch = async function (...args) {
-        // Trigger for significant data requests
-        const isInternalRequest = args[0] && typeof args[0] === 'string' &&
-            (args[0].includes('/api/') || args[0].includes('/admin/'));
+        // Resolve target URL string
+        let urlStr = '';
+        if (args[0]) {
+            if (typeof args[0] === 'string') {
+                urlStr = args[0];
+            } else if (args[0] instanceof URL) {
+                urlStr = args[0].href;
+            } else if (typeof args[0] === 'object' && args[0].url) {
+                urlStr = args[0].url;
+            }
+        }
 
-        if (isInternalRequest) startTimer();
+        // Trigger for significant data requests (internal APIs, admin dashboard, or shop/orders AJAX pages)
+        const isInternalRequest = urlStr && (
+            urlStr.includes('/api/') ||
+            urlStr.includes('/admin/') ||
+            ((urlStr.startsWith('/') || urlStr.startsWith(window.location.origin)) &&
+             (urlStr.includes('/shop') || urlStr.includes('/orders')) &&
+             !/\.(js|css|png|jpg|jpeg|gif|svg|webp)$/i.test(urlStr))
+        );
+
+        if (isInternalRequest) {
+            activeRequests++;
+            if (activeRequests === 1) {
+                startTimer();
+            }
+        }
 
         try {
             const response = await originalFetch(...args);
             return response;
         } finally {
-            if (isInternalRequest) clearTimer();
+            if (isInternalRequest) {
+                activeRequests--;
+                if (activeRequests <= 0) {
+                    activeRequests = 0;
+                    clearTimer();
+                }
+            }
         }
     };
 });

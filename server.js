@@ -11,9 +11,10 @@ const startServer = async () => {
     await createAdmin();
     
     const PORT = process.env.PORT || 3000;
+    const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
     console.log("ENV TEST:", process.env.MONGO_URI ? "LOADED" : "UNDEFINED");
     app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
+      console.log(`Server running on ${BASE_URL}`);
     });
 
   } catch (error) {

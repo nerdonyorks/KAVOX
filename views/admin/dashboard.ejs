@@ -7,6 +7,7 @@
   <title>Dashboard - KAVOX Admin</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/notifications.js"></script>
+  <script src="/js/shimmer.js"></script>
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
@@ -234,41 +235,6 @@
       text-align: right;
       flex-shrink: 0;
     }
-
-    .loading-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(1px);
-      z-index: 10;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 12px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
-    }
-
-    .loading-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .spinner {
-      width: 36px;
-      height: 36px;
-      border: 3.5px solid #e2e8f0;
-      border-top-color: #6366f1;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
     }
   </style>
 </head>
@@ -285,10 +251,6 @@
 
     <div class="content-wrapper" style="position: relative;">
 
-      <!-- Full Dashboard Spinner Overlay -->
-      <div id="dashboardSpinner" class="loading-overlay">
-        <div class="spinner"></div>
-      </div>
 
       <!-- Filters Row -->
       <div class="dashboard-filter-card">
@@ -591,17 +553,7 @@
       filterEnd = end;
       refreshDashboard();
     }
-
-    function showSpinner() {
-      document.getElementById('dashboardSpinner').classList.add('active');
-    }
-
-    function hideSpinner() {
-      document.getElementById('dashboardSpinner').classList.remove('active');
-    }
-
     async function refreshDashboard() {
-      showSpinner();
       try {
         let queryParams = `?filter=${activeFilter}`;
         if (activeFilter === 'custom') {
@@ -624,8 +576,6 @@
       } catch (error) {
         console.error("Dashboard reload error:", error);
         KavoxNotify.toast("Network error occurred reloading dashboard.", "error");
-      } finally {
-        hideSpinner();
       }
     }
 

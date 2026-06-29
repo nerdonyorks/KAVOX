@@ -7,6 +7,7 @@
   <title>Sales Report - KAVOX Admin</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/notifications.js"></script>
+  <script src="/js/shimmer.js"></script>
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
@@ -165,44 +166,6 @@
       align-items: center;
     }
 
-    /* Shimmer screen overlay during API fetches */
-    .loading-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(2px);
-      z-index: 10;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 12px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
-    }
-
-    .loading-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid #e2e8f0;
-      border-top-color: #6366f1;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
   </style>
 </head>
 
@@ -218,10 +181,6 @@
 
     <div class="content-wrapper" style="position: relative;">
       
-      <!-- Loading Overlay for Entire Dashboard -->
-      <div id="dashboardLoader" class="loading-overlay">
-        <div class="spinner"></div>
-      </div>
 
       <!-- Filters Panel -->
       <div class="report-filter-card">
@@ -457,16 +416,7 @@
       excelBtn.href = `/admin/reports/download/excel${queryParams}`;
     }
 
-    function showSpinner() {
-      document.getElementById('dashboardLoader').classList.add('active');
-    }
-
-    function hideSpinner() {
-      document.getElementById('dashboardLoader').classList.remove('active');
-    }
-
     async function loadDashboardData() {
-      showSpinner();
       updateDownloadLinks();
 
       try {
@@ -491,13 +441,10 @@
       } catch (error) {
         console.error("Dashboard Load Error:", error);
         KavoxNotify.toast("Connection error loading sales report dashboard.", "error");
-      } finally {
-        hideSpinner();
       }
     }
 
     async function loadSalesTableOnly(page) {
-      showSpinner();
       currentTablePage = page;
       try {
         let queryParams = `?filter=${currentFilter}&page=${currentTablePage}`;
@@ -513,8 +460,6 @@
         }
       } catch (error) {
         console.error("Table Load Error:", error);
-      } finally {
-        hideSpinner();
       }
     }
 

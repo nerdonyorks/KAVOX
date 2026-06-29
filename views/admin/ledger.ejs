@@ -7,6 +7,7 @@
   <title>General Ledger - KAVOX Admin</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/notifications.js"></script>
+  <script src="/js/shimmer.js"></script>
   <style>
     /* Premium Ledger Styling */
     .ledger-filter-card {
@@ -123,42 +124,6 @@
       gap: 12px;
       align-items: center;
     }
-
-    .loading-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(2px);
-      z-index: 10;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 12px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
-    }
-
-    .loading-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid #e2e8f0;
-      border-top-color: #6366f1;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
   </style>
 </head>
 
@@ -174,10 +139,6 @@
 
     <div class="content-wrapper" style="position: relative;">
 
-      <!-- Loading Overlay -->
-      <div id="ledgerLoader" class="loading-overlay">
-        <div class="spinner"></div>
-      </div>
 
       <!-- Filters Panel -->
       <div class="ledger-filter-card">
@@ -361,16 +322,7 @@
       excelBtn.href = `/admin/ledger/download/excel${queryParams}`;
     }
 
-    function showSpinner() {
-      document.getElementById('ledgerLoader').classList.add('active');
-    }
-
-    function hideSpinner() {
-      document.getElementById('ledgerLoader').classList.remove('active');
-    }
-
     async function loadLedgerData() {
-      showSpinner();
       updateDownloadLinks();
 
       try {
@@ -389,13 +341,10 @@
       } catch (error) {
         console.error("Ledger Load Error:", error);
         KavoxNotify.toast("Connection error loading ledger sheet.", "error");
-      } finally {
-        hideSpinner();
       }
     }
 
     async function loadLedgerPageOnly(page) {
-      showSpinner();
       currentTablePage = page;
       try {
         let queryParams = `?filter=${currentFilter}&page=${currentTablePage}`;
@@ -411,8 +360,6 @@
         }
       } catch (error) {
         console.error("Ledger Page Load Error:", error);
-      } finally {
-        hideSpinner();
       }
     }
 

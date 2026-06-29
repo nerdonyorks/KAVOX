@@ -352,8 +352,9 @@ exports.forgotPassword = async (req, res) => {
     user.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
     await user.save();
 
-    // Dynamically construct reset URL
-    const resetUrl = `${req.protocol}://${req.get('host')}/reset-password?token=${resetToken}`;
+    // Dynamically construct reset URL using BASE_URL env var if available, else fallback
+    const BASE_URL = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+    const resetUrl = `${BASE_URL}/reset-password?token=${resetToken}`;
 
     // Use emailService to send the email
     const emailSent = await emailService.sendPasswordResetEmail(user.email, resetUrl);

@@ -121,80 +121,39 @@ exports.renderAdminWalletDetails = async (req, res) => {
       return res.status(HTTP_STATUS.NOT_FOUND).send("User not found.");
     }
 
-    const wallet = await walletService.getWallet(userId);
-    const transactions = await WalletTransaction.find({ userId }).sort({ createdAt: -1 }).lean();
+    // Support AJAX JSON response or standard EJS render
+    const isAjax = req.accepts('json') && !req.accepts('html');
+    if (isAjax) {
+      const wallet = await walletService.getWallet(userId);
+      const transactions = await WalletTransaction.find({ userId }).sort({ createdAt: -1 }).lean();
 
-    const Order = require("../models/orderModel");
-    const orders = await Order.find({ userId }).select("orderId _id").lean();
-    const orderMap = {};
-    orders.forEach(o => {
-      orderMap[o.orderId] = o._id;
-    });
+      const Order = require("../models/orderModel");
+      const orders = await Order.find({ userId }).select("orderId _id").lean();
+      const orderMap = {};
+      orders.forEach(o => {
+        orderMap[o.orderId] = o._id;
+      });
 
-    transactions.forEach(tx => {
-      if (tx.orderId && orderMap[tx.orderId]) {
-        tx.orderDocId = orderMap[tx.orderId];
-      }
-    });
+      transactions.forEach(tx => {
+        if (tx.orderId && orderMap[tx.orderId]) {
+          tx.orderDocId = orderMap[tx.orderId];
+        }
+      });
+
+      return res.json({
+        success: true,
+        targetUser: user,
+        wallet,
+        transactions
+      });
+    }
 
     res.render("admin/wallet-details", {
       title: `Wallet Details: ${user.name}`,
-      targetUser: user,
-      wallet,
-      transactions
+      userId
     });
   } catch (error) {
     console.error("renderAdminWalletDetails Controller Error:", error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Failed to load admin user wallet details.");
-  }
-};
-
-/**
- * Handles admin manual wallet adjustments (credits / debits).
- */
-exports.adjustWalletBalance = async (req, res) => {
-  try {
-    const { userId, amount, type, reason } = req.body;
-
-    if (!userId || !amount || !type || !reason) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
-        success: false, 
-        message: "Missing parameter fields. Adjustment amount, type, and reason are required." 
-      });
-    }
-
-    const numericAmount = Number(amount);
-    if (isNaN(numericAmount) || numericAmount <= 0) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
-        success: false, 
-        message: "Invalid amount. Must be a number greater than 0." 
-      });
-    }
-
-    if (type !== "CREDIT" && type !== "DEBIT") {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
-        success: false, 
-        message: "Invalid transaction type. Must be CREDIT or DEBIT." 
-      });
-    }
-
-    let updatedWallet;
-    if (type === "CREDIT") {
-      updatedWallet = await walletService.creditWallet(userId, numericAmount, "ADMIN_ADJUSTMENT", reason);
-    } else {
-      updatedWallet = await walletService.debitWallet(userId, numericAmount, "ADMIN_ADJUSTMENT", reason);
-    }
-
-    res.status(HTTP_STATUS.OK).json({
-      success: true,
-      message: `Successfully adjusted balance by ${type === "CREDIT" ? "+" : "-"}₹${numericAmount}.`,
-      wallet: updatedWallet
-    });
-  } catch (error) {
-    console.error("adjustWalletBalance Controller Error:", error);
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ 
-      success: false, 
-      message: error.message || "Failed to adjust wallet balance." 
-    });
   }
 };

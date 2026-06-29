@@ -7,13 +7,13 @@
   <title><%= title %></title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/js/notifications.js"></script>
+  <script src="/js/shimmer.js"></script>
   <style>
     /* Styling for Admin Wallet Details */
     .admin-wallet-grid {
-      display: grid;
-      grid-template-columns: 1fr 380px;
+      display: flex;
+      flex-direction: column;
       gap: 30px;
-      align-items: start;
     }
 
     .info-grid {
@@ -168,140 +168,67 @@
       <!-- Page Grid -->
       <div class="admin-wallet-grid">
         
-        <!-- Left Side: User Info & Transaction History -->
-        <div style="display: flex; flex-direction: column; gap: 30px;">
+        <!-- User Details Card -->
+        <div class="card" style="padding: 25px;">
+          <h2 style="font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 20px;">CUSTOMER WALLET SUMMARY</h2>
           
-          <!-- User Details Card -->
-          <div class="card" style="padding: 25px;">
-            <h2 style="font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 20px;">CUSTOMER WALLET SUMMARY</h2>
-            
-            <div style="display: flex; gap: 40px; margin-bottom: 25px; border-bottom: 1px solid #f1f5f9; padding-bottom: 20px;">
-              <div>
-                <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Customer Name</div>
-                <div style="font-size: 16px; font-weight: 700; color: #0f172a; margin-top: 4px;"><%= targetUser.name %></div>
-              </div>
-              <div>
-                <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Email Address</div>
-                <div style="font-size: 16px; font-weight: 700; color: #0f172a; margin-top: 4px;"><%= targetUser.email %></div>
-              </div>
-              <div>
-                <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Mobile Phone</div>
-                <div style="font-size: 16px; font-weight: 700; color: #0f172a; margin-top: 4px;"><%= targetUser.phone || 'N/A' %></div>
-              </div>
+          <div style="display: flex; gap: 40px; margin-bottom: 25px; border-bottom: 1px solid #f1f5f9; padding-bottom: 20px;">
+            <div>
+              <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Customer Name</div>
+              <div id="customerName" style="font-size: 16px; font-weight: 700; color: #0f172a; margin-top: 4px;">Loading...</div>
             </div>
-
-            <div class="info-grid">
-              <div class="stat-badge">
-                <span class="stat-badge-label">Available Balance</span>
-                <span class="stat-badge-value">₹<%= Number(wallet.balance).toFixed(2) %></span>
-              </div>
-              <div class="stat-badge">
-                <span class="stat-badge-label">Total Credits</span>
-                <span class="stat-badge-value credit">₹<%= Number(wallet.totalCredits || 0).toFixed(2) %></span>
-              </div>
-              <div class="stat-badge">
-                <span class="stat-badge-label">Total Debits</span>
-                <span class="stat-badge-value debit">₹<%= Number(wallet.totalDebits || 0).toFixed(2) %></span>
-              </div>
+            <div>
+              <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Email Address</div>
+              <div id="customerEmail" style="font-size: 16px; font-weight: 700; color: #0f172a; margin-top: 4px;">Loading...</div>
+            </div>
+            <div>
+              <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Mobile Phone</div>
+              <div id="customerPhone" style="font-size: 16px; font-weight: 700; color: #0f172a; margin-top: 4px;">Loading...</div>
             </div>
           </div>
 
-          <!-- Transaction Ledger Card -->
-          <div class="card" style="padding: 0; overflow: hidden;">
-            <div style="padding: 20px 25px; border-bottom: 1px solid #f1f5f9;">
-              <h2 style="font-size: 15px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px; margin: 0;">TRANSACTION LOG</h2>
+          <div class="info-grid">
+            <div class="stat-badge">
+              <span class="stat-badge-label">Available Balance</span>
+              <span id="availableBalance" class="stat-badge-value">₹0.00</span>
             </div>
-            
-            <div class="table-wrapper">
-              <table class="users-table">
-                <thead>
-                  <tr>
-                    <th>Date & Time</th>
-                    <th>Type</th>
-                    <th>Ref Order</th>
-                    <th>Reason / Details</th>
-                    <th style="text-align: right;">Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% if (transactions && transactions.length > 0) { %>
-                    <% transactions.forEach(tx => { %>
-                      <tr>
-                        <td>
-                          <%= new Date(tx.createdAt).toLocaleString('en-IN') %>
-                        </td>
-                        <td>
-                          <span class="badge-tx <%= tx.type.toLowerCase() %>"><%= tx.type %></span>
-                        </td>
-                        <td>
-                          <% if (tx.orderId) { %>
-                            <% if (tx.orderDocId) { %>
-                              <a href="/admin/order/<%= tx.orderDocId %>" style="color: #2563eb; font-weight: bold; text-decoration: none;"><%= tx.orderId %></a>
-                            <% } else { %>
-                              <span style="font-family: monospace; font-weight: 600;"><%= tx.orderId %></span>
-                            <% } %>
-                          <% } else { %>
-                            <span style="color: #94a3b8;">—</span>
-                          <% } %>
-                        </td>
-                        <td>
-                          <% if (tx.description === 'ORDER_CANCELLATION_REFUND') { %>
-                            Order Cancellation Refund
-                          <% } else if (tx.description === 'RETURN_REFUND') { %>
-                            Product Return Refund
-                          <% } else if (tx.description === 'WALLET_PAYMENT') { %>
-                            Purchase Checkout Deduction
-                          <% } else if (tx.description === 'ADMIN_ADJUSTMENT') { %>
-                            Admin Manual Adjustment
-                          <% } else { %>
-                            <%= tx.description %>
-                          <% } %>
-                        </td>
-                        <td style="text-align: right; font-weight: 700; font-size: 15px; color: <%= tx.type === 'CREDIT' ? '#059669' : '#dc2626' %>">
-                          <%= tx.type === 'CREDIT' ? '+' : '-' %>₹<%= Number(tx.amount).toFixed(2) %>
-                        </td>
-                      </tr>
-                    <% }) %>
-                  <% } else { %>
-                    <tr>
-                      <td colspan="5" style="text-align: center; padding: 40px; color: #64748b;">
-                        No transactions found for this user.
-                      </td>
-                    </tr>
-                  <% } %>
-                </tbody>
-              </table>
+            <div class="stat-badge">
+              <span class="stat-badge-label">Total Credits</span>
+              <span id="totalCredits" class="stat-badge-value credit">₹0.00</span>
+            </div>
+            <div class="stat-badge">
+              <span class="stat-badge-label">Total Debits</span>
+              <span id="totalDebits" class="stat-badge-value debit">₹0.00</span>
             </div>
           </div>
-
         </div>
 
-        <!-- Right Side: Manual Adjustment Panel -->
-        <div class="card" style="padding: 25px; sticky; top: 20px;">
-          <h2 style="font-size: 16px; font-weight: 800; color: #1e293b; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px;">BALANCE ADJUSTMENT</h2>
+        <!-- Transaction Ledger Card -->
+        <div class="card" style="padding: 0; overflow: hidden;">
+          <div style="padding: 20px 25px; border-bottom: 1px solid #f1f5f9;">
+            <h2 style="font-size: 15px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px; margin: 0;">TRANSACTION LOG</h2>
+          </div>
           
-          <form id="adjustmentForm" onsubmit="event.preventDefault(); handleAdjustment();">
-            
-            <div class="form-group-custom">
-              <label for="adjustType">Adjustment Type</label>
-              <select id="adjustType" required>
-                <option value="CREDIT">CREDIT (Add Funds)</option>
-                <option value="DEBIT">DEBIT (Deduct Funds)</option>
-              </select>
-            </div>
-
-            <div class="form-group-custom">
-              <label for="adjustAmount">Amount (INR)</label>
-              <input type="number" id="adjustAmount" min="1" step="0.01" placeholder="e.g. 500.00" required>
-            </div>
-
-            <div class="form-group-custom">
-              <label for="adjustReason">Reason / Remarks</label>
-              <input type="text" id="adjustReason" placeholder="e.g. Customer goodwill bonus" required>
-            </div>
-
-            <button type="submit" class="btn-submit-adjust">Apply Adjustment</button>
-          </form>
+          <div class="table-wrapper">
+            <table class="users-table">
+              <thead>
+                <tr>
+                  <th>Date & Time</th>
+                  <th>Type</th>
+                  <th>Ref Order</th>
+                  <th>Reason / Details</th>
+                  <th style="text-align: right;">Amount</th>
+                </tr>
+              </thead>
+              <tbody id="transactionTableBody">
+                <tr>
+                  <td colspan="5" style="text-align: center; padding: 40px; color: #64748b;">
+                    Loading transactions...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
       </div>
@@ -310,60 +237,98 @@
   </main>
 
   <script>
-    async function handleAdjustment() {
-      const type = document.getElementById("adjustType").value;
-      const amount = parseFloat(document.getElementById("adjustAmount").value);
-      const reason = document.getElementById("adjustReason").value.trim();
-      const userId = "<%= targetUser._id %>";
+    const userId = "<%= userId %>";
 
-      if (isNaN(amount) || amount <= 0) {
-        KavoxNotify.toast("Please enter a valid amount greater than zero.", "error");
-        return;
-      }
+    function getDescriptionText(desc) {
+      if (desc === 'ORDER_CANCELLATION_REFUND') return 'Order Cancellation Refund';
+      if (desc === 'RETURN_REFUND') return 'Product Return Refund';
+      if (desc === 'WALLET_PAYMENT') return 'Purchase Checkout Deduction';
+      if (desc === 'ADMIN_ADJUSTMENT') return 'Admin Manual Adjustment';
+      return desc || '';
+    }
 
-      if (!reason) {
-        KavoxNotify.toast("Please specify a reason for the adjustment.", "error");
-        return;
-      }
-
-      const confirmResult = await KavoxNotify.confirm({
-        title: "Confirm Balance Adjustment",
-        text: `Are you sure you want to perform a manual ${type} of ₹${amount.toFixed(2)} for ${"<%= targetUser.name %>"}?`,
-        icon: "warning",
-        confirmText: "Yes, Apply",
-        cancelText: "Cancel"
-      });
-
-      if (!confirmResult.isConfirmed) return;
-
-      KavoxNotify.loading("Applying balance adjustment...");
-
+    async function loadWalletDetails() {
       try {
-        const response = await fetch("/api/admin/wallets/adjust", {
-          method: "POST",
+        const response = await fetch(window.location.pathname, {
           headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ userId, amount, type, reason })
+            'Accept': 'application/json'
+          }
         });
-
         const data = await response.json();
-        KavoxNotify.closeLoading();
 
         if (data.success) {
-          KavoxNotify.toast(data.message || "Adjustment applied successfully!", "success");
-          setTimeout(() => {
-            window.location.reload();
-          }, 1500);
+          // Update User Details
+          document.getElementById('customerName').innerText = data.targetUser.name;
+          document.getElementById('customerEmail').innerText = data.targetUser.email;
+          document.getElementById('customerPhone').innerText = data.targetUser.phone || 'N/A';
+
+          // Update Wallet Metrics
+          document.getElementById('availableBalance').innerText = '₹' + Number(data.wallet.balance).toFixed(2);
+          document.getElementById('totalCredits').innerText = '₹' + Number(data.wallet.totalCredits || 0).toFixed(2);
+          document.getElementById('totalDebits').innerText = '₹' + Number(data.wallet.totalDebits || 0).toFixed(2);
+
+          // Render Transactions Table
+          const tbody = document.getElementById('transactionTableBody');
+          tbody.innerHTML = '';
+
+          if (data.transactions && data.transactions.length > 0) {
+            data.transactions.forEach(tx => {
+              const dateStr = new Date(tx.createdAt).toLocaleString('en-IN');
+              const badgeClass = tx.type.toLowerCase();
+              const orderLink = tx.orderId 
+                ? (tx.orderDocId 
+                    ? `<a href="/admin/order/${tx.orderDocId}" style="color: #2563eb; font-weight: bold; text-decoration: none;">${tx.orderId}</a>`
+                    : `<span style="font-family: monospace; font-weight: 600;">${tx.orderId}</span>`)
+                : '<span style="color: #94a3b8;">—</span>';
+              
+              const descText = getDescriptionText(tx.description);
+              const sign = tx.type === 'CREDIT' ? '+' : '-';
+              const color = tx.type === 'CREDIT' ? '#059669' : '#dc2626';
+
+              tbody.innerHTML += `
+                <tr>
+                  <td>${dateStr}</td>
+                  <td><span class="badge-tx ${badgeClass}">${tx.type}</span></td>
+                  <td>${orderLink}</td>
+                  <td>${descText}</td>
+                  <td style="text-align: right; font-weight: 700; font-size: 15px; color: ${color}">
+                    ${sign}₹${Number(tx.amount).toFixed(2)}
+                  </td>
+                </tr>
+              `;
+            });
+          } else {
+            tbody.innerHTML = `
+              <tr>
+                <td colspan="5" style="text-align: center; padding: 40px; color: #64748b;">
+                  No transactions found for this user.
+                </td>
+              </tr>
+            `;
+          }
         } else {
-          KavoxNotify.toast(data.message || "Failed to apply adjustment.", "error");
+          KavoxNotify.toast(data.message || "Failed to load wallet details.", "error");
+          renderErrorState();
         }
       } catch (error) {
-        KavoxNotify.closeLoading();
-        console.error("Adjustment error:", error);
-        KavoxNotify.toast("An unexpected error occurred. Please try again.", "error");
+        console.error("Fetch error:", error);
+        KavoxNotify.toast("Connection error loading wallet details.", "error");
+        renderErrorState();
       }
     }
+
+    function renderErrorState() {
+      const tbody = document.getElementById('transactionTableBody');
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align: center; padding: 40px; color: #dc2626; font-weight: bold;">
+            Failed to load transaction history. Please refresh the page.
+          </td>
+        </tr>
+      `;
+    }
+
+    document.addEventListener("DOMContentLoaded", loadWalletDetails);
   </script>
 
 </body>
