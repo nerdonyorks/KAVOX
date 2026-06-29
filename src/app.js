@@ -20,6 +20,9 @@ require("./config/passport");
 
 const app = express();
 
+// Trust reverse proxies (Nginx, Heroku, etc.) to get correct request protocol/host
+app.set("trust proxy", true);
+
 // ---------- VIEW ENGINE ----------
 app.set("views", path.join(__dirname, "../views"));
 app.set("view engine", "ejs");

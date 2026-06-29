@@ -13,15 +13,22 @@ router.get("/api/auth/google", (req, res, next) => {
     const returnTo = req.query.returnTo || "/";
     const state = Buffer.from(JSON.stringify({ returnTo })).toString('base64');
     
+    // Dynamically construct callbackURL based on incoming request origin
+    const callbackURL = `${req.protocol}://${req.get('host')}/api/auth/google/callback`;
+    
     passport.authenticate("google", { 
         scope: ["profile", "email"], 
         prompt: "select_account",
-        state: state 
+        state: state,
+        callbackURL: callbackURL
     })(req, res, next);
 });
 
 router.get("/api/auth/google/callback", (req, res, next) => {
-    passport.authenticate("google", (err, user, info) => {
+    // Dynamically construct callbackURL based on incoming request origin
+    const callbackURL = `${req.protocol}://${req.get('host')}/api/auth/google/callback`;
+
+    passport.authenticate("google", { callbackURL }, (err, user, info) => {
         if (err) return next(err);
         
         if (!user) {
