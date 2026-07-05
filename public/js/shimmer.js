@@ -1,7 +1,3 @@
-/**
- * Kavox Global Logic & Loading Transitions
- * Consolidates shimmer loading and admin-specific interactions.
- */
 
 // Global Loading (Shimmer)
 let loadingTimer = null;
@@ -111,8 +107,8 @@ document.addEventListener('DOMContentLoaded', () => {
             urlStr.includes('/api/') ||
             urlStr.includes('/admin/') ||
             ((urlStr.startsWith('/') || urlStr.startsWith(window.location.origin)) &&
-             (urlStr.includes('/shop') || urlStr.includes('/orders')) &&
-             !/\.(js|css|png|jpg|jpeg|gif|svg|webp)$/i.test(urlStr))
+                (urlStr.includes('/shop') || urlStr.includes('/orders')) &&
+                !/\.(js|css|png|jpg|jpeg|gif|svg|webp)$/i.test(urlStr))
         );
 
         if (isInternalRequest) {

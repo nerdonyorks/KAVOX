@@ -111,7 +111,11 @@
     </p>
 
     <div class="failure-actions">
-      <a href="/checkout" class="btn-danger">Retry Payment</a>
+      <% if (locals.orderId) { %>
+        <a href="/order/<%= orderId %>" class="btn-danger">View Order & Retry</a>
+      <% } else { %>
+        <a href="/checkout" class="btn-danger">Retry Payment</a>
+      <% } %>
       <a href="/cart" class="btn-secondary">Go to Cart</a>
     </div>
   </main>

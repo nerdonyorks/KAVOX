@@ -200,11 +200,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                         window.location.href = `/order-success?id=${verifyData.orderId}`;
                                     }, 2500);
                                 } else {
-                                    window.location.href = `/payment-failure?error=${encodeURIComponent(verifyData.message || 'Payment verification failed.')}`;
+                                    window.location.href = `/payment-failure?error=${encodeURIComponent(verifyData.message || 'Payment verification failed.')}&orderId=${data.orderId}`;
                                 }
                             } catch (err) {
                                 console.error('Verification error:', err);
-                                window.location.href = `/payment-failure?error=${encodeURIComponent('An error occurred while verifying the payment.')}`;
+                                window.location.href = `/payment-failure?error=${encodeURIComponent('An error occurred while verifying the payment.')}&orderId=${data.orderId}`;
                             }
                         },
                         prefill: {
@@ -217,16 +217,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         },
                         modal: {
                             ondismiss: function () {
-                                KavoxNotify.toast('Payment cancelled by user.', 'warning');
-                                btnPlaceOrder.textContent = 'PROCEED TO PAYMENT';
-                                btnPlaceOrder.disabled = false;
+                                window.location.href = `/payment-failure?error=${encodeURIComponent('Payment cancelled by user.')}&orderId=${data.orderId}`;
                             }
                         }
                     };
 
                     const rzp = new Razorpay(options);
                     rzp.on('payment.failed', function (paymentFailedResponse) {
-                        window.location.href = `/payment-failure?error=${encodeURIComponent(paymentFailedResponse.error.description || 'Payment transaction failed.')}`;
+                        window.location.href = `/payment-failure?error=${encodeURIComponent(paymentFailedResponse.error.description || 'Payment transaction failed.')}&orderId=${data.orderId}`;
                     });
                     rzp.open();
                 } else {

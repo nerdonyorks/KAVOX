@@ -104,145 +104,7 @@ exports.createOrder = async (req, res) => {
         const receiptId = `rcpt_${Math.floor(100000 + Math.random() * 900000)}`;
         const rzpOrder = await paymentService.createRazorpayOrder(finalAmount, receiptId);
 
-        res.status(HTTP_STATUS.OK).json({
-            success: true,
-            razorpayOrder: rzpOrder,
-            razorpayKeyId: process.env.RAZORPAY_KEY_ID,
-            user: {
-                name: req.user.name,
-                email: req.user.email,
-                phone: req.user.phone || ''
-            }
-        });
-    } catch (error) {
-        console.error("Create Razorpay Order Controller Error:", error);
-        res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ 
-            success: false, 
-            message: "Failed to initiate online payment." 
-        });
-    }
-};
-
-/**
- * Verifies Razorpay payment signature, fetches order from Razorpay to prevent tampering,
- * and creates order in Mongoose database.
- */
-exports.verifyPayment = async (req, res) => {
-    try {
-        const userId = req.user._id;
-        const { razorpayOrderId, razorpayPaymentId, razorpaySignature, addressId } = req.body;
-        const useWallet = req.body.useWallet === true || req.body.useWallet === 'true';
-
-        if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature || !addressId) {
-            return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
-                success: false, 
-                message: "Payment credentials and shipping address are required." 
-            });
-        }
-
-        // 1. Prevent duplicate order creation on multiple clicks
-        const existingOrder = await Order.findOne({ razorpayPaymentId });
-        if (existingOrder) {
-            console.log(`[PAYMENT] Duplicate payment verification request bypassed for paymentId: ${razorpayPaymentId}`);
-            return res.status(HTTP_STATUS.OK).json({
-                success: true,
-                message: "Order already processed successfully.",
-                orderId: existingOrder.orderId,
-                amountPaid: existingOrder.pricing.total
-            });
-        }
-
-        // 2. Verify payment signature securely using HMAC SHA256
-        const isSignatureValid = paymentService.verifySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
-        if (!isSignatureValid) {
-            return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
-                success: false, 
-                message: "Payment verification failed. Security signature mismatch." 
-            });
-        }
-
-        // 3. Fetch Razorpay order details to prevent client-side payment tampering (validate amount)
-        const rzpOrder = await paymentService.fetchRazorpayOrder(razorpayOrderId);
-        
-        const cart = await Cart.findOne({ userId }).populate({
-            path: "items.productId",
-            populate: { path: "category" }
-        });
-
-        if (!cart || cart.items.length === 0) {
-            return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
-                success: false, 
-                message: "Cart is empty. Order may already have been processed." 
-            });
-        }
-
-        // Populate active offers first
-        if (cart.items.length > 0) {
-            const products = cart.items.map(item => item.productId).filter(Boolean);
-            await offerService.populateProductOffers(products);
-        }
-
-        const summary = getDetailedTotals(cart.items);
-        let couponDiscount = 0;
-        let appliedCouponCode = "";
-        if (req.session.couponCode) {
-            const validation = await couponService.validateCoupon(req.session.couponCode, summary.cartTotal, userId);
-            if (validation.isValid) {
-                couponDiscount = validation.discountAmount;
-                appliedCouponCode = validation.coupon.code;
-            }
-        }
-
-        const expectedTotal = summary.cartTotal - couponDiscount;
-        
-        // Wallet calculations
-        let walletAmountUsed = 0;
-        let remainingAmountPaid = expectedTotal;
-
-        const walletService = require("../services/walletService");
-
-        if (useWallet) {
-            const wallet = await walletService.getWallet(userId);
-            if (wallet.balance > 0) {
-                walletAmountUsed = Math.min(wallet.balance, expectedTotal);
-                remainingAmountPaid = expectedTotal - walletAmountUsed;
-            }
-        }
-
-        // Validate wallet balance before order creation
-        if (walletAmountUsed > 0) {
-            const hasSufficientBalance = await walletService.verifyWalletBalance(userId, walletAmountUsed);
-            if (!hasSufficientBalance) {
-                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Insufficient wallet balance." });
-            }
-        }
-
-        const remainingTotalInPaisa = Math.round(remainingAmountPaid * 100);
-
-        // Verify amount paid matches remaining expected amount (1 paisa tolerance)
-        if (Math.abs(rzpOrder.amount - remainingTotalInPaisa) > 1) {
-            console.error(`[PAYMENT_TAMPER] Expected ${remainingTotalInPaisa} paisa, but Razorpay order amount is ${rzpOrder.amount}`);
-            return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
-                success: false, 
-                message: "Payment validation failed. Total amount mismatch." 
-            });
-        }
-
-        // 4. Validate stock and deduct inventory
-        for (let item of cart.items) {
-            const product = item.productId;
-            const variant = product.variants.find(v => v.size === item.size && v.color === item.color);
-            if (!variant || !variant.isActive || variant.quantity < item.quantity) {
-                return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
-                    success: false, 
-                    message: `Insufficient stock for ${product.name} (${item.size}/${item.color}).` 
-                });
-            }
-            variant.quantity -= item.quantity;
-            await product.save();
-        }
-
-        // Prepare order items
+        // Prepare Mongoose order items
         const orderItems = cart.items.map(item => {
             const product = item.productId;
             const variant = product.variants.find(v => v.size === item.size && v.color === item.color);
@@ -274,7 +136,7 @@ exports.verifyPayment = async (req, res) => {
 
         const newOrderId = generateOrderId();
 
-        // 5. Create Order
+        // Create Mongoose Order with paymentStatus: 'Failed'
         const newOrder = new Order({
             userId,
             orderId: newOrderId,
@@ -292,24 +154,31 @@ exports.verifyPayment = async (req, res) => {
                 subtotal: summary.totalActualPrice,
                 discount: summary.totalProductDiscount + summary.totalCategoryDiscount + couponDiscount,
                 shipping: 0,
-                total: expectedTotal
+                total: finalAmount + walletAmountUsed
             },
             couponCode: appliedCouponCode || undefined,
             couponDiscount: couponDiscount,
             paymentMethod: 'RAZORPAY',
-            paymentStatus: 'Completed',
+            paymentStatus: 'Failed',
             orderStatus: 'Processing',
-            razorpayOrderId: razorpayOrderId,
-            razorpayPaymentId: razorpayPaymentId,
-            transactionDate: new Date(),
+            razorpayOrderId: rzpOrder.id,
             walletAmountUsed: walletAmountUsed,
-            remainingAmountPaid: remainingAmountPaid
+            remainingAmountPaid: finalAmount
         });
 
         await newOrder.save();
 
-        // Perform Wallet deduction after successful order placement
+        // Deduct stock
+        for (let item of cart.items) {
+            const product = item.productId;
+            const variant = product.variants.find(v => v.size === item.size && v.color === item.color);
+            variant.quantity -= item.quantity;
+            await product.save();
+        }
+
+        // Perform Wallet deduction
         if (walletAmountUsed > 0) {
+            const walletService = require("../services/walletService");
             try {
                 await walletService.debitWallet(userId, walletAmountUsed, 'WALLET_PAYMENT', newOrderId);
             } catch (walletError) {
@@ -338,15 +207,150 @@ exports.verifyPayment = async (req, res) => {
 
         res.status(HTTP_STATUS.OK).json({
             success: true,
+            orderId: newOrder._id,
+            orderIdString: newOrder.orderId,
+            razorpayOrder: rzpOrder,
+            razorpayKeyId: process.env.RAZORPAY_KEY_ID,
+            user: {
+                name: req.user.name,
+                email: req.user.email,
+                phone: req.user.phone || ''
+            }
+        });
+    } catch (error) {
+        console.error("Create Razorpay Order Controller Error:", error);
+        res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ 
+            success: false, 
+            message: "Failed to initiate online payment." 
+        });
+    }
+};
+
+/**
+ * Verifies Razorpay payment signature and updates the order status to Completed.
+ */
+exports.verifyPayment = async (req, res) => {
+    try {
+        const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body;
+
+        if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
+                success: false, 
+                message: "Payment credentials are required." 
+            });
+        }
+
+        // 1. Find the order by razorpayOrderId
+        const order = await Order.findOne({ razorpayOrderId });
+        if (!order) {
+            return res.status(HTTP_STATUS.NOT_FOUND).json({
+                success: false,
+                message: "Order not found."
+            });
+        }
+
+        // 2. Prevent duplicate order updates
+        if (order.paymentStatus === 'Completed') {
+            return res.status(HTTP_STATUS.OK).json({
+                success: true,
+                message: "Order already processed successfully.",
+                orderId: order.orderId,
+                amountPaid: order.pricing.total
+            });
+        }
+
+        // 3. Verify signature
+        const isSignatureValid = paymentService.verifySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
+        if (!isSignatureValid) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
+                success: false, 
+                message: "Payment verification failed. Security signature mismatch." 
+            });
+        }
+
+        // 4. Update payment details
+        order.paymentStatus = 'Completed';
+        order.razorpayPaymentId = razorpayPaymentId;
+        order.transactionDate = new Date();
+        await order.save();
+
+        res.status(HTTP_STATUS.OK).json({
+            success: true,
             message: "Payment verified and order placed successfully!",
-            orderId: newOrder.orderId,
-            amountPaid: newOrder.pricing.total
+            orderId: order.orderId,
+            amountPaid: order.pricing.total
         });
     } catch (error) {
         console.error("Verify Razorpay Payment Controller Error:", error);
         res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ 
             success: false, 
             message: "Failed to complete transaction verification." 
+        });
+    }
+};
+
+/**
+ * Initiates payment retry for a failed Razorpay order.
+ */
+exports.retryOrder = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const { orderId } = req.body;
+
+        if (!orderId) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
+                success: false, 
+                message: "Order ID is required." 
+            });
+        }
+
+        const order = await Order.findOne({ _id: orderId, userId }).populate('items.productId');
+        if (!order) {
+            return res.status(HTTP_STATUS.NOT_FOUND).json({ 
+                success: false, 
+                message: "Order not found." 
+            });
+        }
+
+        if (order.paymentMethod !== 'RAZORPAY' || order.paymentStatus !== 'Failed') {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
+                success: false, 
+                message: "Only failed Razorpay orders can be retried." 
+            });
+        }
+
+        // Check if any product or category is unlisted or unavailable
+        for (let item of order.items) {
+            const product = item.productId;
+            if (!product || product.isDeleted || !product.isActive || !product.category || !product.category.isActive || product.category.isDeleted) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
+                    success: false, 
+                    message: `Product ${item.productName} is no longer available.` 
+                });
+            }
+        }
+
+        const receiptId = `rcpt_${Math.floor(100000 + Math.random() * 900000)}`;
+        const rzpOrder = await paymentService.createRazorpayOrder(order.remainingAmountPaid, receiptId);
+
+        order.razorpayOrderId = rzpOrder.id;
+        await order.save();
+
+        res.status(HTTP_STATUS.OK).json({
+            success: true,
+            razorpayOrder: rzpOrder,
+            razorpayKeyId: process.env.RAZORPAY_KEY_ID,
+            user: {
+                name: req.user.name,
+                email: req.user.email,
+                phone: req.user.phone || ''
+            }
+        });
+    } catch (error) {
+        console.error("Retry Razorpay Order Controller Error:", error);
+        res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ 
+            success: false, 
+            message: "Failed to initiate online payment retry." 
         });
     }
 };
