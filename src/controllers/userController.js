@@ -660,3 +660,19 @@ exports.updateAddress = async (req, res, next) => {
   }
 };
 
+exports.renderShippingPolicy = (req, res) => {
+  res.render("user/shipping", { title: "Shipping Policy - KAVOX" });
+};
+
+exports.renderTermsOfUse = (req, res) => {
+  res.render("user/terms", { title: "Terms of Use - KAVOX" });
+};
+
+exports.renderSecurityPolicy = (req, res) => {
+  res.render("user/security", { title: "Security Policy - KAVOX" });
+};
+
+exports.renderPrivacyPolicy = (req, res) => {
+  res.render("user/privacy", { title: "Privacy Policy - KAVOX" });
+};
+

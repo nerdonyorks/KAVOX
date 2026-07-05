@@ -8,8 +8,8 @@
     <div class="footer-links">
       <div class="footer-links-column">
         <h4>About</h4>
-        <a href="/cancellation">Cancellation & Returns</a>
-        <a href="<%= locals.user ? '/cart' : '/login?returnTo=/cart' %>">Orders</a>
+        <a href="<%= locals.user ? '/orders' : '/login?returnTo=/orders' %>">Cancellation & Returns</a>
+        <a href="<%= locals.user ? '/orders' : '/login?returnTo=/orders' %>">Orders</a>
         <a href="/">Home</a>
         <a href="/shop">Shop</a>
         <a href="/account">My Account</a>

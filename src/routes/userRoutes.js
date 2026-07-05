@@ -22,6 +22,12 @@ router.get("/forgot-password", isLoggedOut, userController.renderForgotPassword)
 router.get("/reset-password", isLoggedOut, userController.renderResetPassword);
 router.get("/user/new-password", isLoggedOut, userController.renderNewPassword);
 
+// Policy / Footer Info Routes
+router.get("/shipping", userController.renderShippingPolicy);
+router.get("/terms", userController.renderTermsOfUse);
+router.get("/security", userController.renderSecurityPolicy);
+router.get("/privacy", userController.renderPrivacyPolicy);
+
 // Product Routes
 router.get("/shop", productController.userListProducts);
 router.get("/product/:id", productController.userGetProductDetails);

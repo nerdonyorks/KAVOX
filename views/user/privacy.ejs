@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/shimmer.js"></script>
+  <style>
+    .policy-container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .policy-hero {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #fff;
+      border-radius: 16px;
+      padding: 40px;
+      margin-bottom: 40px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    .policy-hero h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 10px;
+    }
+
+    .policy-hero p {
+      color: #94a3b8;
+      font-size: 16px;
+    }
+
+    .policy-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .policy-card h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #1e293b;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .policy-card p {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #475569;
+      margin-bottom: 15px;
+    }
+
+    .policy-card ul {
+      margin-left: 20px;
+      margin-bottom: 15px;
+      color: #475569;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .policy-card li {
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+
+<body class="user-layout">
+  <%- include('../partials/user-header') %>
+
+  <main class="main-content">
+    <div class="policy-container">
+      <div class="policy-hero">
+        <h1>Privacy Policy</h1>
+        <p>Your privacy matters to us. Read how KAVOX collects, uses, and protects your personal data.</p>
+      </div>
+
+      <div class="policy-card">
+        <h2>Information We Collect</h2>
+        <p>We collect information to provide a better shopping experience to all our users. This includes:</p>
+        <ul>
+          <li><strong>Account Details:</strong> Name, email address, password, phone number, and shipping address.</li>
+          <li><strong>Order Details:</strong> Purchase details, order values, product choices, and transaction history.</li>
+          <li><strong>Technical Data:</strong> IP address, device details, browser type, and cookie logs.</li>
+        </ul>
+      </div>
+
+      <div class="policy-card">
+        <h2>How We Use Your Data</h2>
+        <p>The information we collect is used to:</p>
+        <ul>
+          <li>Process and fulfill your purchase orders.</li>
+          <li>Send shipping confirmations and tracking details.</li>
+          <li>Offer personalized product recommendations and categories.</li>
+          <li>Provide customer support and process returns/refunds.</li>
+          <li>Prevent fraudulent activities and maintain platform security.</li>
+        </ul>
+      </div>
+
+      <div class="policy-card">
+        <h2>Cookies & Tracking Technologies</h2>
+        <p>We use cookies to maintain your shopping cart, persist session details, and track analytics data. Cookies help us understand how you interact with our website. You can configure your browser to reject cookies, though some parts of the site (like checkout) may not work correctly as a result.</p>
+      </div>
+
+      <div class="policy-card">
+        <h2>Third-Party Services</h2>
+        <p>We share certain data with trusted third-party providers only to facilitate checkout processes:</p>
+        <ul>
+          <li><strong>Razorpay:</strong> To process card and net-banking transactions securely.</li>
+          <li><strong>Courier Services:</strong> To ship and deliver your physical sneakers to your shipping address.</li>
+        </ul>
+        <p>These providers only receive the necessary information to complete their functions, and they do not sell your personal data.</p>
+      </div>
+
+      <div class="policy-card">
+        <h2>Your Data Rights</h2>
+        <p>You have the right to request access to the personal data we store, request modifications to your profile, or delete your account. You can manage your profile details directly from the My Account panel or contact our privacy team for assistance.</p>
+      </div>
+
+      <div class="policy-card">
+        <h2>Contact Privacy Team</h2>
+        <p>If you have any questions, feedback, or complaints regarding this Privacy Policy, please email our data protection officer at <strong>privacy@kavox.com</strong>.</p>
+      </div>
+    </div>
+  </main>
+
+  <%- include('../partials/user-footer') %>
+</body>
+
+</html>

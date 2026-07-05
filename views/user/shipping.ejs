@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/shimmer.js"></script>
+  <style>
+    .policy-container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .policy-hero {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #fff;
+      border-radius: 16px;
+      padding: 40px;
+      margin-bottom: 40px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    .policy-hero h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 10px;
+    }
+
+    .policy-hero p {
+      color: #94a3b8;
+      font-size: 16px;
+    }
+
+    .policy-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .policy-card h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #1e293b;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .policy-card p {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #475569;
+      margin-bottom: 15px;
+    }
+
+    .policy-card ul {
+      margin-left: 20px;
+      margin-bottom: 15px;
+      color: #475569;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .policy-card li {
+      margin-bottom: 8px;
+    }
+
+    .highlight-box {
+      background-color: #f8fafc;
+      border-left: 4px solid #e91e63;
+      padding: 15px 20px;
+      border-radius: 0 8px 8px 0;
+      margin: 15px 0;
+    }
+
+    .highlight-box p {
+      margin-bottom: 0;
+      font-weight: 600;
+      color: #0f172a;
+    }
+  </style>
+</head>
+
+<body class="user-layout">
+  <%- include('../partials/user-header') %>
+
+  <main class="main-content">
+    <div class="policy-container">
+      <div class="policy-hero">
+        <h1>Shipping & Delivery Policy</h1>
+        <p>Reliable and fast delivery for all your premium sneaker purchases</p>
+      </div>
+
+      <div class="policy-card">
+        <h2>Order Processing Time</h2>
+        <p>All orders placed on KAVOX are processed within 1-2 business days. Orders are not shipped or delivered on weekends or public holidays.</p>
+        <p>If we are experiencing a high volume of orders, shipments may be delayed by a few days. Please allow additional days in transit for delivery.</p>
+      </div>
+
+      <div class="policy-card">
+        <h2>Shipping Methods & Delivery Timelines</h2>
+        <p>We partner with leading courier services (DHL, FedEx, BlueDart, Delhivery) to offer the following shipping methods:</p>
+        <ul>
+          <li><strong>Standard Shipping:</strong> Delivered within 5-7 business days.</li>
+          <li><strong>Express Shipping:</strong> Delivered within 2-3 business days.</li>
+        </ul>
+        <div class="highlight-box">
+          <p>Please note: Delivery timelines are estimates and commence from the date of shipping, rather than the date of order.</p>
+        </div>
+      </div>
+
+      <div class="policy-card">
+        <h2>Shipping Charges & Free Shipping Policy</h2>
+        <p>Shipping charges for your order will be calculated and displayed at checkout.</p>
+        <ul>
+          <li><strong>Standard Shipping:</strong> Free for all orders above ₹4,999. A flat rate of ₹150 applies to orders below this threshold.</li>
+          <li><strong>Express Shipping:</strong> A premium rate of ₹350 applies to all express delivery options.</li>
+        </ul>
+      </div>
+
+      <div class="policy-card">
+        <h2>Tracking Information</h2>
+        <p>Once your order has been dispatched, you will receive a shipping confirmation email containing your tracking number(s). The tracking number will be active within 24 hours.</p>
+      </div>
+
+      <div class="policy-card">
+        <h2>Customs, Duties & Taxes</h2>
+        <p>KAVOX is not responsible for any customs and taxes applied to your order. All fees imposed during or after shipping are the responsibility of the customer (tariffs, taxes, etc.).</p>
+      </div>
+
+      <div class="policy-card">
+        <h2>Damages & Lost Packages</h2>
+        <p>KAVOX is not liable for any products damaged or lost during shipping. If you received your order damaged, please contact the shipment carrier or our support team directly to file a claim. Please save all packaging material and damaged goods before filing a claim.</p>
+      </div>
+
+      <div class="policy-card">
+        <h2>Contact Information</h2>
+        <p>If you have any questions or concerns regarding our Shipping Policy, feel free to get in touch with our customer service team:</p>
+        <ul>
+          <li><strong>Email:</strong> support@kavox.com</li>
+          <li><strong>Phone:</strong> +91 98765 43210 (Mon-Sat, 9:00 AM - 6:00 PM IST)</li>
+        </ul>
+      </div>
+    </div>
+  </main>
+
+  <%- include('../partials/user-footer') %>
+</body>
+
+</html>

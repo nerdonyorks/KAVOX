@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/shimmer.js"></script>
+  <style>
+    .policy-container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .policy-hero {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #fff;
+      border-radius: 16px;
+      padding: 40px;
+      margin-bottom: 40px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    .policy-hero h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 10px;
+    }
+
+    .policy-hero p {
+      color: #94a3b8;
+      font-size: 16px;
+    }
+
+    .policy-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .policy-card h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #1e293b;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .policy-card p {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #475569;
+      margin-bottom: 15px;
+    }
+
+    .policy-card ul {
+      margin-left: 20px;
+      margin-bottom: 15px;
+      color: #475569;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .policy-card li {
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+
+<body class="user-layout">
+  <%- include('../partials/user-header') %>
+
+  <main class="main-content">
+    <div class="policy-container">
+      <div class="policy-hero">
+        <h1>Terms of Use</h1>
+        <p>Please read these Terms carefully before using the KAVOX platform</p>
+      </div>
+
+      <div class="policy-card">
+        <h2>Acceptance of Terms</h2>
+        <p>By accessing or using the KAVOX website ("Platform"), you agree to comply with and be bound by these Terms of Use. If you do not agree to these Terms, please do not use the Platform.</p>
+      </div>
+
+      <div class="policy-card">
+        <h2>Account Registration & Usage</h2>
+        <p>To access certain features of KAVOX, you may be required to create an account. You agree to:</p>
+        <ul>
+          <li>Provide accurate, current, and complete information during the registration process.</li>
+          <li>Maintain the confidentiality and security of your password and credentials.</li>
+          <li>Take full responsibility for all activities that occur under your account.</li>
+          <li>Notify KAVOX customer support immediately if you suspect any unauthorized access or security breach.</li>
+        </ul>
+      </div>
+
+      <div class="policy-card">
+        <h2>Ordering Terms</h2>
+        <p>KAVOX displays high-end footwear and sneaker collections. All orders are subject to acceptance and availability.</p>
+        <p>We reserve the right to cancel or refuse any order at our sole discretion, including cases of pricing errors, incorrect inventory count, or suspected fraudulent activity.</p>
+      </div>
+
+      <div class="policy-card">
+        <h2>Payment Terms</h2>
+        <p>KAVOX supports secure payment options including COD, Wallet payment, and Razorpay online payments. All payments are processed through certified gateways. By providing card or account details, you warrant that you are authorized to make the payment transaction.</p>
+      </div>
+
+      <div class="policy-card">
+        <h2>Cancellations & Returns</h2>
+        <p>Our cancellation and return workflows are governed by specific guidelines:</p>
+        <ul>
+          <li><strong>Cancellations:</strong> Users can request cancellations for items in the Processing stage. Orders with a failed online payment state can be retried or cancelled.</li>
+          <li><strong>Returns:</strong> Return requests are subject to approval. Returned items must be in original condition, unworn, and with all tags/boxes intact.</li>
+        </ul>
+      </div>
+
+      <div class="policy-card">
+        <h2>Intellectual Property</h2>
+        <p>All content displayed on KAVOX, including text, graphics, logos, images, code, and databases, is the property of KAVOX (Sole Lab) or its content providers and is protected by local and international copyright and trademark laws.</p>
+      </div>
+
+      <div class="policy-card">
+        <h2>Limitation of Liability</h2>
+        <p>In no event shall KAVOX, its directors, employees, or agents be liable for any direct, indirect, incidental, or consequential damages resulting from your use of the Platform or purchase of products.</p>
+      </div>
+
+      <div class="policy-card">
+        <h2>Governing Law</h2>
+        <p>These Terms of Use shall be governed by and construed in accordance with the laws of India. Any disputes arising out of these Terms shall be subject to the exclusive jurisdiction of the courts in Kozhikode, Kerala.</p>
+      </div>
+    </div>
+  </main>
+
+  <%- include('../partials/user-footer') %>
+</body>
+
+</html>

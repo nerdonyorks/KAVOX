@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/shimmer.js"></script>
+  <style>
+    .policy-container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .policy-hero {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #fff;
+      border-radius: 16px;
+      padding: 40px;
+      margin-bottom: 40px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    .policy-hero h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 10px;
+    }
+
+    .policy-hero p {
+      color: #94a3b8;
+      font-size: 16px;
+    }
+
+    .policy-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .policy-card h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #1e293b;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .policy-card p {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #475569;
+      margin-bottom: 15px;
+    }
+
+    .policy-card ul {
+      margin-left: 20px;
+      margin-bottom: 15px;
+      color: #475569;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .policy-card li {
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+
+<body class="user-layout">
+  <%- include('../partials/user-header') %>
+
+  <main class="main-content">
+    <div class="policy-container">
+      <div class="policy-hero">
+        <h1>Security Information</h1>
+        <p>Your trust is our priority. Learn how KAVOX safeguards your shopping experience.</p>
+      </div>
+
+      <div class="policy-card">
+        <h2>SSL & HTTPS Protection</h2>
+        <p>The KAVOX Platform is fully protected with Secure Sockets Layer (SSL) certificates. All network communications between your web browser and our servers are encrypted via HTTPS (TLS 1.3), preventing third parties from intercepts, eavesdropping, or tampering with your actions.</p>
+      </div>
+
+      <div class="policy-card">
+        <h2>Secure Payments</h2>
+        <p>We do not store your credit card, debit card, or bank account credentials on our servers. All financial transactions are directly handled by **Razorpay**, a PCI-DSS compliant and industry-leading payment gateway provider. This ensures your payment information is secure under top banking security standards.</p>
+      </div>
+
+      <div class="policy-card">
+        <h2>Data & Password Encryption</h2>
+        <p>We prioritize password security. All user passwords are encrypted using secure cryptographic hashing algorithms (BCrypt) before saving them to our MongoDB database. KAVOX staff cannot view your password.</p>
+      </div>
+
+      <div class="policy-card">
+        <h2>Fraud Prevention</h2>
+        <p>We implement active fraud detection systems to monitor checkout activities. If any suspicious transaction behaviour is flagged, the order is placed on hold or rejected, and the payment is refunded to the source account.</p>
+      </div>
+
+      <div class="policy-card">
+        <h2>Safe Shopping Guidelines</h2>
+        <p>To help maintain a secure profile, we recommend the following practices:</p>
+        <ul>
+          <li>Create a strong, unique password consisting of letters, numbers, and symbols.</li>
+          <li>Never share your KAVOX login credentials or OTP codes with anyone.</li>
+          <li>Log out of your account when using public or shared computers.</li>
+        </ul>
+      </div>
+
+      <div class="policy-card">
+        <h2>Security Concerns</h2>
+        <p>If you identify any vulnerability or suspect unauthorized activity on your account, please notify our security team immediately at <strong>security@kavox.com</strong>. We will investigate all reports promptly.</p>
+      </div>
+    </div>
+  </main>
+
+  <%- include('../partials/user-footer') %>
+</body>
+
+</html>
