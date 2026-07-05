@@ -74,10 +74,12 @@ exports.createOrder = async (req, res) => {
         const summary = getDetailedTotals(cart.items);
 
         let couponDiscount = 0;
+        let appliedCouponCode = "";
         if (req.session.couponCode) {
             const validation = await couponService.validateCoupon(req.session.couponCode, summary.cartTotal, userId);
             if (validation.isValid) {
                 couponDiscount = validation.discountAmount;
+                appliedCouponCode = validation.coupon.code;
             }
         }
 
