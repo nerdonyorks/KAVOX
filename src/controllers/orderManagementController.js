@@ -301,7 +301,7 @@ exports.downloadInvoice = async (req, res) => {
         doc.fillColor(WHITE).font('Helvetica-Bold').fontSize(26)
             .text('INVOICE', 0, 30, { align: 'right', width: PAGE_W - MARGIN });
         doc.fillColor(GREEN).font('Helvetica').fontSize(9)
-            .text(new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }),
+            .text(new Date(order.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'long', year: 'numeric' }),
                 0, 62, { align: 'right', width: PAGE_W - MARGIN });
 
         // ── Order Meta Row ────────────────────────────────────────────
@@ -461,14 +461,18 @@ exports.downloadInvoice = async (req, res) => {
         totalRow('Discount', `- Rs. ${order.pricing.discount}`, GRAY, '#22c55e');
         totalRow('Shipping', order.pricing.shipping === 0 ? '  FREE' : `  Rs. ${order.pricing.shipping}`, GRAY, BLACK);
 
+        if (order.walletAmountUsed > 0) {
+            totalRow('Wallet Used', `- Rs. ${order.walletAmountUsed}`, GRAY, '#22c55e');
+        }
+
         doc.moveTo(totX, y).lineTo(totX + 195, y).lineWidth(0.5).stroke(BORDER);
         y += 8;
 
         // Total — black pill with green amount
         doc.rect(totX - 8, y - 4, 203, 26).fill(BLACK);
-        doc.fillColor(WHITE).font('Helvetica-Bold').fontSize(12).text('TOTAL', totX, y + 4);
+        doc.fillColor(WHITE).font('Helvetica-Bold').fontSize(12).text(order.walletAmountUsed > 0 ? 'PAID TOTAL' : 'TOTAL', totX, y + 4);
         doc.fillColor(GREEN).font('Helvetica-Bold').fontSize(12)
-            .text(` Rs. ${order.pricing.total}`, totX + 120, y + 4, { align: 'left', width: 75 });
+            .text(` Rs. ${order.walletAmountUsed > 0 ? order.remainingAmountPaid : order.pricing.total}`, totX + 120, y + 4, { align: 'left', width: 75 });
 
         // ── Footer bar ─────────────────────────────────────────────────
         doc.rect(0, PAGE_H - 55, PAGE_W, 55).fill(BLACK);

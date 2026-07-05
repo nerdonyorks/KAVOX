@@ -35,6 +35,7 @@ const orderSchema = new Schema({
     color: { type: String },
     quantity: { type: Number, required: true },
     price: { type: Number, required: true },
+    mrp: { type: Number },
     totalPrice: { type: Number, required: true },
     itemStatus: {
       type: String,

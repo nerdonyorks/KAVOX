@@ -122,6 +122,7 @@ exports.createOrder = async (req, res) => {
                 color: item.color,
                 quantity: item.quantity,
                 price: finalPrice,
+                mrp: product.price,
                 totalPrice: item.quantity * finalPrice
             };
         });

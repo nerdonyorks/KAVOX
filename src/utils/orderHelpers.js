@@ -80,8 +80,7 @@ async function updateOrderPricingAndRefund(order, cancelledItem = null, isFullCa
         const initialOrderTotal = order.pricing.total;
 
         // Deduct cancelled item values from order summary
-        const product = await Product.findById(cancelledItem.productId);
-        const basePrice = product ? product.price : cancelledItem.price;
+        const basePrice = cancelledItem.mrp || cancelledItem.price;
         const itemSubtotal = cancelledItem.quantity * basePrice;
         const itemDiscount = Math.max(0, itemSubtotal - cancelledItem.totalPrice);
 
