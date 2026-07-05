@@ -13,13 +13,40 @@ router.post("/api/payment/verify-payment", isLoggedIn, paymentController.verifyP
 router.post("/api/payment/retry-order", isLoggedIn, paymentController.retryOrder);
 
 // Route to display payment failure page
-router.get("/payment-failure", isLoggedIn, (req, res) => {
+router.get("/payment-failure", isLoggedIn, async (req, res) => {
     const errorMessage = req.query.error || null;
     const orderId = req.query.orderId || null;
+    
+    try {
+        if (orderId) {
+            const Order = require("../models/orderModel");
+            const order = await Order.findOne({ _id: orderId, userId: req.user._id });
+            if (order && order.paymentStatus !== 'Completed') {
+                order.paymentStatus = 'Failed';
+                order.orderStatus = 'Payment Failed';
+                
+                // Restore reserved wallet amount if applicable
+                if (order.walletAmountUsed > 0) {
+                    const walletService = require("../services/walletService");
+                    await walletService.creditWallet(req.user._id, order.walletAmountUsed, 'WALLET_PAYMENT_REFUND', order.orderId);
+                    
+                    // Reset remainingAmountPaid to full amount since wallet is refunded
+                    order.remainingAmountPaid = order.pricing.total;
+                    order.walletAmountUsed = 0;
+                }
+                
+                await order.save();
+                console.log(`[PAYMENT] Order ${order.orderId} marked as Payment Failed. Wallet amount refunded if applicable.`);
+            }
+        }
+    } catch (error) {
+        console.error("Error handling payment failure logic:", error);
+    }
+
     res.render("user/payment-failure", { 
         title: "Payment Failed - KAVOX", 
         errorMessage,
-        orderId
+        orderId 
     });
 });
 

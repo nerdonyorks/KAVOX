@@ -237,7 +237,18 @@
                             const cs = order.orderStatus;
                             const hasReturn = order.items.some(i => ['Return Requested', 'Return Approved', 'Returned', 'Return Rejected'].includes(i.itemStatus)) || ['Return Requested', 'Returned'].includes(cs);
 
-                            if (cs === 'Cancelled') {
+                            if (cs === 'Payment Pending') {
+                                tlSteps = [
+                                    { label: 'Order Initiated', cls: 'tl-done', desc: 'Your order was created, awaiting payment.' },
+                                    { label: 'Payment Status', cls: 'tl-partial', desc: 'Waiting for online payment confirmation.' },
+                                    { label: 'Awaiting Dispatch', cls: '', desc: 'We will dispatch once payment is complete.' }
+                                ];
+                            } else if (cs === 'Payment Failed') {
+                                tlSteps = [
+                                    { label: 'Order Initiated', cls: 'tl-done', desc: 'Your order was created.' },
+                                    { label: 'Payment Failed', cls: 'tl-cancelled', desc: 'The payment transaction failed. Please retry.' }
+                                ];
+                            } else if (cs === 'Cancelled') {
                                 tlSteps = [
                                     { label: 'Order Placed',  cls: 'tl-done',      desc: 'Your order was placed successfully.' },
                                     { label: 'Cancelled',     cls: 'tl-cancelled', desc: order.cancellationReason || 'Order was cancelled.' }
@@ -423,7 +434,7 @@
                             <span class="payment-value"><%= order.transactionDate ? new Date(order.transactionDate).toLocaleString('en-IN') : 'N/A' %></span>
                         </div>
                     <% } %>
-                    <% if (order.paymentMethod === 'RAZORPAY' && order.paymentStatus === 'Failed' && order.orderStatus !== 'Cancelled') { %>
+                    <% if (order.paymentMethod === 'RAZORPAY' && (order.paymentStatus === 'Failed' || order.paymentStatus === 'Pending') && ['Payment Pending', 'Payment Failed'].includes(order.orderStatus)) { %>
                         <div style="margin-top: 15px; border-top: 1px dashed #eee; padding-top: 15px; text-align: center;">
                             <button id="retryPaymentBtn" data-order-id="<%= order._id %>" style="background: #e91e63; color: #fff; border: none; padding: 12px 24px; font-weight: 700; border-radius: 6px; text-transform: uppercase; transition: background 0.3s; cursor: pointer; width: 100%;">Retry Payment</button>
                         </div>

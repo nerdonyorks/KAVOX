@@ -138,7 +138,7 @@ exports.createOrder = async (req, res) => {
 
         const newOrderId = generateOrderId();
 
-        // Create Mongoose Order with paymentStatus: 'Failed'
+        // Create Mongoose Order with paymentStatus: 'Pending' and orderStatus: 'Payment Pending'
         const newOrder = new Order({
             userId,
             orderId: newOrderId,
@@ -161,8 +161,8 @@ exports.createOrder = async (req, res) => {
             couponCode: appliedCouponCode || undefined,
             couponDiscount: couponDiscount,
             paymentMethod: 'RAZORPAY',
-            paymentStatus: 'Failed',
-            orderStatus: 'Processing',
+            paymentStatus: 'Pending',
+            orderStatus: 'Payment Pending',
             razorpayOrderId: rzpOrder.id,
             walletAmountUsed: walletAmountUsed,
             remainingAmountPaid: finalAmount
@@ -170,42 +170,20 @@ exports.createOrder = async (req, res) => {
 
         await newOrder.save();
 
-        // Deduct stock
-        for (let item of cart.items) {
-            const product = item.productId;
-            const variant = product.variants.find(v => v.size === item.size && v.color === item.color);
-            variant.quantity -= item.quantity;
-            await product.save();
-        }
+        console.log(`[PAYMENT] Pre-created Order ${newOrder.orderId} for User ${userId}. paymentStatus: Pending, orderStatus: Payment Pending.`);
 
-        // Perform Wallet deduction
+        // Perform Wallet deduction (reserving wallet funds)
         if (walletAmountUsed > 0) {
             const walletService = require("../services/walletService");
             try {
                 await walletService.debitWallet(userId, walletAmountUsed, 'WALLET_PAYMENT', newOrderId);
+                console.log(`[PAYMENT] Reserved ₹${walletAmountUsed} from Wallet for Order ${newOrderId}`);
             } catch (walletError) {
                 // Rollback Order creation
                 await Order.deleteOne({ _id: newOrder._id });
-                // Restore stock
-                for (let item of cart.items) {
-                    const product = item.productId;
-                    const variant = product.variants.find(v => v.size === item.size && v.color === item.color);
-                    if (variant) {
-                        variant.quantity += item.quantity;
-                        await product.save();
-                    }
-                }
                 return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: walletError.message || "Failed to process wallet payment." });
             }
         }
-
-        // Clear coupon code session
-        delete req.session.couponCode;
-
-        // Empty user cart
-        cart.items = [];
-        cart.cartTotal = 0;
-        await cart.save();
 
         res.status(HTTP_STATUS.OK).json({
             success: true,
@@ -253,6 +231,7 @@ exports.verifyPayment = async (req, res) => {
 
         // 2. Prevent duplicate order updates
         if (order.paymentStatus === 'Completed') {
+            console.log(`[PAYMENT] Duplicate payment verification request bypassed for order: ${order.orderId}`);
             return res.status(HTTP_STATUS.OK).json({
                 success: true,
                 message: "Order already processed successfully.",
@@ -270,11 +249,52 @@ exports.verifyPayment = async (req, res) => {
             });
         }
 
-        // 4. Update payment details
+        // 4. Validate stock one final time before completing order
+        for (let item of order.items) {
+            const product = await Product.findById(item.productId);
+            if (!product) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
+                    success: false, 
+                    message: `Product ${item.productName} is no longer available.` 
+                });
+            }
+            const variant = product.variants.id(item.variantId);
+            if (!variant || !variant.isActive || variant.quantity < item.quantity) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
+                    success: false, 
+                    message: `Insufficient stock for ${item.productName} (${item.size}/${item.color}).` 
+                });
+            }
+        }
+
+        // 5. Deduct stock from variants
+        for (let item of order.items) {
+            const product = await Product.findById(item.productId);
+            const variant = product.variants.id(item.variantId);
+            variant.quantity -= item.quantity;
+            await product.save();
+        }
+
+        // 6. Update Mongoose order details
         order.paymentStatus = 'Completed';
+        order.orderStatus = 'Processing';
         order.razorpayPaymentId = razorpayPaymentId;
         order.transactionDate = new Date();
         await order.save();
+
+        console.log(`[PAYMENT] Payment verified successfully for Order ${order.orderId}. Status updated to Completed/Processing.`);
+
+        // 7. Clear session coupon
+        delete req.session.couponCode;
+
+        // 8. Empty user cart
+        const cart = await Cart.findOne({ userId: order.userId });
+        if (cart) {
+            cart.items = [];
+            cart.cartTotal = 0;
+            await cart.save();
+            console.log(`[PAYMENT] Cleared Cart for User ${order.userId}`);
+        }
 
         res.status(HTTP_STATUS.OK).json({
             success: true,

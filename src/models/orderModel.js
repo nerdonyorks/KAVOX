@@ -62,7 +62,7 @@ const orderSchema = new Schema({
   },
   orderStatus: { 
     type: String, 
-    enum: ['Processing', 'Partially Shipped', 'Shipped', 'Partially Delivered', 'Delivered', 'Cancelled', 'Return Requested', 'Returned'], 
+    enum: ['Processing', 'Partially Shipped', 'Shipped', 'Partially Delivered', 'Delivered', 'Cancelled', 'Return Requested', 'Returned', 'Payment Pending', 'Payment Failed'], 
     default: 'Processing' 
   },
   cancellationReason: { type: String },

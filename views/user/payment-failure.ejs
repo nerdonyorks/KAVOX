@@ -110,13 +110,16 @@
       <% } %>
     </p>
 
-    <div class="failure-actions">
-      <% if (locals.orderId) { %>
-        <a href="/order/<%= orderId %>" class="btn-danger">View Order & Retry</a>
-      <% } else { %>
-        <a href="/checkout" class="btn-danger">Retry Payment</a>
-      <% } %>
-      <a href="/cart" class="btn-secondary">Go to Cart</a>
+    <div class="failure-actions" style="display: flex; flex-direction: column; gap: 15px; align-items: center; margin-top: 30px;">
+      <div style="display: flex; gap: 15px; justify-content: center; width: 100%; max-width: 480px;">
+        <% if (locals.orderId) { %>
+          <a href="/order/<%= orderId %>" class="btn-danger" style="flex: 1; text-align: center;">Go to Order Details</a>
+        <% } else { %>
+          <a href="/checkout" class="btn-danger" style="flex: 1; text-align: center;">Retry Payment</a>
+        <% } %>
+        <a href="/shop" class="btn-secondary" style="flex: 1; text-align: center;">Continue Shopping</a>
+      </div>
+      <a href="/cart" style="font-weight: 700; color: #666; text-decoration: underline; margin-top: 10px;">Go to Cart</a>
     </div>
   </main>
 

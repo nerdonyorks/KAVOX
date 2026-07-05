@@ -91,15 +91,18 @@ exports.cancelOrder = async (req, res) => {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Order cannot be cancelled at this stage." });
         }
 
-        // Restore stock
+        // Restore stock only if the order was actually paid and stock was deducted
+        const shouldRestoreStock = order.orderStatus !== 'Payment Pending' && order.orderStatus !== 'Payment Failed';
         for (let item of order.items) {
             if (item.itemStatus !== 'Cancelled' && item.itemStatus !== 'Returned') {
-                const product = await Product.findById(item.productId);
-                if (product) {
-                    const variant = product.variants.id(item.variantId);
-                    if (variant) {
-                        variant.quantity += item.quantity;
-                        await product.save();
+                if (shouldRestoreStock) {
+                    const product = await Product.findById(item.productId);
+                    if (product) {
+                        const variant = product.variants.id(item.variantId);
+                        if (variant) {
+                            variant.quantity += item.quantity;
+                            await product.save();
+                        }
                     }
                 }
                 item.itemStatus = 'Cancelled';
@@ -143,13 +146,15 @@ exports.cancelOrderItem = async (req, res) => {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: "Item cannot be cancelled at this stage." });
         }
 
-        // Restore stock
-        const product = await Product.findById(item.productId);
-        if (product) {
-            const variant = product.variants.id(item.variantId);
-            if (variant) {
-                variant.quantity += item.quantity;
-                await product.save();
+        // Restore stock only if the order was actually paid and stock was deducted
+        if (order.orderStatus !== 'Payment Pending' && order.orderStatus !== 'Payment Failed') {
+            const product = await Product.findById(item.productId);
+            if (product) {
+                const variant = product.variants.id(item.variantId);
+                if (variant) {
+                    variant.quantity += item.quantity;
+                    await product.save();
+                }
             }
         }
 
@@ -157,9 +162,15 @@ exports.cancelOrderItem = async (req, res) => {
         item.cancellationReason = reason || 'No reason provided';
 
         // Recalculate main order status
-        order.orderStatus = getCalculatedOrderStatus(order.items);
-        if (order.orderStatus === 'Cancelled') {
+        const isCurrentlyUnpaid = order.orderStatus === 'Payment Pending' || order.orderStatus === 'Payment Failed';
+        const newStatus = getCalculatedOrderStatus(order.items);
+        if (newStatus === 'Cancelled') {
+            order.orderStatus = 'Cancelled';
             order.cancellationReason = 'All items cancelled';
+        } else if (isCurrentlyUnpaid) {
+            // Keep it in unpaid state
+        } else {
+            order.orderStatus = newStatus;
         }
 
         // Update pricing and refund
