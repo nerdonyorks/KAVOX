@@ -422,6 +422,7 @@
                             <span class="payment-label">Date</span>
                             <span class="payment-value"><%= order.transactionDate ? new Date(order.transactionDate).toLocaleString('en-IN') : 'N/A' %></span>
                         </div>
+                    <% } %>
                     <% if (order.paymentMethod === 'RAZORPAY' && order.paymentStatus === 'Failed' && order.orderStatus !== 'Cancelled') { %>
                         <div style="margin-top: 15px; border-top: 1px dashed #eee; padding-top: 15px; text-align: center;">
                             <button id="retryPaymentBtn" data-order-id="<%= order._id %>" style="background: #e91e63; color: #fff; border: none; padding: 12px 24px; font-weight: 700; border-radius: 6px; text-transform: uppercase; transition: background 0.3s; cursor: pointer; width: 100%;">Retry Payment</button>
