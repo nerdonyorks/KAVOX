@@ -251,18 +251,24 @@ exports.verifyPayment = async (req, res) => {
 
         // 4. Validate stock one final time before completing order
         for (let item of order.items) {
-            const product = await Product.findById(item.productId);
-            if (!product) {
+            const product = await Product.findById(item.productId).populate('category');
+            if (!product || product.isDeleted || !product.isActive || !product.category || !product.category.isActive || product.category.isDeleted) {
                 return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
                     success: false, 
                     message: `Product ${item.productName} is no longer available.` 
                 });
             }
             const variant = product.variants.id(item.variantId);
-            if (!variant || !variant.isActive || variant.quantity < item.quantity) {
+            if (!variant || !variant.isActive) {
                 return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
                     success: false, 
-                    message: `Insufficient stock for ${item.productName} (${item.size}/${item.color}).` 
+                    message: `Variant ${item.size}/${item.color} for product ${item.productName} is no longer available.` 
+                });
+            }
+            if (variant.quantity < item.quantity) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
+                    success: false, 
+                    message: `Insufficient stock for product ${item.productName} (${item.size}/${item.color}). Only ${variant.quantity} units available.` 
                 });
             }
         }
@@ -326,7 +332,10 @@ exports.retryOrder = async (req, res) => {
             });
         }
 
-        const order = await Order.findOne({ _id: orderId, userId }).populate('items.productId');
+        const order = await Order.findOne({ _id: orderId, userId }).populate({
+            path: 'items.productId',
+            populate: { path: 'category' }
+        });
         if (!order) {
             return res.status(HTTP_STATUS.NOT_FOUND).json({ 
                 success: false, 
@@ -348,6 +357,21 @@ exports.retryOrder = async (req, res) => {
                 return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
                     success: false, 
                     message: `Product ${item.productName} is no longer available.` 
+                });
+            }
+
+            const variant = product.variants && product.variants.find(v => v.size === item.size && v.color === item.color);
+            if (!variant || !variant.isActive) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({
+                    success: false,
+                    message: `Variant ${item.size}/${item.color} for product ${item.productName} is no longer available.`
+                });
+            }
+
+            if (variant.quantity < item.quantity) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({
+                    success: false,
+                    message: `Insufficient stock for product ${item.productName} (${item.size}/${item.color}). Only ${variant.quantity} units available.`
                 });
             }
         }
