@@ -273,7 +273,12 @@
 
           if (data.transactions && data.transactions.length > 0) {
             data.transactions.forEach(tx => {
-              const dateStr = new Date(tx.createdAt).toLocaleString('en-IN');
+              const d = new Date(tx.createdAt);
+              const day = d.toLocaleDateString('en-IN', { day: '2-digit', timeZone: 'Asia/Kolkata' });
+              const month = d.toLocaleDateString('en-IN', { month: 'short', timeZone: 'Asia/Kolkata' });
+              const year = d.toLocaleDateString('en-IN', { year: 'numeric', timeZone: 'Asia/Kolkata' });
+              let timePart = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }).toUpperCase();
+              const dateStr = `${day} ${month} ${year}, ${timePart} (IST)`;
               const badgeClass = tx.type.toLowerCase();
               const orderLink = tx.orderId 
                 ? (tx.orderDocId 
