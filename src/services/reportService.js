@@ -24,19 +24,22 @@ function getDateRange(filter, startDate, endDate) {
       start.setHours(0, 0, 0, 0);
       end.setHours(23, 59, 59, 999);
       break;
-    case "weekly":
-      start.setDate(now.getDate() - 7);
-      start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
+    case "weekly": {
+      const day = now.getDay();
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day, 0, 0, 0, 0);
+      end = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day + 6, 23, 59, 59, 999);
       break;
-    case "monthly":
+    }
+    case "monthly": {
       start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
+      end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
       break;
-    case "yearly":
+    }
+    case "yearly": {
       start = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
+      end = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
       break;
+    }
     case "custom":
       start = parseLocalDate(startDate, false);
       end = parseLocalDate(endDate, true);

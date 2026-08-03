@@ -10,11 +10,10 @@ const { getDateRange } = require("./reportService");
 async function getDashboardSummary(filter, startDate, endDate) {
   const { start, end } = getDateRange(filter, startDate, endDate);
 
-  // Delivered and Completed orders aggregation
+  // Group all orders within date range and calculate conditional stats based on status
   const statsAggregation = await Order.aggregate([
     {
       $match: {
-        orderStatus: "Delivered",
         createdAt: { $gte: start, $lte: end }
       }
     },
@@ -22,13 +21,48 @@ async function getDashboardSummary(filter, startDate, endDate) {
       $group: {
         _id: null,
         totalOrders: { $sum: 1 },
-        grossRevenue: { $sum: "$pricing.subtotal" },
-        netRevenue: { $sum: "$pricing.total" },
-        totalDiscounts: { $sum: "$pricing.discount" },
-        totalCoupons: { $sum: { $ifNull: ["$couponDiscount", 0] } },
+        deliveredOrders: {
+          $sum: { $cond: [{ $eq: ["$orderStatus", "Delivered"] }, 1, 0] }
+        },
+        cancelledOrders: {
+          $sum: { $cond: [{ $eq: ["$orderStatus", "Cancelled"] }, 1, 0] }
+        },
+        pendingOrders: {
+          $sum: {
+            $cond: [
+              { $in: ["$orderStatus", ["Processing", "Shipped", "Partially Shipped", "Partially Delivered", "Payment Pending", "Payment Failed"]] },
+              1,
+              0
+            ]
+          }
+        },
+        grossRevenue: {
+          $sum: {
+            $cond: [{ $eq: ["$orderStatus", "Delivered"] }, "$pricing.subtotal", 0]
+          }
+        },
+        netRevenue: {
+          $sum: {
+            $cond: [{ $eq: ["$orderStatus", "Delivered"] }, "$pricing.total", 0]
+          }
+        },
+        totalDiscounts: {
+          $sum: {
+            $cond: [{ $eq: ["$orderStatus", "Delivered"] }, "$pricing.discount", 0]
+          }
+        },
+        totalCoupons: {
+          $sum: {
+            $cond: [{ $eq: ["$orderStatus", "Delivered"] }, { $ifNull: ["$couponDiscount", 0] }, 0]
+          }
+        },
         totalProductsSold: {
           $sum: {
-            $sum: "$items.quantity"
+            $cond: [
+              { $eq: ["$orderStatus", "Delivered"] },
+              { $sum: "$items.quantity" },
+              0
+            ]
           }
         }
       }
@@ -37,6 +71,9 @@ async function getDashboardSummary(filter, startDate, endDate) {
 
   const stats = statsAggregation[0] || {
     totalOrders: 0,
+    deliveredOrders: 0,
+    cancelledOrders: 0,
+    pendingOrders: 0,
     grossRevenue: 0,
     netRevenue: 0,
     totalDiscounts: 0,
@@ -44,19 +81,27 @@ async function getDashboardSummary(filter, startDate, endDate) {
     totalProductsSold: 0
   };
 
-  // Customers count is typically system-wide
-  const registeredCustomers = await User.countDocuments({ role: "user" });
+  // Customers registered in the window
+  const registeredCustomers = await User.countDocuments({ role: "user", createdAt: { $gte: start, $lte: end } });
 
-  const totalReviews = await Review.countDocuments({ isDeleted: false });
+  // Reviews submitted in the window
+  const totalReviews = await Review.countDocuments({ isDeleted: false, createdAt: { $gte: start, $lte: end } });
+
   const avgRatingAggregation = await Product.aggregate([
     { $match: { isDeleted: false, totalReviews: { $gt: 0 } } },
     { $group: { _id: null, avgRating: { $avg: "$averageRating" } } }
   ]);
   const averageProductRating = avgRatingAggregation[0] ? Math.round(avgRatingAggregation[0].avgRating * 10) / 10 : 0;
 
+  const averageOrderValue = stats.deliveredOrders > 0 ? Math.round((stats.netRevenue / stats.deliveredOrders) * 100) / 100 : 0;
+
   return {
     totalRevenue: stats.grossRevenue, // Gross Sales
     totalOrders: stats.totalOrders,
+    deliveredOrders: stats.deliveredOrders,
+    cancelledOrders: stats.cancelledOrders,
+    pendingOrders: stats.pendingOrders,
+    averageOrderValue,
     registeredCustomers,
     totalProductsSold: stats.totalProductsSold,
     totalDiscountsGiven: stats.totalDiscounts,

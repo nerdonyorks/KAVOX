@@ -142,12 +142,16 @@ app.use((req, res, next) => {
 app.use(setNoCache);
 
 const { HTTP_STATUS, MESSAGES } = require("./utils/constants");
+const { formatDateTime, formatDateOnly, formatTimeOnly } = require("./utils/dateHelper");
 
 // Pass constants and user object to all templates universally
 app.use((req, res, next) => {
   res.locals.HTTP_STATUS = HTTP_STATUS;
   res.locals.MESSAGES = MESSAGES;
   res.locals.user = req.user || null;
+  res.locals.formatDateTime = formatDateTime;
+  res.locals.formatDateOnly = formatDateOnly;
+  res.locals.formatTimeOnly = formatTimeOnly;
   next();
 });
 

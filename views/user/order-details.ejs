@@ -376,6 +376,39 @@
                         <span>Total</span>
                         <span class="text-primary">₹<%= order.pricing.total %></span>
                     </div>
+                    <% if (order.couponDetails && order.couponDetails.code) { %>
+                        <div style="margin-top: 15px; border-top: 1px dashed #eee; padding-top: 15px;">
+                            <h6 style="font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; color: #64748b; text-transform: uppercase; margin-bottom: 10px;">APPLIED COUPON DETAILS</h6>
+                            <div class="summary-row">
+                                <span>Applied Coupon Code</span>
+                                <strong style="color: #e91e63;"><%= order.couponDetails.code %></strong>
+                            </div>
+                            <div class="summary-row">
+                                <span>Discount Type</span>
+                                <span><%= order.couponDetails.discountType === 'percentage' ? 'Percentage' : 'Fixed' %></span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Discount Value</span>
+                                <span><%= order.couponDetails.discountType === 'percentage' ? order.couponDetails.discountValue + '%' : '₹' + order.couponDetails.discountValue %></span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Original Subtotal</span>
+                                <span>₹<%= order.couponDetails.originalSubtotal %></span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Discount Amount</span>
+                                <span class="text-success">- ₹<%= order.couponDetails.discountAmount %></span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Final Total</span>
+                                <span class="text-primary" style="font-weight: 700;">₹<%= order.couponDetails.finalTotal %></span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Saved Amount</span>
+                                <span class="text-success" style="font-weight: 700;">₹<%= order.couponDetails.savedAmount %></span>
+                            </div>
+                        </div>
+                    <% } %>
                     <% if (order.walletAmountUsed > 0) { %>
                         <div class="summary-row" style="margin-top: 10px; border-top: 1px dashed #eee; padding-top: 10px;">
                             <span>Wallet Amount Used</span>
@@ -431,7 +464,7 @@
                         </div>
                         <div class="payment-info" style="margin-bottom:0;">
                             <span class="payment-label">Date</span>
-                            <span class="payment-value"><%= order.transactionDate ? new Date(order.transactionDate).toLocaleString('en-IN') : 'N/A' %></span>
+                            <span class="payment-value"><%= order.transactionDate ? formatDateTime(order.transactionDate) : 'N/A' %></span>
                         </div>
                     <% } %>
                     <% if (order.paymentMethod === 'RAZORPAY' && (order.paymentStatus === 'Failed' || order.paymentStatus === 'Pending') && ['Payment Pending', 'Payment Failed'].includes(order.orderStatus)) { %>

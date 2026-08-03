@@ -213,17 +213,27 @@ exports.placeOrder = async (req, res) => {
 
         let couponDiscount = 0;
         let appliedCouponCode = "";
+        let couponDetailsObj = undefined;
         if (req.session.couponCode) {
             const validation = await couponService.validateCoupon(req.session.couponCode, summary.cartTotal, userId);
             if (validation.isValid) {
-                couponDiscount = validation.discountAmount;
+                couponDiscount = Math.min(validation.discountAmount, summary.cartTotal);
                 appliedCouponCode = validation.coupon.code;
+                couponDetailsObj = {
+                    code: validation.coupon.code,
+                    discountType: validation.coupon.discountType,
+                    discountValue: validation.coupon.discountValue,
+                    discountAmount: couponDiscount,
+                    originalSubtotal: summary.cartTotal,
+                    finalTotal: Math.max(summary.cartTotal - couponDiscount, 0),
+                    savedAmount: couponDiscount
+                };
             } else {
                 return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: validation.message });
             }
         }
 
-        const expectedTotal = summary.cartTotal - couponDiscount;
+        const expectedTotal = Math.max(summary.cartTotal - couponDiscount, 0);
 
         // Wallet calculations
         let walletAmountUsed = 0;
@@ -318,6 +328,7 @@ exports.placeOrder = async (req, res) => {
             },
             couponCode: appliedCouponCode || undefined,
             couponDiscount: couponDiscount,
+            couponDetails: couponDetailsObj,
             paymentMethod: paymentMethod,
             paymentStatus: finalPaymentStatus,
             orderStatus: 'Processing',
@@ -412,7 +423,7 @@ exports.getCheckoutSummary = async (req, res) => {
         if (req.session.couponCode) {
             const validation = await couponService.validateCoupon(req.session.couponCode, summary.cartTotal, userId);
             if (validation.isValid) {
-                couponDiscount = validation.discountAmount;
+                couponDiscount = Math.min(validation.discountAmount, summary.cartTotal);
                 appliedCouponCode = validation.coupon.code;
             } else {
                 if (validation.coupon && summary.cartTotal < validation.coupon.minPurchaseAmount) {
@@ -428,7 +439,7 @@ exports.getCheckoutSummary = async (req, res) => {
             couponDiscount,
             appliedCouponCode,
             couponRemovedMessage,
-            finalTotal: summary.cartTotal - couponDiscount
+            finalTotal: Math.max(summary.cartTotal - couponDiscount, 0)
         });
     } catch (error) {
         console.error("Get Checkout Summary Error:", error);

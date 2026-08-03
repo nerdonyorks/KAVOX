@@ -261,7 +261,7 @@
                     <%= ref.referredId ? ref.referredId.name : 'Unknown User' %>
                   </td>
                   <td>
-                    <%= new Date(ref.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) %>
+                    <%= formatDateOnly(ref.createdAt) %>
                   </td>
                   <td>
                     <span class="status-badge status-active" style="padding: 3px 8px; font-size: 0.75rem;">

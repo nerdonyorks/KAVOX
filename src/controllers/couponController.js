@@ -121,10 +121,10 @@ exports.createCoupon = async (req, res) => {
             });
         }
 
-        if (parsedMax !== null && (isNaN(parsedMax) || parsedMax <= 0) || parsedMax < minPurchaseAmount) {
+        if (parsedMax !== null && (isNaN(parsedMax) || parsedMax <= 0)) {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({
                 success: false,
-                message: "Maximum discount must be greater than 0 and less than minimum purchase amount."
+                message: "Maximum discount must be greater than 0."
             });
         }
 
@@ -133,6 +133,26 @@ exports.createCoupon = async (req, res) => {
                 success: false,
                 message: "Minimum purchase amount must be greater than 0."
             });
+        }
+
+        // Fixed Amount Coupon Validation
+        if (type === 'fixed' && parsedVal >= parsedMin) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({
+                success: false,
+                message: "Discount amount must be less than the minimum order amount."
+            });
+        }
+
+        // Percentage Coupon Validation
+        if (type === 'percentage') {
+            const potentialDiscount = (parsedMin * parsedVal) / 100;
+            const effectiveDiscount = parsedMax !== null ? Math.min(potentialDiscount, parsedMax) : potentialDiscount;
+            if (effectiveDiscount >= parsedMin) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({
+                    success: false,
+                    message: "The calculated discount must be less than the minimum order amount."
+                });
+            }
         }
 
         // Validate expiry date (must be in the future)
@@ -271,6 +291,26 @@ exports.updateCoupon = async (req, res) => {
                 success: false,
                 message: "Minimum purchase amount must be greater than 0."
             });
+        }
+
+        // Fixed Amount Coupon Validation
+        if (type === 'fixed' && parsedVal >= parsedMin) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({
+                success: false,
+                message: "Discount amount must be less than the minimum order amount."
+            });
+        }
+
+        // Percentage Coupon Validation
+        if (type === 'percentage') {
+            const potentialDiscount = (parsedMin * parsedVal) / 100;
+            const effectiveDiscount = parsedMax !== null ? Math.min(potentialDiscount, parsedMax) : potentialDiscount;
+            if (effectiveDiscount >= parsedMin) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({
+                    success: false,
+                    message: "The calculated discount must be less than the minimum order amount."
+                });
+            }
         }
 
         const expiry = new Date(expiryDate);

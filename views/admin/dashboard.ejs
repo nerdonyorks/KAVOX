@@ -258,7 +258,7 @@
           <label for="timeFilter">Dashboard Interval</label>
           <select id="timeFilter" class="filter-control" onchange="handleFilterChange()">
             <option value="daily">Daily View (Today)</option>
-            <option value="weekly">Weekly View (Last 7 Days)</option>
+            <option value="weekly">Weekly View (Current Week)</option>
             <option value="monthly" selected>Monthly View (Current Month)</option>
             <option value="yearly">Yearly View (Current Year)</option>
             <option value="custom">Custom Date Range</option>
@@ -300,11 +300,59 @@
         <div class="card stat-card">
           <div class="stat-info">
             <div id="statTotalOrders" class="stat-value"><%= typeof totalOrders !== 'undefined' ? totalOrders : '0' %></div>
-            <div class="stat-label">Delivered Orders</div>
-            <div class="stat-detail-subtext">Delivered count in window</div>
+            <div class="stat-label">Total Orders</div>
+            <div class="stat-detail-subtext">Total orders placed in window</div>
           </div>
           <div class="stat-icon-box" style="color: #6366f1;">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          </div>
+        </div>
+
+        <!-- Card 2b: Delivered Orders -->
+        <div class="card stat-card">
+          <div class="stat-info">
+            <div id="statDeliveredOrders" class="stat-value"><%= typeof deliveredOrders !== 'undefined' ? deliveredOrders : '0' %></div>
+            <div class="stat-label">Delivered Orders</div>
+            <div class="stat-detail-subtext">Delivered count in window</div>
+          </div>
+          <div class="stat-icon-box" style="color: #10b981;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+        </div>
+
+        <!-- Card 2c: Cancelled Orders -->
+        <div class="card stat-card">
+          <div class="stat-info">
+            <div id="statCancelledOrders" class="stat-value"><%= typeof cancelledOrders !== 'undefined' ? cancelledOrders : '0' %></div>
+            <div class="stat-label">Cancelled Orders</div>
+            <div class="stat-detail-subtext">Cancelled count in window</div>
+          </div>
+          <div class="stat-icon-box" style="color: #ef4444;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          </div>
+        </div>
+
+        <!-- Card 2d: Pending Orders -->
+        <div class="card stat-card">
+          <div class="stat-info">
+            <div id="statPendingOrders" class="stat-value"><%= typeof pendingOrders !== 'undefined' ? pendingOrders : '0' %></div>
+            <div class="stat-label">Pending Orders</div>
+            <div class="stat-detail-subtext">Awaiting delivery/completion</div>
+          </div>
+          <div class="stat-icon-box" style="color: #f57c00;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+        </div>
+
+        <!-- Card 2e: Average Order Value (AOV) -->
+        <div class="card stat-card">
+          <div class="stat-info">
+            <div id="statAverageOrderValue" class="stat-value">₹<%= typeof averageOrderValue !== 'undefined' ? averageOrderValue.toLocaleString() : '0' %></div>
+            <div class="stat-label">Average Order Value</div>
+            <div class="stat-detail-subtext">AOV of delivered sales</div>
+          </div>
+          <div class="stat-icon-box" style="color: #3b82f6;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
           </div>
         </div>
 
@@ -582,6 +630,10 @@
     function updateSummaryMetrics(s) {
       document.getElementById('statGrossRevenue').innerText = `₹${s.totalRevenue.toLocaleString()}`;
       document.getElementById('statTotalOrders').innerText = s.totalOrders;
+      document.getElementById('statDeliveredOrders').innerText = s.deliveredOrders;
+      document.getElementById('statCancelledOrders').innerText = s.cancelledOrders;
+      document.getElementById('statPendingOrders').innerText = s.pendingOrders;
+      document.getElementById('statAverageOrderValue').innerText = `₹${s.averageOrderValue.toLocaleString()}`;
       document.getElementById('statTotalCustomers').innerText = s.registeredCustomers;
       document.getElementById('statProductsSold').innerText = s.totalProductsSold;
       document.getElementById('statDiscounts').innerText = `₹${s.totalDiscountsGiven.toLocaleString()}`;

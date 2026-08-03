@@ -493,13 +493,6 @@ exports.userListProducts = async (req, res) => {
       query.brand = brand;
     }
 
-    // Filter by Price Range
-    if (minPrice || maxPrice) {
-      query.price = {};
-      if (minPrice) query.price.$gte = parseInt(minPrice);
-      if (maxPrice) query.price.$lte = parseInt(maxPrice);
-    }
-
     // Filter by Size (within variants)
     const variantQuery = {
       isActive: true
@@ -512,24 +505,43 @@ exports.userListProducts = async (req, res) => {
 
     query.variants = { $elemMatch: variantQuery };
 
-    // Sorting
-    let sortOptions = { createdAt: -1 };
-    if (sort === "priceLowHigh") sortOptions = { price: 1 };
-    else if (sort === "priceHighLow") sortOptions = { price: -1 };
-    else if (sort === "nameAZ") sortOptions = { name: 1 };
-    else if (sort === "newest") sortOptions = { createdAt: -1 };
-
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-    const totalProducts = await Product.countDocuments(query);
-    const products = await Product.find(query)
+    // Fetch matching products from the database
+    let products = await Product.find(query)
       .populate("category")
-      .sort(sortOptions)
-      .skip(skip)
-      .limit(parseInt(limit))
       .lean();
 
     const offerService = require("../services/offerService");
     await offerService.populateProductOffers(products);
+
+    // Calculate final price (selling price) for each product
+    products.forEach(product => {
+      const { finalPrice } = offerService.getDiscountedPrice(product);
+      product.finalPrice = finalPrice;
+    });
+
+    // Filter by Price Range based on final price (selling price)
+    if (minPrice || maxPrice) {
+      const min = minPrice ? parseInt(minPrice) : 0;
+      const max = maxPrice ? parseInt(maxPrice) : Infinity;
+      products = products.filter(p => p.finalPrice >= min && p.finalPrice <= max);
+    }
+
+    // Sort by dynamic options based on selling price
+    if (sort === "priceLowHigh") {
+      products.sort((a, b) => a.finalPrice - b.finalPrice);
+    } else if (sort === "priceHighLow") {
+      products.sort((a, b) => b.finalPrice - a.finalPrice);
+    } else if (sort === "nameAZ") {
+      products.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sort === "newest") {
+      products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } else {
+      products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
+
+    const totalProducts = products.length;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    products = products.slice(skip, skip + parseInt(limit));
 
     // Get user's wishlist product IDs if logged in
     let wishlistProductIds = [];

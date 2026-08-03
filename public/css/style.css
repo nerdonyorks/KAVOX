@@ -5230,3 +5230,85 @@ select.form-control {
   width: 10% !important;
   text-align: center;
 }
+
+/* Universal Clear Search Styles */
+.kavox-search-wrapper {
+  position: relative;
+  display: inline-flex !important;
+  align-items: center;
+  width: 100%;
+}
+
+.kavox-clear-search-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none !important;
+  border: none !important;
+  padding: 6px !important;
+  margin: 0 !important;
+  cursor: pointer;
+  display: none;
+  /* controlled by JS */
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  transition: color 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+  z-index: 10;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  box-shadow: none !important;
+  outline: none;
+}
+
+.kavox-clear-search-btn:hover {
+  color: #1f2937;
+  background-color: #f3f4f6 !important;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.kavox-clear-search-btn:focus-visible {
+  outline: 2px solid #000;
+  color: #000;
+}
+
+.kavox-clear-search-btn svg {
+  position: static !important;
+  display: block !important;
+  width: 14px !important;
+  height: 14px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  stroke: currentColor !important;
+}
+
+/* Adjust search wrappers styling to ensure position relative */
+.admin-layout .search-input-wrapper {
+  position: relative !important;
+}
+
+.admin-layout .search-input-wrapper .kavox-clear-search-btn {
+  right: 12px;
+  color: #94a3b8;
+}
+
+.admin-layout .search-input-wrapper .kavox-clear-search-btn:hover {
+  color: #1e293b;
+  background-color: #f1f5f9 !important;
+}
+
+.user-layout .search-box {
+  position: relative !important;
+}
+
+.user-layout .search-box .kavox-clear-search-btn {
+  right: 12px;
+  color: #999;
+}
+
+.user-layout .search-box .kavox-clear-search-btn:hover {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.15) !important;
+}

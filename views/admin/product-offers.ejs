@@ -179,13 +179,13 @@
                   <td><%= offer.productId ? offer.productId.name : 'Unknown Product' %></td>
                   <td>₹<%= offer.productId ? offer.productId.price : 'N/A' %></td>
                   <td style="color: #059669; font-weight: 700;"><%= offer.discountPercentage %>% OFF</td>
-                  <td><%= new Date(offer.startDate).toLocaleDateString('en-IN') %></td>
+                  <td><%= formatDateOnly(offer.startDate) %></td>
                   <td>
                     <% 
                       const isExpired = new Date(offer.endDate) < new Date();
                     %>
                     <span style="<%= isExpired ? 'color: var(--error); font-weight: 600;' : '' %>">
-                      <%= new Date(offer.endDate).toLocaleDateString('en-IN') %> <%= isExpired ? '(Expired)' : '' %>
+                      <%= formatDateOnly(offer.endDate) %> <%= isExpired ? '(Expired)' : '' %>
                     </span>
                   </td>
                   <td>

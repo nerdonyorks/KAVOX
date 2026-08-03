@@ -97,7 +97,7 @@
 
         // ── Render one order card ────────────────────────────────────
         function renderCard(order) {
-            const date     = new Date(order.createdAt).toLocaleDateString();
+            const date     = formatDateOnly(order.createdAt);
             const badgeCls = statusClass[order.orderStatus] || 'status-processing';
             const preview  = order.items.slice(0, 2).map(item => {
                 let imgUrl = '';
@@ -154,7 +154,18 @@
                                     (${order.paymentStatus})
                                 </span>
                             </div>
-                            <a href="/order/${order._id}" class="btn-outline-primary">VIEW DETAILS</a>
+                            ${order.couponDetails && order.couponDetails.code ? `
+                            <div class="coupon-details-history" style="margin-top:12px; font-size:12px; text-align:right; border-top:1px dashed #eee; padding-top:10px; color: #475569;">
+                                <div style="margin-bottom: 2px;">Coupon Code: <strong style="color: #e91e63;">${order.couponDetails.code}</strong></div>
+                                <div style="margin-bottom: 2px;">Discount Type: <strong>${order.couponDetails.discountType === 'percentage' ? 'Percentage' : 'Fixed'}</strong></div>
+                                <div style="margin-bottom: 2px;">Discount Value: <strong>${order.couponDetails.discountType === 'percentage' ? order.couponDetails.discountValue + '%' : '₹' + order.couponDetails.discountValue}</strong></div>
+                                <div style="margin-bottom: 2px;">Original Subtotal: <strong>₹${order.couponDetails.originalSubtotal}</strong></div>
+                                <div style="margin-bottom: 2px;">Discount Amount: <strong style="color: #22c55e;">- ₹${order.couponDetails.discountAmount}</strong></div>
+                                <div style="margin-bottom: 2px;">Final Total: <strong style="color: #3b82f6;">₹${order.couponDetails.finalTotal}</strong></div>
+                                <div>Saved Amount: <strong style="color: #22c55e;">₹${order.couponDetails.savedAmount}</strong></div>
+                            </div>
+                            ` : ''}
+                            <a href="/order/${order._id}" class="btn-outline-primary" style="margin-top: 10px; display: inline-block;">VIEW DETAILS</a>
                         </div>
                     </div>
                 </div>`;

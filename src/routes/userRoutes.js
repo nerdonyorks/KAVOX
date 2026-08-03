@@ -63,7 +63,8 @@ router.get("/order-success", isLoggedIn, async (req, res) => {
             title: "Order Success - KAVOX", 
             orderId: order.orderId,
             paymentId: order.razorpayPaymentId || 'N/A',
-            amountPaid: order.pricing.total
+            amountPaid: order.pricing.total,
+            order
         });
     } catch (error) {
         console.error("Order success page error:", error);

@@ -3,6 +3,7 @@ const Product = require("../models/productModel");
 const User = require("../models/userModel");
 const PDFDocument = require("pdfkit");
 const { HTTP_STATUS } = require("../utils/constants");
+const { formatDateOnly } = require("../utils/dateHelper");
 const { getCalculatedOrderStatus, updateOrderPricingAndRefund } = require("../utils/orderHelpers");
 
 exports.getUserOrders = async (req, res) => {
@@ -301,7 +302,7 @@ exports.downloadInvoice = async (req, res) => {
         doc.fillColor(WHITE).font('Helvetica-Bold').fontSize(26)
             .text('INVOICE', 0, 30, { align: 'right', width: PAGE_W - MARGIN });
         doc.fillColor(GREEN).font('Helvetica').fontSize(9)
-            .text(new Date(order.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'long', year: 'numeric' }),
+            .text(formatDateOnly(order.createdAt),
                 0, 62, { align: 'right', width: PAGE_W - MARGIN });
 
         // ── Order Meta Row ────────────────────────────────────────────
@@ -460,6 +461,15 @@ exports.downloadInvoice = async (req, res) => {
         totalRow('Subtotal', `  Rs. ${order.pricing.subtotal}`, GRAY, BLACK);
         totalRow('Discount', `- Rs. ${order.pricing.discount}`, GRAY, '#22c55e');
         totalRow('Shipping', order.pricing.shipping === 0 ? '  FREE' : `  Rs. ${order.pricing.shipping}`, GRAY, BLACK);
+
+        if (order.couponDetails && order.couponDetails.code) {
+            totalRow('Coupon Code', `  ${order.couponDetails.code}`, GRAY, BLACK);
+            totalRow('Coupon Type', `  ${order.couponDetails.discountType === 'percentage' ? 'Percentage' : 'Fixed'}`, GRAY, BLACK);
+            totalRow('Coupon Value', `  ${order.couponDetails.discountType === 'percentage' ? order.couponDetails.discountValue + '%' : 'Rs. ' + order.couponDetails.discountValue}`, GRAY, BLACK);
+            totalRow('Orig. Subtotal', `  Rs. ${order.couponDetails.originalSubtotal}`, GRAY, BLACK);
+            totalRow('Coupon Discount', `- Rs. ${order.couponDetails.discountAmount}`, GRAY, '#22c55e');
+            totalRow('Coupon Saved', `  Rs. ${order.couponDetails.savedAmount}`, GRAY, '#22c55e');
+        }
 
         if (order.walletAmountUsed > 0) {
             totalRow('Wallet Used', `- Rs. ${order.walletAmountUsed}`, GRAY, '#22c55e');

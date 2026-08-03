@@ -71,6 +71,15 @@ const orderSchema = new Schema({
   couponApplied: { type: String },
   couponCode: { type: String },
   couponDiscount: { type: Number, default: 0 },
+  couponDetails: {
+    code: { type: String },
+    discountType: { type: String, enum: ['percentage', 'fixed'] },
+    discountValue: { type: Number },
+    discountAmount: { type: Number },
+    originalSubtotal: { type: Number },
+    finalTotal: { type: Number },
+    savedAmount: { type: Number }
+  },
   razorpayOrderId: { type: String },
   razorpayPaymentId: { type: String },
   transactionDate: { type: Date },

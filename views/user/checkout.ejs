@@ -247,7 +247,7 @@
               <% availableCoupons.forEach(coupon => {
                 const isEligible = summary.cartTotal >= coupon.minPurchaseAmount;
                 const isApplied = appliedCouponCode && appliedCouponCode === coupon.code;
-                const expiryLabel = new Date(coupon.expiryDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+                const expiryLabel = formatDateOnly(coupon.expiryDate);
               %>
                 <button type="button"
                   class="available-coupon-card <%= isEligible ? '' : 'disabled' %> <%= isApplied ? 'applied' : '' %>"

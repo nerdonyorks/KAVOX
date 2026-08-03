@@ -2,6 +2,7 @@ const User = require("../models/userModel");
 const Order = require("../models/orderModel");
 const Product = require("../models/productModel");
 const { HTTP_STATUS, MESSAGES } = require("../utils/constants");
+const { formatDateOnly } = require("../utils/dateHelper");
 const dashboardService = require("../services/dashboardService");
 
 // Helper to validate date inputs
@@ -91,6 +92,10 @@ exports.renderDashboard = async (req, res) => {
         const initialSummary = await dashboardService.getDashboardSummary("monthly");
         const totalRevenue = initialSummary.totalRevenue;
         const totalOrders = initialSummary.totalOrders;
+        const deliveredOrders = initialSummary.deliveredOrders;
+        const cancelledOrders = initialSummary.cancelledOrders;
+        const pendingOrders = initialSummary.pendingOrders;
+        const averageOrderValue = initialSummary.averageOrderValue;
         const totalCustomers = initialSummary.registeredCustomers;
         const totalProducts = await Product.countDocuments(); // Active + Inactive
         const totalReviews = initialSummary.totalReviews || 0;
@@ -133,7 +138,7 @@ exports.renderDashboard = async (req, res) => {
         const recentOrders = recentOrdersData.map(order => ({
             id: order.orderId,
             customer: order.userId ? order.userId.name : 'Unknown',
-            date: new Date(order.createdAt).toLocaleDateString(),
+            date: formatDateOnly(order.createdAt),
             total: order.pricing.total,
             status: order.orderStatus
         }));
@@ -143,6 +148,10 @@ exports.renderDashboard = async (req, res) => {
             activePage: "dashboard",
             totalRevenue,
             totalOrders,
+            deliveredOrders,
+            cancelledOrders,
+            pendingOrders,
+            averageOrderValue,
             totalCustomers,
             totalProducts,
             lowStockItems,
@@ -157,7 +166,7 @@ exports.renderDashboard = async (req, res) => {
         res.render("admin/dashboard", {
             title: "Admin Dashboard - KAVOX",
             activePage: "dashboard",
-            totalRevenue: 0, totalOrders: 0, totalCustomers: 0, totalProducts: 0, lowStockItems: [], orders: [],
+            totalRevenue: 0, totalOrders: 0, deliveredOrders: 0, cancelledOrders: 0, pendingOrders: 0, averageOrderValue: 0, totalCustomers: 0, totalProducts: 0, lowStockItems: [], orders: [],
             totalReviews: 0, averageProductRating: 0, topRatedProducts: [], lowestRatedProducts: []
         });
     }
@@ -328,7 +337,7 @@ exports.renderUserManagement = async (req, res) => {
         name: user.name,
         email: user.email,
         phone: user.phone || 'N/A',
-        joinedOn: new Date(user.createdAt).toLocaleDateString(),
+        joinedOn: formatDateOnly(user.createdAt),
         blocked: !user.isActive,
         avatar: user.profilePicture || '/images/default-avatar.png'
     }));
@@ -429,7 +438,7 @@ exports.renderUserDetails = async (req, res, next) => {
         }
         return {
             id: order.orderId,
-            date: new Date(order.createdAt).toLocaleDateString(),
+            date: formatDateOnly(order.createdAt),
             total: order.pricing.total,
             status: order.orderStatus,
             method: order.paymentMethod

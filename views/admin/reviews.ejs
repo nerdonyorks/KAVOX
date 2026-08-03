@@ -192,7 +192,7 @@
                     </div>
                   </td>
                   <td>
-                    <span style="font-size: 13px; color: #475569;"><%= new Date(r.createdAt).toLocaleDateString() %></span>
+                    <span style="font-size: 13px; color: #475569;"><%= formatDateOnly(r.createdAt) %></span>
                   </td>
                   <td style="text-align: center;">
                     <span id="badge-<%= r._id %>" class="status-badge <%= r.status.toLowerCase() === 'approved' ? 'approved' : (r.status.toLowerCase() === 'hidden' ? 'hidden-status' : 'pending') %>">

@@ -144,7 +144,7 @@
           return orders.map(o => {
             const cls = statusClass[o.orderStatus] || '';
             const name = o.userId ? o.userId.name : 'Unknown';
-            const date = new Date(o.createdAt).toLocaleDateString();
+            const date = formatDateOnly(o.createdAt);
             const shortId = o.orderId.length > 12 ? o.orderId.substring(0, 12) + '...' : o.orderId;
             return `
           <tr>

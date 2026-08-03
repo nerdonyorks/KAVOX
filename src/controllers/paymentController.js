@@ -75,15 +75,25 @@ exports.createOrder = async (req, res) => {
 
         let couponDiscount = 0;
         let appliedCouponCode = "";
+        let couponDetailsObj = undefined;
         if (req.session.couponCode) {
             const validation = await couponService.validateCoupon(req.session.couponCode, summary.cartTotal, userId);
             if (validation.isValid) {
-                couponDiscount = validation.discountAmount;
+                couponDiscount = Math.min(validation.discountAmount, summary.cartTotal);
                 appliedCouponCode = validation.coupon.code;
+                couponDetailsObj = {
+                    code: validation.coupon.code,
+                    discountType: validation.coupon.discountType,
+                    discountValue: validation.coupon.discountValue,
+                    discountAmount: couponDiscount,
+                    originalSubtotal: summary.cartTotal,
+                    finalTotal: Math.max(summary.cartTotal - couponDiscount, 0),
+                    savedAmount: couponDiscount
+                };
             }
         }
 
-        let finalAmount = summary.cartTotal - couponDiscount;
+        let finalAmount = Math.max(summary.cartTotal - couponDiscount, 0);
         let walletAmountUsed = 0;
 
         if (useWallet) {
@@ -161,6 +171,7 @@ exports.createOrder = async (req, res) => {
             },
             couponCode: appliedCouponCode || undefined,
             couponDiscount: couponDiscount,
+            couponDetails: couponDetailsObj,
             paymentMethod: 'RAZORPAY',
             paymentStatus: 'Pending',
             orderStatus: 'Payment Pending',

@@ -217,6 +217,32 @@
                 <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.1rem;">
                   <span>Total</span><span>₹<%= order.pricing.total %></span>
                 </div>
+                <% if (order.couponDetails && order.couponDetails.code) { %>
+                  <div style="margin-top: 15px; border-top: 1px dashed #eee; padding-top: 15px;">
+                    <h4 style="font-size: 0.95rem; font-weight: bold; color: #475569; margin-bottom: 10px;">Applied Coupon Details</h4>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem;">
+                      <span>Coupon Code</span><strong style="color: #e91e63;"><%= order.couponDetails.code %></strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem;">
+                      <span>Discount Type</span><span><%= order.couponDetails.discountType === 'percentage' ? 'Percentage' : 'Fixed' %></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem;">
+                      <span>Discount Value</span><span><%= order.couponDetails.discountType === 'percentage' ? order.couponDetails.discountValue + '%' : '₹' + order.couponDetails.discountValue %></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem;">
+                      <span>Original Subtotal</span><span>₹<%= order.couponDetails.originalSubtotal %></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem;">
+                      <span>Discount Amount</span><span style="color: green;">-₹<%= order.couponDetails.discountAmount %></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem; font-weight: bold;">
+                      <span>Final Total</span><span>₹<%= order.couponDetails.finalTotal %></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem; font-weight: bold; color: green;">
+                      <span>Saved Amount</span><span>₹<%= order.couponDetails.savedAmount %></span>
+                    </div>
+                  </div>
+                <% } %>
                 <% if (order.walletAmountUsed > 0) { %>
                   <div style="display: flex; justify-content: space-between; margin-top: 10px; color: #15803d; font-size: 0.95rem;">
                     <span>Wallet Amount Used</span><span>-₹<%= order.walletAmountUsed %></span>
@@ -282,7 +308,7 @@
 
                   <div class="info-label" style="margin-top: 10px;">Transaction Date</div>
                   <div class="info-value">
-                    <%= order.transactionDate ? new Date(order.transactionDate).toLocaleString('en-IN') : 'N/A' %>
+                    <%= order.transactionDate ? formatDateTime(order.transactionDate) : 'N/A' %>
                   </div>
                 <% } %>
               </div>

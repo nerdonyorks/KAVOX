@@ -381,11 +381,7 @@
       }
 
       res.entries.forEach(e => {
-        const transDateStr = new Date(e.date).toLocaleDateString("en-IN", {
-          year: "numeric",
-          month: "short",
-          day: "numeric"
-        }) + " " + new Date(e.date).toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' });
+        const transDateStr = formatDateTime(e.date);
 
         const debitVal = e.debit > 0 ? `<span style="color:#ef4444; font-weight:500;">₹${e.debit.toLocaleString()}</span>` : "-";
         const creditVal = e.credit > 0 ? `<span style="color:#10b981; font-weight:500;">₹${e.credit.toLocaleString()}</span>` : "-";

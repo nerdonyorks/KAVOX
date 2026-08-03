@@ -483,11 +483,7 @@
       }
 
       res.orders.forEach(o => {
-        const orderDateStr = new Date(o.date).toLocaleDateString("en-IN", {
-          year: "numeric",
-          month: "short",
-          day: "numeric"
-        });
+        const orderDateStr = formatDateOnly(o.date);
 
         tbody.innerHTML += `
           <tr>

@@ -131,8 +131,8 @@
                   <td>
                     <% if (b.startDate || b.endDate) { %>
                       <div style="font-size: 12px; color: #475569;">
-                        <strong>Start:</strong> <%= b.startDate ? new Date(b.startDate).toLocaleDateString() : 'N/A' %><br>
-                        <strong>End:</strong> <%= b.endDate ? new Date(b.endDate).toLocaleDateString() : 'N/A' %>
+                        <strong>Start:</strong> <%= b.startDate ? formatDateOnly(b.startDate) : 'N/A' %><br>
+                        <strong>End:</strong> <%= b.endDate ? formatDateOnly(b.endDate) : 'N/A' %>
                       </div>
                     <% } else { %>
                       <span style="color: #94a3b8; font-size: 12px;">Always active</span>

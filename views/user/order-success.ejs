@@ -115,6 +115,39 @@
           <span style="font-weight: 600; color: #334155; font-family: monospace;"><%= paymentId %></span>
         </div>
       <% } %>
+      <% if (locals.order && order.couponDetails && order.couponDetails.code) { %>
+        <div style="margin-top: 12px; border-top: 1px dashed #e2e8f0; padding-top: 12px; font-size: 14px;">
+          <div style="font-weight: 700; color: #1e293b; margin-bottom: 8px;">Applied Coupon Details</div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span style="color: #64748b;">Coupon Code:</span>
+            <span style="font-weight: 600; color: #e91e63;"><%= order.couponDetails.code %></span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span style="color: #64748b;">Discount Type:</span>
+            <span style="font-weight: 600; color: #334155;"><%= order.couponDetails.discountType === 'percentage' ? 'Percentage' : 'Fixed' %></span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span style="color: #64748b;">Discount Value:</span>
+            <span style="font-weight: 600; color: #334155;"><%= order.couponDetails.discountType === 'percentage' ? order.couponDetails.discountValue + '%' : '₹' + order.couponDetails.discountValue %></span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span style="color: #64748b;">Original Subtotal:</span>
+            <span style="font-weight: 600; color: #334155;">₹<%= order.couponDetails.originalSubtotal %></span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span style="color: #64748b;">Discount Amount:</span>
+            <span style="font-weight: 600; color: #22c55e;">- ₹<%= order.couponDetails.discountAmount %></span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span style="color: #64748b;">Final Total:</span>
+            <span style="font-weight: 700; color: #334155;">₹<%= order.couponDetails.finalTotal %></span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+            <span style="color: #64748b;">Saved Amount:</span>
+            <span style="font-weight: 700; color: #22c55e;">₹<%= order.couponDetails.savedAmount %></span>
+          </div>
+        </div>
+      <% } %>
       <div style="display: flex; justify-content: space-between; font-size: 14px; margin-top: 12px; border-top: 1px dashed #e2e8f0; padding-top: 12px;">
         <span style="color: #64748b; font-weight: 600;">Amount Paid:</span>
         <span style="font-weight: 800; color: #e91e63; font-size: 16px;">₹<%= locals.amountPaid || 0 %></span>

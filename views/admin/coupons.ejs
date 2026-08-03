@@ -157,13 +157,10 @@
                   </td>
                   <td>
                     <% 
-                      const dateObj = new Date(coupon.expiryDate);
-                      const formattedDate = dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-                      const now = new Date();
-                      const isExpired = dateObj < now;
+                      const isExpired = new Date(coupon.expiryDate) < new Date();
                     %>
                     <span style="<%= isExpired ? 'color: var(--error); font-weight: 600;' : '' %>">
-                      <%= formattedDate %> <%= isExpired ? '(Expired)' : '' %>
+                      <%= formatDateOnly(coupon.expiryDate) %> <%= isExpired ? '(Expired)' : '' %>
                     </span>
                   </td>
                   <td>
@@ -382,18 +379,35 @@
       const discountType = document.getElementById('discountType').value;
       const discountValue = document.getElementById('discountValue').value;
       const minPurchaseAmount = document.getElementById('minPurchaseAmount').value;
+      const maxDiscount = document.getElementById('maxDiscount').value;
 
       const valNum = parseFloat(discountValue);
       const minNum = parseFloat(minPurchaseAmount);
 
-      if (discountType === 'fixed' && !isNaN(valNum) && !isNaN(minNum)) {
-        if (valNum > minNum) {
-          document.getElementById('valueError').textContent = "Discount amount cannot be greater than the minimum purchase amount.";
+      if (isNaN(valNum) || isNaN(minNum)) return true;
+
+      if (discountType === 'fixed') {
+        if (valNum >= minNum) {
+          document.getElementById('valueError').textContent = "Discount amount must be less than the minimum order amount.";
           document.getElementById('valueError').style.display = 'block';
           document.getElementById('discountValue').classList.add('is-invalid');
           return false;
         } else {
-          if (document.getElementById('valueError').textContent === "Discount amount cannot be greater than the minimum purchase amount.") {
+          if (document.getElementById('valueError').textContent === "Discount amount must be less than the minimum order amount.") {
+            hideFieldError('discountValue', 'valueError');
+          }
+        }
+      } else if (discountType === 'percentage') {
+        const potentialDiscount = (minNum * valNum) / 100;
+        const maxNum = parseFloat(maxDiscount);
+        const effectiveDiscount = !isNaN(maxNum) ? Math.min(potentialDiscount, maxNum) : potentialDiscount;
+        if (effectiveDiscount >= minNum) {
+          document.getElementById('valueError').textContent = "The calculated discount must be less than the minimum order amount.";
+          document.getElementById('valueError').style.display = 'block';
+          document.getElementById('discountValue').classList.add('is-invalid');
+          return false;
+        } else {
+          if (document.getElementById('valueError').textContent === "The calculated discount must be less than the minimum order amount.") {
             hideFieldError('discountValue', 'valueError');
           }
         }
@@ -482,8 +496,8 @@
         isValid = false;
       }
 
-      if (isValid && discountType === 'fixed' && valNum > minNum) {
-        document.getElementById('valueError').textContent = "Discount amount cannot be greater than the minimum purchase amount.";
+      if (isValid && discountType === 'fixed' && valNum >= minNum) {
+        document.getElementById('valueError').textContent = "Discount amount must be less than the minimum order amount.";
         document.getElementById('valueError').style.display = 'block';
         document.getElementById('discountValue').classList.add('is-invalid');
         isValid = false;
@@ -495,6 +509,18 @@
           document.getElementById('maxError').textContent = "Please enter a valid maximum discount greater than 0.";
           document.getElementById('maxError').style.display = 'block';
           document.getElementById('maxDiscount').classList.add('is-invalid');
+          isValid = false;
+        }
+      }
+
+      if (isValid && discountType === 'percentage') {
+        const potentialDiscount = (minNum * valNum) / 100;
+        const maxNum = parseFloat(maxDiscount);
+        const effectiveDiscount = !isNaN(maxNum) ? Math.min(potentialDiscount, maxNum) : potentialDiscount;
+        if (effectiveDiscount >= minNum) {
+          document.getElementById('valueError').textContent = "The calculated discount must be less than the minimum order amount.";
+          document.getElementById('valueError').style.display = 'block';
+          document.getElementById('discountValue').classList.add('is-invalid');
           isValid = false;
         }
       }
